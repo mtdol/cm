@@ -1,0 +1,1 @@
+def _print = lam x (print x). # allows print to be used like a funtion\#

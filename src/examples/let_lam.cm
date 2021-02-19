@@ -1,0 +1,2 @@
+@ let add1 = [lam x {1 + x}] (add1 : 3) # prints 4\#
+@ let add = [lam x {lam y {x + y}}] (add : 2 : 3) # prints 5\#
