@@ -5,11 +5,11 @@
 print 7.                    # same\#
 def x = 5.                  # def creates a toplevel binding\#
 x - 3.                      # evaluates to 2 but does not normally print\#
-@ [1 + 2] - 5 + {4 * 3}.    # square brackets and curly brackets
+@ ([1 + 2] - 5 + {4 * 3}).    # square brackets and curly brackets
                               are the same as parens\#
 .                           # does nothing\#
 #def y = 7.\#
-@ let y = [x - 2] (y + 1).    # let is an expression;
+@ (let y = [x - 2] (y + 1)).    # let is an expression;
                                 this expression returns 4 (5 - 2 + 1)\#
 
 # strings\#

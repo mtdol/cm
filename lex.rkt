@@ -1,23 +1,29 @@
 #lang racket
 (provide tokenize tokenize-from-file reserved-keywords operators)
 
+;; Matthew Dolinka
+;; cm lexer
+
 ;; reserved keywords
 (define reserved-keywords 
  (set "(" ")" "[" "]" "{" "}" "#" "\\#" "noop" "null" "head" "`"
       "tail" "~" "cons" "," "=" "equal" "equals" ">" "gt" "<"
-      "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" ":uni_minus" "*" "mult"
-      "/" "div" "^" "exp" "%" "mod" "&" "and" "|" "or" "not" "!" "@" "print" "let"
-      "def" "lam" "lambda" ":" "apply" "if" "while" "rec" "this" "_"))
+      "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" "*" "mult"
+      "/" "div" "^" "exp" "%" "mod" "&" "and" "|" "or" "not" "!" "true" "false"
+      "@" "print" "let" "in" "def" "final" "lam" "lambda" ":" "apply"
+      "if" "then" "else" "eval" "$" "cat" "type" "error" "catch"
+      "int" "float" "string" "while" "rec" "this" "_"))
 (define operators 
- (set "head" "`"
-      "tail" "~" "cons" "," "=" "equal" "equals" ">" "gt" "<"
-      "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" ":uni_minus" "*" "mult"
-      "/" "div" "^" "exp" "%" "mod" "&" "and" "|" "or" "not" "!" "@" "print" "let"
-      "def" "lam" "lambda" ":" "apply" "if"))
+ (set "head" "`" "tail" "~" "cons" "," "=" ":def_assign" ":let_assign" "equal" "equals"
+      ">" "gt" "<" "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus"
+      "*" "mult" "/" "div" "^" "exp" "%" "mod" "&" "and" "|" "or" 
+      "not" "true" "false" "!" "@" "print" "let" "in" "def"
+      "lam" "lambda" ":" "apply" "if" "then" "else" "eval" "$" "cat" "type"
+      "error" "int" "float" "string"))
 ;; chars to be tokenized regardless of context
 (define key-tokens 
   (list "`" "~" "," "=" ">" "<" ">=" "<=" "+" "-" "*" "/" "^" "%" "&" "|" "!" "@"
-            "(" ")" "[" "]" "{" "}" ":" "#" "\\#"))
+            "(" ")" "[" "]" "{" "}" ":" "$" "#" "\\#"))
 
 ;; turns a string into a list of strings by spliting by whitespace,
 ;; and also performs other necessary adjustments to the token list
@@ -42,7 +48,7 @@
          [(cons "`" t) (cons "head" (convert-symbols t))]
          [(cons "~" t) (cons "tail" (convert-symbols t))]
          [(cons "," t) (cons "cons" (convert-symbols t))]
-         [(cons "()" t) (cons "null" (convert-symbols t))]
+         [(cons "(" (cons ")" t)) (cons "null" (convert-symbols t))]
          [(cons "[" t) (cons "(" (convert-symbols t))]
          [(cons "]" t) (cons ")" (convert-symbols t))]
          [(cons "{" t) (cons "(" (convert-symbols t))]
@@ -62,8 +68,11 @@
          [(cons "&" t) (cons "and" (convert-symbols t))]
          [(cons "|" t) (cons "or" (convert-symbols t))]
          [(cons "!" t) (cons "not" (convert-symbols t))]
+         [(cons "true" t) (cons "1" (convert-symbols t))]
+         [(cons "false" t) (cons "0" (convert-symbols t))]
+         [(cons "$" t) (cons "cat" (convert-symbols t))]
          [(cons "@" t) (cons "print" (convert-symbols t))]
-         [(cons "lambda" t) (cons "lam" (convert-symbols t))]
+         [(cons "lam" t) (cons "lambda" (convert-symbols t))]
          [(cons ":" t) (cons "apply" (convert-symbols t))]
          [(cons h t) (cons h (convert-symbols t))]))
 
