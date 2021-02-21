@@ -1,4 +1,3 @@
 . allow strings to be tokenized even when they have spaces within them
 . line numbers in tokens
 . standardized testing
-. match operator?

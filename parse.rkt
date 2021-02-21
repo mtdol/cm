@@ -1,5 +1,5 @@
 #lang racket
-(provide parse-expr ast-to-expr)
+(provide parse-expr)
 (require "lex.rkt" "ast.rkt")
 
 ;; Matthew Dolinka
@@ -30,51 +30,6 @@
             [(cons h t) (balanced-parens-aux? t pcount)]))
 
 
-;; returns the ast back with proper parenthesis
-(define (ast-to-expr ast) (apply string-append (ast-to-expr-aux ast)))
-(define (ast-to-expr-aux ast) 
-    (match ast
-           [(Int i) (list (number->string i))]
-           [(Float f) (list (number->string f))]
-           [(String s) (list "\"" s "\"")]
-           [(Var v) (list v)]
-           [(Null) "null"]
-           [(Prim1 op e1 e2) #:when (symbol=? op 'cons)
-                              (flatten (list "(" (ast-to-expr-aux e1)
-                                     ", " (ast-to-expr-aux e2) ")"))]
-           [(Prim1 op e1 e2) (flatten
-                               (list "(" (ast-to-expr-aux e1)
-                                     " " (symbol->string (translate-op-name op))
-                                     " " (ast-to-expr-aux e2) ")"))]
-           [(Prim2 op e) (flatten
-                               (list "(" (symbol->string (translate-op-name op))
-                                     " (" (ast-to-expr-aux e) "))"))]
-           [(Def v e) (list "def " (ast-to-expr v) " = "
-                                (ast-to-expr e))]
-           [(Let v e1 e2) (list "let " (ast-to-expr v) " = "
-                                (ast-to-expr e1) " in " (ast-to-expr e2) )]
-           [(Lambda v e) (flatten (list "(" "lambda "
-                        (ast-to-expr-aux v) " " (ast-to-expr-aux e) ")"))]
-           [(If e1 e2 e3) (flatten
-                               (list "(" "if " (ast-to-expr-aux e1)
-                                  " then " (ast-to-expr-aux e2) 
-                                  " else " (ast-to-expr-aux e3) ")"))]
-           [(Print e) (flatten (list "(" "print " (ast-to-expr-aux e) ")"))]
-           [(Format s l) (flatten (list "(" "format " 
-                            (ast-to-expr-aux s) " " (ast-to-expr-aux l) ")"))]
-           [(Error s) (flatten (list "(" "error " (ast-to-expr-aux s) ")"))]
-           [(Stat e st) (list (ast-to-expr e) ". " (ast-to-expr st))]
-           [(EOP) (list)]))
-
-;; translates op names if necessary to the form used in the language
-(define (translate-op-name op) 
-  (match op
-    ['add 'plus]
-    ['pos 'plus]
-    ['sub 'minus]
-    ['neg 'minus]
-    ['apply ':]
-    [op op]))
 
 
 (define (is-keyword? v)
@@ -97,14 +52,26 @@
           (is-string? v)))
 
 
-;; converts lam x,y (x+y) into lam x lam y (x + y)
-(define (replace-lambda-commas lst)
+;; converts lam x,y = (x+y) into lam x = lam y = (x + y)
+(define (replace-assign-commas lst)
   (match lst
         ['() '()]
         [(cons "lambda" (cons h1 (cons "cons" t)))
-            (cons "lambda" (cons h1
-                (replace-lambda-commas (cons "lambda" t))))]
-        [(cons h t) (cons h (replace-lambda-commas t))]))
+            (cons "lambda" (cons h1 (cons ":lambda_assign"
+                (replace-assign-commas (cons "lambda" t)))))]
+        [(cons "def" (cons h1 (cons "cons" t)))
+            (cons "def" (cons h1 (cons ":def_assign"
+                (replace-assign-commas (cons "def" t)))))]
+        [(cons h t) (cons h (replace-assign-commas t))]))
+
+;; walks down the list, conses, and returns the list back with the first
+;; instance of target changed to replacement
+(define (replace-first lst target replacement)
+  (match lst
+         ['() '()]
+         [(cons h t) #:when (string=? h target)
+                (cons replacement t)]
+         [(cons h t) (cons h (replace-first t target replacement))]))
 
 ;; converts def x equal 2 into def x :assign 2
 (define (replace-assign-equal lst)
@@ -115,6 +82,12 @@
                 (replace-assign-equal t))))]
         [(cons "let" (cons h1 (cons "equal" t)))
             (cons "let" (cons h1 (cons ":let_assign"
+                (replace-assign-equal t))))]
+        [(cons "values" t) 
+            (cons "values" 
+                (replace-assign-equal (replace-first t "equal" ":values_assign")))]
+        [(cons "lambda" (cons h1 (cons "equal" t)))
+            (cons "lambda" (cons h1 (cons ":lambda_assign"
                 (replace-assign-equal t))))]
         [(cons h t) (cons h (replace-assign-equal t))]))
 
@@ -135,14 +108,22 @@
   (match tokens
          ['() '()]
          [(cons "if" t) (cons "if" (cons "(" (replace-op-components1 t)))]
+         [(cons "match" t) (cons "match" (cons "(" (replace-op-components1 t)))]
+         [(cons "index" t) (cons "index" (cons "(" (replace-op-components1 t)))]
+         [(cons "format" t) (cons "format" (cons "(" (replace-op-components1 t)))]
+         [(cons "values" t) (cons "values" (cons "(" (replace-op-components1 t)))]
          [(cons "then" t)
             (cons ")" (cons "(" (replace-op-components1 t)))]
          [(cons "else" t)
             (cons ")" (cons "else" (replace-op-components1 t)))]
          [(cons "in" t)
             (cons ")" (cons "in" (replace-op-components1 t)))]
+         [(cons "with" t)
+            (cons ")" (cons "with" (replace-op-components1 t)))]
          [(cons ":let_assign" t)
             (cons ":let_assign" (cons "(" (replace-op-components1 t)))]
+         [(cons ":values_assign" t)
+            (cons ")" (cons "(" (replace-op-components1 t)))]
          [(cons h t) (cons h (replace-op-components1 t))]))
 
 (define (replace-op-components2 tokens)
@@ -152,13 +133,18 @@
             (cons "(" (replace-op-components2 (insert-late-paren t)))]
          [(cons "in" t)
             (cons "(" (replace-op-components2 (insert-late-paren t)))]
+         [(cons "with" t)
+            (cons "(" (replace-op-components2 (insert-late-paren t)))]
          [(cons ":def_assign" t)
             (cons ":def_assign" (cons "(" (replace-op-components2 (insert-late-paren t))))]
+         [(cons ":lambda_assign" t)
+            (cons ":lambda_assign" (cons "(" (replace-op-components2 (insert-late-paren t))))]
          [(cons "print" t)
             (cons "print" (cons "(" (replace-op-components2 (insert-late-paren t))))]
-         [(cons "lambda" (cons h t))
-            (cons "lambda" (cons h (cons "(" 
-                    (replace-op-components2 (insert-late-paren t)))))]
+         [(cons "eval" t)
+            (cons "eval" (cons "(" (replace-op-components2 (insert-late-paren t))))]
+         [(cons "error" t)
+            (cons "error" (cons "(" (replace-op-components2 (insert-late-paren t))))]
          [(cons h t) (cons h (replace-op-components2 t))]))
 
 ;; acumulates the next expression in the token list and returns the accumlator
@@ -199,8 +185,8 @@
 (define (parse-expr tokens)
     (parse-expr-aux
         (replace-op-components
-            (replace-lambda-commas
-              (replace-assign-equal 
+          (replace-assign-equal 
+            (replace-assign-commas
                 (check-balanced-parens tokens))))))
    
 ;; removes extra parens from the given expression
@@ -302,14 +288,13 @@
            [_ (error "Exp parse error.")]))
 
 (define bottom-ops (set
-        "format" "let" "if" "def" "lambda" "print" "eval" "string"
-        "float" "int" "error" "type" "not" "tail" "head" "plus" "minus" ))
+        "match" "index" "length" "format"
+        "let" "values" "if" "def" "lambda" "print" "eval" "string" "float" "int"
+        "bool" "int?" "string?" "float?" "bool?" "list?" "pair?" "null?"
+        "error" "type" "not" "tail" "head" "plus" "minus"))
 
 (define (parse-bottom tokens acc pcount)
     (match tokens
-           ;[(cons h t) #:when (and (zero? pcount) (is-value? h)
-                        ;(not (null? t)) (is-operator? (car t)))
-                    ;(error "Error: Token placed before expression.")]
            [(cons h t) #:when (and (set-member? bottom-ops h) (not (null? acc)))
                        (error "Error: Token(s) placed before expression.")]
            [(cons "minus" t) #:when (zero? pcount) (Prim2 'neg (parse-expr-aux t))]
@@ -321,10 +306,20 @@
            [(cons "int" t) #:when (zero? pcount) (Prim2 'int (parse-expr-aux t))]
            [(cons "float" t) #:when (zero? pcount) (Prim2 'float (parse-expr-aux t))]
            [(cons "string" t) #:when (zero? pcount) (Prim2 'string (parse-expr-aux t))]
-           [(cons "eval" t) #:when (zero? pcount) (Prim2 'eval (parse-expr-aux t))]
+           [(cons "bool" t) #:when (zero? pcount) (Prim2 'bool (parse-expr-aux t))]
+           [(cons "int?" t) #:when (zero? pcount) (Prim2 'int (parse-expr-aux t))]
+           [(cons "float?" t) #:when (zero? pcount) (Prim2 'float (parse-expr-aux t))]
+           [(cons "string?" t) #:when (zero? pcount) (Prim2 'string (parse-expr-aux t))]
+           [(cons "bool?" t) #:when (zero? pcount) (Prim2 'bool (parse-expr-aux t))]
+           [(cons "list?" t) #:when (zero? pcount) (Prim2 'bool (parse-expr-aux t))]
+           [(cons "pair?" t) #:when (zero? pcount) (Prim2 'bool (parse-expr-aux t))]
+           [(cons "null?" t) #:when (zero? pcount) (Prim2 'bool (parse-expr-aux t))]
+           [(cons "length" t) #:when (zero? pcount) (Prim2 'length (parse-expr-aux t))]
            [(cons "print" t) #:when (zero? pcount) (Print (parse-expr-aux t))]
-           [(cons "lambda" (cons h t)) #:when (zero? pcount)
+           [(cons "lambda" (cons h (cons ":lambda_assign" t))) #:when (zero? pcount)
                     (Lambda (parse-expr-aux (list h)) (parse-expr-aux t))]
+           [(cons "lambda" t) #:when (zero? pcount) 
+                (error "Improperly formed lambda expression.")]
            [(cons "def" (cons h (cons ":def_assign" t))) #:when (zero? pcount)
                     (Def (parse-expr-aux (list h)) (parse-expr-aux t))]
            [(cons "def" t) #:when (zero? pcount) 
@@ -341,10 +336,23 @@
                             (parse-expr-aux e1) (parse-expr-aux e2)})]
            [(cons "let" t) #:when (zero? pcount) 
                 (error "Improperly formed let expression.")]
+           [(cons "values" t) #:when (zero? pcount) 
+                    (let-values 
+                      ([(e1 e2 e3) (accumulate-num-expressions t 2)])
+                        {Values (parse-expr-aux e1)
+                            (parse-expr-aux e2) (parse-expr-aux e3)})]
            [(cons "format" t) #:when (zero? pcount) 
                     (let-values 
                       ([(e1 e2) (accumulate-num-expressions t 1)])
                         {Format (parse-expr-aux e1) (parse-expr-aux e2)})]
+           [(cons "match" t) #:when (zero? pcount) 
+                    (let-values 
+                      ([(e1 e2) (accumulate-num-expressions t 1)])
+                        {Match (parse-expr-aux e1) (parse-expr-aux e2)})]
+           [(cons "index" t) #:when (zero? pcount) 
+                    (let-values 
+                      ([(e1 e2) (accumulate-num-expressions t 1)])
+                        {Index (parse-expr-aux e1) (parse-expr-aux e2)})]
            [(cons "eval" t) #:when (zero? pcount) (Eval (parse-expr-aux t))]
            [(cons "error" t) #:when (zero? pcount) (Error (parse-expr-aux t))]
            [(cons "(" t) (parse-bottom t (cons "(" acc) (add1 pcount))] 

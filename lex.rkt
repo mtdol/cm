@@ -10,16 +10,20 @@
       "tail" "~" "cons" "," "=" "equal" "equals" ">" "gt" "<"
       "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" "*" "mult"
       "/" "div" "^" "exp" "%" "mod" "&" "and" "|" "or" "not" "!" "true" "false"
-      "@" "print" "let" "in" "def" "final" "lam" "lambda" ":" "apply"
+      "@" "print" "let" "values" "in" "def" "final" "lam" "lambda" ":" "apply"
       "if" "then" "else" "eval" "$" "cat" "type" "error" "catch"
-      "int" "float" "string" "while" "rec" "this" "_"))
+      "int" "int?" "float" "float?" "string" "string?" "bool" "bool?" "list?"
+      "pair?" "null?" "format" "match" "index" "length" "with"
+      "while" "rec" "this" "_"))
 (define operators 
- (set "head" "`" "tail" "~" "cons" "," "=" ":def_assign" ":let_assign" "equal" "equals"
+ (set "head" "`" "tail" "~" "cons" "," "=" ":def_assign" 
+      ":let_assign" ":values_assign" ":lambda_assign" "equal" "equals"
       ">" "gt" "<" "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus"
       "*" "mult" "/" "div" "^" "exp" "%" "mod" "&" "and" "|" "or" 
-      "not" "true" "false" "!" "@" "print" "let" "in" "def"
+      "not" "true" "false" "!" "@" "print" "let" "values" "in" "def"
       "lam" "lambda" ":" "apply" "if" "then" "else" "eval" "$" "cat" "type"
-      "error" "int" "float" "string"))
+      "error" "int" "int?" "float" "float?" "string" "string?" "bool" "bool?"
+      "list?" "pair?" "null?" "format" "match" "index" "length" "with"))
 ;; chars to be tokenized regardless of context
 (define key-tokens 
   (list "`" "~" "," "=" ">" "<" ">=" "<=" "+" "-" "*" "/" "^" "%" "&" "|" "!" "@"
