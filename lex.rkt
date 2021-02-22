@@ -11,7 +11,7 @@
       "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" "*" "mult"
       "/" "div" "^" "exp" "%" "mod" "&" "and" "|" "or" "not" "!" "true" "false"
       "@" "print" "let" "values" "in" "def" "final" "lam" "lambda" ":" "apply"
-      "if" "then" "else" "eval" "$" "cat" "type" "error" "catch"
+      "if" "then" "else" "cond" "eval" "$" "cat" "type" "error" "catch"
       "int" "int?" "float" "float?" "string" "string?" "bool" "bool?" "list?"
       "pair?" "null?" "format" "match" "index" "length" "with"
       "while" "rec" "this" "_"))
@@ -21,7 +21,7 @@
       ">" "gt" "<" "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus"
       "*" "mult" "/" "div" "^" "exp" "%" "mod" "&" "and" "|" "or" 
       "not" "true" "false" "!" "@" "print" "let" "values" "in" "def"
-      "lam" "lambda" ":" "apply" "if" "then" "else" "eval" "$" "cat" "type"
+      "lam" "lambda" ":" "apply" "if" "then" "else" "cond" "eval" "$" "cat" "type"
       "error" "int" "int?" "float" "float?" "string" "string?" "bool" "bool?"
       "list?" "pair?" "null?" "format" "match" "index" "length" "with"))
 ;; chars to be tokenized regardless of context

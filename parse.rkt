@@ -108,6 +108,7 @@
   (match tokens
          ['() '()]
          [(cons "if" t) (cons "if" (cons "(" (replace-op-components1 t)))]
+         [(cons "cond" t) (cons "cond" (cons "(" (replace-op-components1 t)))]
          [(cons "match" t) (cons "match" (cons "(" (replace-op-components1 t)))]
          [(cons "index" t) (cons "index" (cons "(" (replace-op-components1 t)))]
          [(cons "format" t) (cons "format" (cons "(" (replace-op-components1 t)))]
@@ -307,13 +308,13 @@
            [(cons "float" t) #:when (zero? pcount) (Prim2 'float (parse-expr-aux t))]
            [(cons "string" t) #:when (zero? pcount) (Prim2 'string (parse-expr-aux t))]
            [(cons "bool" t) #:when (zero? pcount) (Prim2 'bool (parse-expr-aux t))]
-           [(cons "int?" t) #:when (zero? pcount) (Prim2 'int (parse-expr-aux t))]
-           [(cons "float?" t) #:when (zero? pcount) (Prim2 'float (parse-expr-aux t))]
-           [(cons "string?" t) #:when (zero? pcount) (Prim2 'string (parse-expr-aux t))]
-           [(cons "bool?" t) #:when (zero? pcount) (Prim2 'bool (parse-expr-aux t))]
-           [(cons "list?" t) #:when (zero? pcount) (Prim2 'bool (parse-expr-aux t))]
-           [(cons "pair?" t) #:when (zero? pcount) (Prim2 'bool (parse-expr-aux t))]
-           [(cons "null?" t) #:when (zero? pcount) (Prim2 'bool (parse-expr-aux t))]
+           [(cons "int?" t) #:when (zero? pcount) (Prim2 'int? (parse-expr-aux t))]
+           [(cons "float?" t) #:when (zero? pcount) (Prim2 'float? (parse-expr-aux t))]
+           [(cons "string?" t) #:when (zero? pcount) (Prim2 'string? (parse-expr-aux t))]
+           [(cons "bool?" t) #:when (zero? pcount) (Prim2 'bool? (parse-expr-aux t))]
+           [(cons "list?" t) #:when (zero? pcount) (Prim2 'list? (parse-expr-aux t))]
+           [(cons "pair?" t) #:when (zero? pcount) (Prim2 'pair? (parse-expr-aux t))]
+           [(cons "null?" t) #:when (zero? pcount) (Prim2 'null? (parse-expr-aux t))]
            [(cons "length" t) #:when (zero? pcount) (Prim2 'length (parse-expr-aux t))]
            [(cons "print" t) #:when (zero? pcount) (Print (parse-expr-aux t))]
            [(cons "lambda" (cons h (cons ":lambda_assign" t))) #:when (zero? pcount)
@@ -329,6 +330,10 @@
                       ([(e1 e2 e3) (accumulate-num-expressions t 2)])
                         {If (parse-expr-aux e1)
                             (parse-expr-aux e2) (parse-expr-aux e3)})]
+           [(cons "cond" t) #:when (zero? pcount) 
+                    (let-values 
+                      ([(e1 e2) (accumulate-num-expressions t 1)])
+                        {Cond (parse-expr-aux e1) (parse-expr-aux e2)})]
            [(cons "let" (cons h (cons ":let_assign" t))) #:when (zero? pcount) 
                     (let-values 
                       ([(e1 e2) (accumulate-num-expressions t 1)])
@@ -364,7 +369,8 @@
 
 (define (parse-fundamental tokens)
     (match tokens
-           [(cons h t) #:when (not (null? t)) (error "Invalid Syntax (v v)")]
+           [(cons h t) #:when (not (null? t))
+                (error "Invalid Syntax. Perhaps an operator is Missing.")]
            [(cons "null" t) (Null)]
            [(cons h t) #:when (is-int? h) (Int (string->number h))]
            [(cons h t) #:when (is-float? h) (Float (string->number h))]
