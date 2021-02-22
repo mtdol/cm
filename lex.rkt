@@ -7,26 +7,26 @@
 ;; reserved keywords
 (define reserved-keywords 
  (set "(" ")" "[" "]" "{" "}" "#" "\\#" "noop" "null" "head" "`"
-      "tail" "~" "cons" "," "=" "equal" "equals" ">" "gt" "<"
+      "tail" "~" "cons" "," ";" "=" "equal" "equals" ">" "gt" "<"
       "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" "*" "mult"
       "/" "div" "^" "exp" "%" "mod" "&" "and" "|" "or" "not" "!" "true" "false"
       "@" "print" "let" "values" "in" "def" "final" "lam" "lambda" ":" "apply"
       "if" "then" "else" "cond" "eval" "$" "cat" "type" "error" "catch"
       "int" "int?" "float" "float?" "string" "string?" "bool" "bool?" "list?"
       "pair?" "null?" "format" "match" "index" "length" "with"
-      "while" "rec" "this" "_"))
+      "while" "rec" "this" "to" "_"))
 (define operators 
- (set "head" "`" "tail" "~" "cons" "," "=" ":def_assign" 
+ (set "head" "`" "tail" "~" "cons" "," ";" "=" ":def_assign" 
       ":let_assign" ":values_assign" ":lambda_assign" "equal" "equals"
       ">" "gt" "<" "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus"
       "*" "mult" "/" "div" "^" "exp" "%" "mod" "&" "and" "|" "or" 
       "not" "true" "false" "!" "@" "print" "let" "values" "in" "def"
       "lam" "lambda" ":" "apply" "if" "then" "else" "cond" "eval" "$" "cat" "type"
       "error" "int" "int?" "float" "float?" "string" "string?" "bool" "bool?"
-      "list?" "pair?" "null?" "format" "match" "index" "length" "with"))
+      "list?" "pair?" "null?" "format" "match" "index" "length" "with" "to"))
 ;; chars to be tokenized regardless of context
 (define key-tokens 
-  (list "`" "~" "," "=" ">" "<" ">=" "<=" "+" "-" "*" "/" "^" "%" "&" "|" "!" "@"
+  (list "`" "~" "," ";" "=" ">" "<" ">=" "<=" "+" "-" "*" "/" "^" "%" "&" "|" "!" "@"
             "(" ")" "[" "]" "{" "}" ":" "$" "#" "\\#"))
 
 ;; turns a string into a list of strings by spliting by whitespace,
@@ -52,6 +52,7 @@
          [(cons "`" t) (cons "head" (convert-symbols t))]
          [(cons "~" t) (cons "tail" (convert-symbols t))]
          [(cons "," t) (cons "cons" (convert-symbols t))]
+         [(cons ";" t) (cons "cons" (cons "null" (convert-symbols t)))]
          [(cons "(" (cons ")" t)) (cons "null" (convert-symbols t))]
          [(cons "[" t) (cons "(" (convert-symbols t))]
          [(cons "]" t) (cons ")" (convert-symbols t))]

@@ -2,11 +2,5 @@
 . line numbers in tokens
 . standardized testing
 . print doesnt return a value
-. add a cond expression
+. how exactly should type system work
 
-cond [1, 2], [3, 4] else 5.
-
-cond 
-    [1, 2],
-    [3, 4]
-    else 5.

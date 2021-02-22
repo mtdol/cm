@@ -91,24 +91,37 @@
          [_ 1]))
 
 ;; converts a pair to a list if it wasn't already
-(define (pair-to-list p)
-  (match p
-        ['() '()] ;; already a list
-        [(cons h t) (cons h (pair-to-list t))]
-        [h (cons h '())]))
+;(define (pair-to-list p)
+  ;(match p
+        ;['() '()] ;; already a list
+        ;[(cons h t) (cons h (pair-to-list t))]
+        ;[h (cons h '())]))
 
-;; converts argument pair to list, and ensures that the subarguments
-;; have the right dimensions
-(define (process-2-arguments p)
-    (let aux ([lst (pair-to-list p)] [count 0])
+;; Ensures that the subarguments given are all lists.
+(define (check-list-arguments args op)
+    (if (not (list? args))
+        (error (string-append "Error: arguments to " op " were not a list."
+                              "Perhaps you forgot a semicolon."))
+    (let aux ([lst args])
         {match lst
-            [(cons h1 (cons h2 '())) 
-                #:when (and (not (pair? h1)) (not (pair? h2)))
-                        (cons (cons h1 h2) '())]
+            ['() '()]
+            [(cons h t) #:when (not (list? h)) 
+                (error (string-append "Error: All subarguments to " op 
+                        " must be lists. "
+                       "Perhaps you forgot a semicolon."))]
+            [(cons h t) (cons h (aux t))]})))
+
+(define (check-argument-dimensions args minargs maxargs op)
+    (let aux ([lst args])
+        {match lst
+            ['() '()]
             [(cons h t) #:when 
-              (not (= (length (pair-to-list h)) 2))
-              (error "Error: All subarguments to cond must be of size 2")]
-            [(cons h t) (cons h (aux t (add1 count)))]}))
+              (or (> (length h) maxargs) (< (length h) minargs))
+                (error 
+                  (string-append "Error: Incorrect number of subarguments to " op ". "
+                       "Min number of args: " (number->string minargs) ". "
+                       "Max number of args: " (number->string maxargs) ". "))]
+            [(cons h t) (cons h (aux t))]}))
 
 (define (interp ast)
   (match ast
@@ -116,14 +129,12 @@
         [(Prim2 op e) (interp-prim2 op (interp e))]
         [(If e1 e2 e3) (if (bool-to-racket (interp e1)) (interp e2) (interp e3))] 
         [(Cond e1 e2) 
-            (let ([v1 (interp e1)] [v2 (interp e2)]) {
-                if (not (pair? v1))
-                    (error "Error: Left side args to cond were not a pair.")
-                    (let aux ([args (process-2-arguments v1)]) 
+            (let ([v1 (interp e1)] [v2 (interp e2)])
+                    { let aux ([args (check-argument-dimensions (check-list-arguments v1 "cond") 2 2 "cond")]) 
                            (match args
                                   ['() v2]
-                                  [(cons h t) #:when (bool-to-racket (car h)) (cdr h)]
-                                  [(cons h t) (aux t)]))})] 
+                                  [(cons h t) #:when (bool-to-racket (car h)) (cadr h)]
+                                  [(cons h t) (aux t)])})] 
         [(Print e) (display (string-append (string-coerce (interp e)) "\n"))] 
         [(Error e) (error (string-coerce (interp e)))] 
         [(Eval s) (eval-string (string-coerce (interp s)))] 
