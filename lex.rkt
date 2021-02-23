@@ -1,4 +1,5 @@
 #lang racket
+(require "error.rkt")
 (provide tokenize tokenize-from-file reserved-keywords operators)
 
 ;; Matthew Dolinka
@@ -119,7 +120,7 @@
 ;; when we found a token
 (define (remove-comments-aux tokens)
   (match tokens 
-        ['() (error "No termination of comment")]
+        ['() (cm-error "No termination of comment")]
         [(cons "\\#" t) (remove-comments t)]
         [(cons h t) (remove-comments-aux t)]))
 

@@ -1,6 +1,5 @@
 . allow strings to be tokenized even when they have spaces within them
 . line numbers in tokens
 . standardized testing
-. print doesnt return a value
 . how exactly should type system work
 

@@ -1,5 +1,5 @@
 #lang racket
-(require "ast.rkt")
+(require "ast.rkt" "error.rkt")
 (provide interp ast-to-expr)
 
 ;; Matthew Dolinka
@@ -25,7 +25,12 @@
     [(is-pair? v) "pair"]
     [else "unknown"]))
 
-(define (string-to-number v) (string->number v))
+(define (string-to-number v) 
+    (let ([v2 (string->number v)]) 
+        (match v2
+            [#f (cm-error (string-append "Error: String could not be coerced into a number.\n" 
+                                      "The string was: " v))]
+            [_ v2])))
 
 
 ;; turns a list or pair into a string
@@ -44,25 +49,25 @@
          ["list" (list-to-string v)]
          ["pair" (list-to-string v)]
          ["null" "null"]
-         [_ (error "String coersion error.")]))
+         [_ (cm-error "String coersion error.")]))
 (define (int-coerce v) 
   (match (get-type v) 
          ["string" (exact-floor (string-to-number v))]
          ["int" v]
          ["float" (exact-floor v)]
-         ["list" (error "Cannot coerce a List to an int.")]
-         ["pair" (error "Cannot coerce a Pair to an int.")]
-         ["null" (error "Cannot coerce a Null to an int.")]
-         [_ (error "Int coersion error.")]))
+         ["list" (cm-error "Cannot coerce a List to an int.")]
+         ["pair" (cm-error "Cannot coerce a Pair to an int.")]
+         ["null" (cm-error "Cannot coerce a Null to an int.")]
+         [_ (cm-error "Int coersion error.")]))
 (define (float-coerce v) 
   (match (get-type v) 
          ["string" (+ (string-to-number v) 0.0)]
          ["int" (+ v 0.0)]
          ["float" v]
-         ["list" (error "Cannot coerce a List to a float.")]
-         ["pair" (error "Cannot coerce a Pair to a float.")]
-         ["null" (error "Cannot coerce a Null to a float.")]
-         [_ (error "Float coersion error.")]))
+         ["list" (cm-error "Cannot coerce a List to a float.")]
+         ["pair" (cm-error "Cannot coerce a Pair to a float.")]
+         ["null" (cm-error "Cannot coerce a Null to a float.")]
+         [_ (cm-error "Float coersion error.")]))
 
 ;; turns a value into a cm bool
 ;; zero int is the only false value in the language
@@ -76,7 +81,7 @@
          ["null" 1]
          [#t 1]
          [#f 0]
-         [_ (error "Bool coersion error.")]))
+         [_ (cm-error "Bool coersion error.")]))
 
 ;; converts a cm bool to a racket bool
 (define (bool-to-racket v) 
@@ -100,13 +105,13 @@
 ;; Ensures that the subarguments given are all lists.
 (define (check-list-arguments args op)
     (if (not (list? args))
-        (error (string-append "Error: arguments to " op " were not a list."
+        (cm-error (string-append "Error: Arguments to " op " were not a list. "
                               "Perhaps you forgot a semicolon."))
     (let aux ([lst args])
         {match lst
             ['() '()]
             [(cons h t) #:when (not (list? h)) 
-                (error (string-append "Error: All subarguments to " op 
+                (cm-error (string-append "Error: All subarguments to " op 
                         " must be lists. "
                        "Perhaps you forgot a semicolon."))]
             [(cons h t) (cons h (aux t))]})))
@@ -117,7 +122,7 @@
             ['() '()]
             [(cons h t) #:when 
               (or (> (length h) maxargs) (< (length h) minargs))
-                (error 
+                (cm-error 
                   (string-append "Error: Incorrect number of subarguments to " op ". "
                        "Min number of args: " (number->string minargs) ". "
                        "Max number of args: " (number->string maxargs) ". "))]
@@ -135,8 +140,11 @@
                                   ['() v2]
                                   [(cons h t) #:when (bool-to-racket (car h)) (cadr h)]
                                   [(cons h t) (aux t)])})] 
-        [(Print e) (display (string-append (string-coerce (interp e)) "\n"))] 
-        [(Error e) (error (string-coerce (interp e)))] 
+        [(Print e) 
+          (let ([v (interp e)])
+             (match (cons (displayln (string-append (string-coerce v))) v)
+                    [(cons _ res) res]))] 
+        [(Error e) (cm-error (string-coerce (interp e)))] 
         [(Eval s) (eval-string (string-coerce (interp s)))] 
         [(Int i) i]
         [(Float f) f]
@@ -151,7 +159,7 @@
         ['cat (string-append (string-coerce v1)
                            (string-coerce v2))]
         [op #:when (not (string=? (get-type v1) (get-type v2)))
-          (error (string-append "Error: Operands of " (symbol->string op)
+          (cm-error (string-append "Error: Operands of " (symbol->string op)
                 " are not of the same type. Given " (get-type v1)
                 ", " (get-type v2) "."))]
         ['gt (racket-to-bool (> v1 v2))]
@@ -171,25 +179,25 @@
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]
-        ['pos (error (string-append 
+        ['pos (cm-error (string-append 
             "Error: Applied positive to non number. Given type "
             (get-type v) "."))]
         ['neg  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (- v)]
-        ['neg (error (string-append 
+        ['neg (cm-error (string-append 
             "Error: Applied negative to non number. Given type "
             (get-type v) "."))]
         ['head  #:when (or (string=? (get-type v) "list" ) 
                         (string=? (get-type v) "pair"))
         (car v)]
-        ['head (error (string-append 
+        ['head (cm-error (string-append 
             "Error: Applied head to non list or pair. Given type "
             (get-type v) "."))]
         ['tail  #:when (or (string=? (get-type v) "list" ) 
                         (string=? (get-type v) "pair"))
         (cdr v)]
-        ['tail (error (string-append 
+        ['tail (cm-error (string-append 
             "Error: Applied tail to non list or pair. Given type "
             (get-type v) "."))]
         ['length  #:when (or (string=? (get-type v) "list")
@@ -197,7 +205,7 @@
         (length v)]
         ['length  #:when (string=? (get-type v) "string" ) 
         (string-length v)]
-        ['length (error (string-append 
+        ['length (cm-error (string-append 
             "Error: Applied tail to non list or string. Given type "
             (get-type v) "."))]
         ['type (get-type v)] 

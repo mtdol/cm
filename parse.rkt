@@ -1,6 +1,6 @@
 #lang racket
+(require "lex.rkt" "ast.rkt" "error.rkt")
 (provide parse-expr)
-(require "lex.rkt" "ast.rkt")
 
 ;; Matthew Dolinka
 ;; cm parser
@@ -19,7 +19,7 @@
             [(cons h t) (get-matching-paren-aux t pcount)]))
 
 ;; returns list if parens are balanced, else throws exception
-(define (check-balanced-parens lst) (if (balanced-parens? lst) lst (error "Missing Paren(s).")))
+(define (check-balanced-parens lst) (if (balanced-parens? lst) lst (cm-error "Missing Paren(s).")))
 ;; determines that every paren (0 or more) in an expr has a matching friend
 (define (balanced-parens? lst) (balanced-parens-aux? lst 0))
 (define (balanced-parens-aux? lst pcount)
@@ -153,7 +153,7 @@
 (define (accumulate-expression tokens) (accumulate-expression-aux tokens 0))
 (define (accumulate-expression-aux tokens pcount)
   (match tokens
-         ['() (error "An expected expression was missing.")]
+         ['() (cm-error "An expected expression was missing.")]
          [(cons "(" t) (let-values ;; lp case
                 ([(res tail) (accumulate-expression-aux t (add1 pcount))])
                     (values (cons "(" res) tail))]
@@ -163,7 +163,7 @@
                 ([(res tail) (accumulate-expression-aux t (sub1 pcount))])
                     (values (cons ")" res) tail))]
          [(cons h t) #:when (and (zero? pcount) (not (is-value? h))) ;; probably another operator
-                     (error "Attempted to pass a non-value as a Value.")]
+                     (cm-error "Attempted to pass a non-value as a Value.")]
          [(cons h t) #:when (zero? pcount) (values (list h) t)] ;; end case
          [(cons h t) (let-values ;; general case
                 ([(res tail) (accumulate-expression-aux t pcount)])
@@ -215,7 +215,7 @@
            [(cons ")" t) (parse-apply t (cons ")" acc) (sub1 pcount))] 
            ['() (parse-cons (reverse acc) '() 0)]
            [(cons h t) (parse-apply t (cons h acc) pcount)]
-           [_ (error "Apply parse error.")]))
+           [_ (cm-error "Apply parse error.")]))
 
 (define (parse-cons tokens acc pcount)
     (match tokens
@@ -224,7 +224,7 @@
            [(cons ")" t) (parse-cons t (cons ")" acc) (sub1 pcount))] 
            ['() (parse-andor (reverse acc) '() 0)]
            [(cons h t) (parse-cons t (cons h acc) pcount)]
-           [_ (error "Cons parse error.")]))
+           [_ (cm-error "Cons parse error.")]))
 
 (define (parse-andor tokens acc pcount)
     (match tokens
@@ -235,7 +235,7 @@
            [(cons ")" t) (parse-andor t (cons ")" acc) (sub1 pcount))] 
            ['() (parse-comp (reverse acc) '() 0)]
            [(cons h t) (parse-andor t (cons h acc) pcount)]
-           [_ (error "Andor parse error.")]))
+           [_ (cm-error "Andor parse error.")]))
 
 (define (parse-comp tokens acc pcount)
     (match tokens
@@ -248,7 +248,7 @@
            [(cons ")" t) (parse-comp t (cons ")" acc) (sub1 pcount))] 
            ['() (parse-addsub (reverse acc) '() 0)]
            [(cons h t) (parse-comp t (cons h acc) pcount)]
-           [_ (error "Comp parse error.")]))
+           [_ (cm-error "Comp parse error.")]))
 
 (define (parse-addsub tokens acc pcount)
     (match tokens
@@ -266,7 +266,7 @@
            [(cons ")" t) (parse-addsub t (cons ")" acc) (sub1 pcount))] 
            ['() (parse-multdiv (reverse acc) '() 0)]
            [(cons h t) (parse-addsub t (cons h acc) pcount)]
-           [_ (error "Addsub parse error.")]))
+           [_ (cm-error "Addsub parse error.")]))
 
 (define (parse-multdiv tokens acc pcount)
     (match tokens
@@ -277,7 +277,7 @@
            [(cons ")" t) (parse-multdiv t (cons ")" acc) (sub1 pcount))] 
            ['() (parse-exp (reverse acc) '() 0)]
            [(cons h t) (parse-multdiv t (cons h acc) pcount)]
-           [_ (error "Multdiv parse error.")]))
+           [_ (cm-error "Multdiv parse error.")]))
 
 (define (parse-exp tokens acc pcount)
     (match tokens
@@ -286,7 +286,7 @@
            [(cons ")" t) (parse-exp t (cons ")" acc) (sub1 pcount))] 
            ['() (parse-bottom (reverse acc) '() 0)]
            [(cons h t) (parse-exp t (cons h acc) pcount)]
-           [_ (error "Exp parse error.")]))
+           [_ (cm-error "Exp parse error.")]))
 
 (define bottom-ops (set
         "match" "index" "length" "format"
@@ -297,7 +297,7 @@
 (define (parse-bottom tokens acc pcount)
     (match tokens
            [(cons h t) #:when (and (set-member? bottom-ops h) (not (null? acc)))
-                       (error "Error: Token(s) placed before expression.")]
+                       (cm-error "Error: Token(s) placed before expression.")]
            [(cons "minus" t) #:when (zero? pcount) (Prim2 'neg (parse-expr-aux t))]
            [(cons "plus" t) #:when (zero? pcount) (Prim2 'pos (parse-expr-aux t))]
            [(cons "head" t) #:when (zero? pcount) (Prim2 'head (parse-expr-aux t))]
@@ -320,11 +320,11 @@
            [(cons "lambda" (cons h (cons ":lambda_assign" t))) #:when (zero? pcount)
                     (Lambda (parse-expr-aux (list h)) (parse-expr-aux t))]
            [(cons "lambda" t) #:when (zero? pcount) 
-                (error "Improperly formed lambda expression.")]
+                (cm-error "Improperly formed lambda expression.")]
            [(cons "def" (cons h (cons ":def_assign" t))) #:when (zero? pcount)
                     (Def (parse-expr-aux (list h)) (parse-expr-aux t))]
            [(cons "def" t) #:when (zero? pcount) 
-                (error "Improperly formed def expression.")]
+                (cm-error "Improperly formed def expression.")]
            [(cons "if" t) #:when (zero? pcount) 
                     (let-values 
                       ([(e1 e2 e3) (accumulate-num-expressions t 2)])
@@ -340,7 +340,7 @@
                         {Let (parse-expr-aux (list h))
                             (parse-expr-aux e1) (parse-expr-aux e2)})]
            [(cons "let" t) #:when (zero? pcount) 
-                (error "Improperly formed let expression.")]
+                (cm-error "Improperly formed let expression.")]
            [(cons "values" t) #:when (zero? pcount) 
                     (let-values 
                       ([(e1 e2 e3) (accumulate-num-expressions t 2)])
@@ -364,16 +364,16 @@
            [(cons ")" t) (parse-bottom t (cons ")" acc) (sub1 pcount))] 
            ['() (parse-fundamental (reverse acc))]
            [(cons h t) (parse-bottom t (cons h acc) pcount)]
-           [_ (error "Bottom level parse error.")]))
+           [_ (cm-error "Bottom level parse error.")]))
 
 
 (define (parse-fundamental tokens)
     (match tokens
            [(cons h t) #:when (not (null? t))
-                (error "Invalid Syntax. Perhaps an operator is Missing.")]
+                (cm-error "Invalid Syntax. Perhaps an operator is Missing.")]
            [(cons "null" t) (Null)]
            [(cons h t) #:when (is-int? h) (Int (string->number h))]
            [(cons h t) #:when (is-float? h) (Float (string->number h))]
            [(cons h t) #:when (is-string? h) (String (substring h 1 (sub1 (string-length h))))]
            [(cons h t) #:when (is-variable? h) (Var h)]
-           [_ (error "Fundamental parse error; values missing?")]))
+           [_ (cm-error "Fundamental parse error; values missing?")]))
