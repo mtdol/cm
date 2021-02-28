@@ -1,30 +1,11 @@
 #lang racket
 (require "error.rkt")
-(provide tokenize tokenize-from-file reserved-keywords operators)
+(provide tokenize tokenize-from-file)
+(define error-id 1)
 
 ;; Matthew Dolinka
 ;; cm lexer
 
-;; reserved keywords
-(define reserved-keywords 
- (set "(" ")" "[" "]" "{" "}" "#" "\\#" "noop" "null" "head" "`"
-      "tail" "~" "cons" "," ";" "=" "equal" "equals" ">" "gt" "<"
-      "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" "*" "mult"
-      "/" "div" "^" "exp" "%" "mod" "&" "and" "|" "or" "not" "!" "true" "false"
-      "@" "print" "let" "values" "in" "def" "final" "lam" "lambda" ":" "apply"
-      "if" "then" "else" "cond" "eval" "$" "cat" "type" "error" "catch"
-      "int" "int?" "float" "float?" "string" "string?" "bool" "bool?" "list?"
-      "pair?" "null?" "format" "match" "index" "length" "with"
-      "while" "rec" "this" "to" "_"))
-(define operators 
- (set "head" "`" "tail" "~" "cons" "," ";" "=" ":def_assign" 
-      ":let_assign" ":values_assign" ":lambda_assign" "equal" "equals"
-      ">" "gt" "<" "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus"
-      "*" "mult" "/" "div" "^" "exp" "%" "mod" "&" "and" "|" "or" 
-      "not" "true" "false" "!" "@" "print" "let" "values" "in" "def"
-      "lam" "lambda" ":" "apply" "if" "then" "else" "cond" "eval" "$" "cat" "type"
-      "error" "int" "int?" "float" "float?" "string" "string?" "bool" "bool?"
-      "list?" "pair?" "null?" "format" "match" "index" "length" "with" "to"))
 ;; chars to be tokenized regardless of context
 (define key-tokens 
   (list "`" "~" "," ";" "=" ">" "<" ">=" "<=" "+" "-" "*" "/" "^" "%" "&" "|" "!" "@"
@@ -120,7 +101,7 @@
 ;; when we found a token
 (define (remove-comments-aux tokens)
   (match tokens 
-        ['() (cm-error "No termination of comment")]
+        ['() (cm-error error-id "No termination of comment")]
         [(cons "\\#" t) (remove-comments t)]
         [(cons h t) (remove-comments-aux t)]))
 

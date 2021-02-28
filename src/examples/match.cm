@@ -1,4 +1,4 @@
-def last_item = lam list lst -> ? = 
+def last_item = lam lst = 
     match lst with
         [(), (error "list is empty");],
         [(h, ();), h;],

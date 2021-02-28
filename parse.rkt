@@ -110,7 +110,7 @@
          [(cons "if" t) (cons "if" (cons "(" (replace-op-components1 t)))]
          [(cons "cond" t) (cons "cond" (cons "(" (replace-op-components1 t)))]
          [(cons "match" t) (cons "match" (cons "(" (replace-op-components1 t)))]
-         [(cons "index" t) (cons "index" (cons "(" (replace-op-components1 t)))]
+         [(cons "splice" t) (cons "splice" (cons "(" (replace-op-components1 t)))]
          [(cons "format" t) (cons "format" (cons "(" (replace-op-components1 t)))]
          [(cons "values" t) (cons "values" (cons "(" (replace-op-components1 t)))]
          [(cons "then" t)
@@ -230,6 +230,7 @@
     (match tokens
            [(cons "and" t) #:when (zero? pcount) (Prim1 'and (parse-expr-aux (reverse acc)) (parse-expr-aux t))]
            [(cons "or" t) #:when (zero? pcount) (Prim1 'or (parse-expr-aux (reverse acc)) (parse-expr-aux t))]
+           [(cons "xor" t) #:when (zero? pcount) (Prim1 'xor (parse-expr-aux (reverse acc)) (parse-expr-aux t))]
            [(cons "cat" t) #:when (zero? pcount) (Prim1 'cat (parse-expr-aux (reverse acc)) (parse-expr-aux t))]
            [(cons "(" t) (parse-andor t (cons "(" acc) (add1 pcount))] 
            [(cons ")" t) (parse-andor t (cons ")" acc) (sub1 pcount))] 
@@ -289,7 +290,7 @@
            [_ (cm-error "Exp parse error.")]))
 
 (define bottom-ops (set
-        "match" "index" "length" "format"
+        "match" "splice" "length" "format"
         "let" "values" "if" "def" "lambda" "print" "eval" "string" "float" "int"
         "bool" "int?" "string?" "float?" "bool?" "list?" "pair?" "null?"
         "error" "type" "not" "tail" "head" "plus" "minus"))
@@ -307,6 +308,7 @@
            [(cons "int" t) #:when (zero? pcount) (Prim2 'int (parse-expr-aux t))]
            [(cons "float" t) #:when (zero? pcount) (Prim2 'float (parse-expr-aux t))]
            [(cons "string" t) #:when (zero? pcount) (Prim2 'string (parse-expr-aux t))]
+           [(cons "fun" t) #:when (zero? pcount) (Prim2 'fun (parse-expr-aux t))]
            [(cons "bool" t) #:when (zero? pcount) (Prim2 'bool (parse-expr-aux t))]
            [(cons "int?" t) #:when (zero? pcount) (Prim2 'int? (parse-expr-aux t))]
            [(cons "float?" t) #:when (zero? pcount) (Prim2 'float? (parse-expr-aux t))]
@@ -315,6 +317,7 @@
            [(cons "list?" t) #:when (zero? pcount) (Prim2 'list? (parse-expr-aux t))]
            [(cons "pair?" t) #:when (zero? pcount) (Prim2 'pair? (parse-expr-aux t))]
            [(cons "null?" t) #:when (zero? pcount) (Prim2 'null? (parse-expr-aux t))]
+           [(cons "fun?" t) #:when (zero? pcount) (Prim2 'fun? (parse-expr-aux t))]
            [(cons "length" t) #:when (zero? pcount) (Prim2 'length (parse-expr-aux t))]
            [(cons "print" t) #:when (zero? pcount) (Print (parse-expr-aux t))]
            [(cons "lambda" (cons h (cons ":lambda_assign" t))) #:when (zero? pcount)
@@ -354,10 +357,10 @@
                     (let-values 
                       ([(e1 e2) (accumulate-num-expressions t 1)])
                         {Match (parse-expr-aux e1) (parse-expr-aux e2)})]
-           [(cons "index" t) #:when (zero? pcount) 
+           [(cons "splice" t) #:when (zero? pcount) 
                     (let-values 
                       ([(e1 e2) (accumulate-num-expressions t 1)])
-                        {Index (parse-expr-aux e1) (parse-expr-aux e2)})]
+                        {Splice (parse-expr-aux e1) (parse-expr-aux e2)})]
            [(cons "eval" t) #:when (zero? pcount) (Eval (parse-expr-aux t))]
            [(cons "error" t) #:when (zero? pcount) (Error (parse-expr-aux t))]
            [(cons "(" t) (parse-bottom t (cons "(" acc) (add1 pcount))] 
