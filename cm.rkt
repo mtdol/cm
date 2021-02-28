@@ -1,5 +1,5 @@
 #lang racket
-(require "lex.rkt" "ast.rkt" "parse.rkt" "interp.rkt")
+(require "lex.rkt" "ast.rkt" "parse-expr.rkt" "interp.rkt")
 (provide cm-run cm-tokenize cm-parse)
 
 ;; takes in a string, then tokenizes, parses, and interprets
