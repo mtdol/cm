@@ -1,0 +1,35 @@
+def _print = lam v (print v). # allows print to be used like a funtion\#
+
+# returns true if the given val is of the asked type\#
+def _string? = lam v (type v = "string").
+def _int? = lam v (type v = "int").
+def _float? = lam v (type v = "float").
+def _number? = lam v let t = type v in t = "int" or t = "float".
+
+# returns the function if the types
+def _type_err = lam v,t,e,f if type v != t then error e else f.
+def _int_err = lam v,f
+    if type v != "int" then error "Value was expected to be int" else f.
+
+# returns f2 if v : f1 equals true else throws exception e\#
+def _func_err = lam v,f1,e,f2 if f1 : v then error e else f2.
+
+# example...
+def safe_add1 = lam v
+    _func_err : v : _number? : "not a number" : (
+        _add1 : v). 
+\#
+
+
+def _add1 = lam x (x + 1).
+def _sub1 = lam x (x - 1).
+def _zero? = lam x (x = 0).
+
+# 0 if false, 1 if true\#
+def _to_bool = lam v (if (_zero? : v) then false else true).
+# returns true if v is a "pure" boolean (0 or 1)\#
+def _bool? = lam v (if ((_zero? : v) or (v = 1)) then true else false).
+
+# string funcs\#
+def _substring = lam s,n1,n2 
+    (eval ( "(substring " $ s $ " " $ n1 $ " " $ n2 $ ")" )).
