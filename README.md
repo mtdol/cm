@@ -3,13 +3,34 @@ Implementation of the cm language.
 
 Development in progress.
 
+## Repl
 When build is stable, use:
 ```
 racket ./repl.rkt
 ```
-in language directory to test language expressions (requires racket).
+in language directory (core) to test language expressions (requires racket).
 
-## language form
+## Running Files
+The cm.rkt file in the core directory contains racket functions to interpret/parse/tokenize  
+cm files/expressions and statements.
+
+### Examples
+```
+racket -e '(require cm/core/cm) (cm-run "language statement")'
+racket -e '(require cm/core/cm) (cm-run-file "file here")'
+racket -e '(require cm/core/cm) (cm-parse "statement here")'
+racket -e '(require cm/core/cm) (cm-parse-expr "expression here")'
+```
+Use the following in the cm directory to install cm as a package:
+```
+cd "path to cm dir"
+raco pkg install
+```
+There are example files in the `examples` directory, although
+most of the example files are not yet complete (or correct) but will be made runable in time.
+
+
+## Language form
 Substitute expr for any expression.
 
 Construct | Effect | Example | Yields | Explanation
@@ -32,7 +53,7 @@ null | empty list () | 1,2,3,null | (1 2 3)
 {} | curly parens | {1 + 2} | 3 | same as ()
 print expr | print | print 1 + 2 | 3 
 @ expr | print | @ 1 + 2 | 3 | alias of print
-\# \\# | comment | 4 + \# 1 + 2 \\# 5 | 9
+\# | comment | 4 + 1 + 2 # 5 + 6 | 7
 int expr | int coercion | int 7.9 | 7
 int? expr | is int? | int? 6 | 1
 cond list else expr | cond expression | cond \[false, 3;], \[3, 5;]; else 7 | 5 | cond takes in a list of lists where each sublist is of length 2.
