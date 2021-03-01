@@ -1,1 +1,1 @@
-@ (let x = [5] (let y = [x + 1] (x + y))). # prints 11\#
+@ let x = 5 in let y = x + 1 in x + y. # prints 11
