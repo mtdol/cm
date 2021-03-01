@@ -1,3 +1,0 @@
-@ (eval "(+ 1 2 3)" "int"). # runs the following code in racket
-                             and prints the result (6). The second arg is the type
-                             of the resulting expression\#

@@ -1,3 +1,0 @@
-def head_greater? = lam tup {`tup > ~tup}.
-@ (head_greater? : 4,3). # prints true\#
-@ (head_greater? : 3,4). # prints false\#
