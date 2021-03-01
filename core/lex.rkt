@@ -1,135 +1,108 @@
 #lang racket
-(require cm/core/error)
-(provide tokenize tokenize-from-file)
+(provide tokenize-file tokenize-string)
 (define error-id 1)
 
-;; Matthew Dolinka
-;; cm lexer
+(require cm/core/error cm/core/reserved-keywords
+  parser-tools/lex
+    (prefix-in : parser-tools/lex-sre))
 
-;; chars to be tokenized regardless of context
-(define key-tokens 
-  (list "`" "~" "," ";" "=" ">" "<" ">=" "<=" "+" "-" "*" "/" "^" "%" "&" "|" "!" "@"
-            "(" ")" "[" "]" "{" "}" ":" "$" "#" "\\#"))
+(define-tokens value-tokens (NUM VAR STR))
 
-;; turns a string into a list of strings by spliting by whitespace,
-;; and also performs other necessary adjustments to the token list
-(define (tokenize s)
-    (remove-comments 
-      (process-dot 
-        (convert-symbols 
-          (token-split s)))))
+;;#rx"^[a-zA-Z_][a-zA-Z1-9_]*[?]*[']*$"
+(define-lex-abbrevs
+  [digit (:/ "0" "9")]
 
-(define (tokenize-from-file file) (tokenize (file->string file)))
+  [lower-letter (:/ "a" "z")]
 
-;; splits the given line into tokens, removing empty tokens
-;; ensures that 'key chars' are seperated as individual tokes regardless
-;; of the context they occur in
-(define (token-split line)
- (remove* '("") (regexp-split #rx" |\r|\n" (add-spaces line key-tokens))))
+  [upper-letter (:/ #\A #\Z)]
 
-;; converts symbols with multiple names into their parsable form
-(define (convert-symbols tokens) 
-  (match tokens
-         ['() '()]
-         [(cons "`" t) (cons "head" (convert-symbols t))]
-         [(cons "~" t) (cons "tail" (convert-symbols t))]
-         [(cons "," t) (cons "cons" (convert-symbols t))]
-         [(cons ";" t) (cons "cons" (cons "null" (convert-symbols t)))]
-         [(cons "(" (cons ")" t)) (cons "null" (convert-symbols t))]
-         [(cons "[" t) (cons "(" (convert-symbols t))]
-         [(cons "]" t) (cons ")" (convert-symbols t))]
-         [(cons "{" t) (cons "(" (convert-symbols t))]
-         [(cons "}" t) (cons ")" (convert-symbols t))]
-         [(cons "=" t) (cons "equal" (convert-symbols t))]
-         [(cons "equals" t) (cons "equal" (convert-symbols t))]
-         [(cons "<" t) (cons "lt" (convert-symbols t))]
-         [(cons ">" t) (cons "gt" (convert-symbols t))]
-         [(cons ">=" t) (cons "ge" (convert-symbols t))]
-         [(cons "<=" t) (cons "le" (convert-symbols t))]
-         [(cons "+" t) (cons "plus" (convert-symbols t))]
-         [(cons "-" t) (cons "minus" (convert-symbols t))]
-         [(cons "*" t) (cons "mult" (convert-symbols t))]
-         [(cons "/" t) (cons "div" (convert-symbols t))]
-         [(cons "^" t) (cons "exp" (convert-symbols t))]
-         [(cons "%" t) (cons "mod" (convert-symbols t))]
-         [(cons "&" t) (cons "and" (convert-symbols t))]
-         [(cons "|" t) (cons "or" (convert-symbols t))]
-         [(cons "!" t) (cons "not" (convert-symbols t))]
-         [(cons "true" t) (cons "1" (convert-symbols t))]
-         [(cons "false" t) (cons "0" (convert-symbols t))]
-         [(cons "$" t) (cons "cat" (convert-symbols t))]
-         [(cons "@" t) (cons "print" (convert-symbols t))]
-         [(cons "lam" t) (cons "lambda" (convert-symbols t))]
-         [(cons ":" t) (cons "apply" (convert-symbols t))]
-         [(cons h t) (cons h (convert-symbols t))]))
+  [letter (:or lower-letter upper-letter)]
 
-;; removes contiguous duplicate "dot"s from the token list in order to
-;; remove empty statements (noops) from the source code before parsing
-(define (remove-empty-statements tokens)
-  (match tokens 
-         ['() '()]
-         [(cons h '()) (cons h '())]
-         [(cons h t) (cons h (remove-empty-statements-aux t h))]))
-         
-(define (remove-empty-statements-aux tokens prev) 
-  (match tokens
-        ['() '()]
-        [(cons h t)
-            #:when (and (string=? prev "dot") (string=? h "dot")) 
-                (remove-empty-statements-aux t prev)]
-        [(cons h t) (cons h (remove-empty-statements-aux t h))]))
+  [alphanumeral (:or letter digit)]
+
+  ;; operators that can be placed after digits or variables
+  ;; ie. in "3+2", + would count
+  [key-token (:or "`" "~" "," ";" "=" ">" "<" "+" "-"
+                   "*" "/" "^" "%" "&" "|" "!" "@"
+            "(" ")" "[" "]" "{" "}" ":" "$" "#" ".")]
+  ;[keyword (:or (set->list reserved-keywords))]
+
+  [string-char (:~ #\")]
+
+  ;[comment (:: "#" (:* (:~ #\newline)) #\newline)]
+  [comment (:: "#" (:* (:~ #\newline)))]
+  )
 
 
-;; turns all instances where "." is the statement terminator into "dot"
-;; doesn not do this for other usages of dot like "4.2" which is a float
-(define (process-dot tokens)
-  (match tokens
-        ['() '()]
-        [(cons h t) #:when (string=? h ".") (cons "dot" (process-dot t))]
-        [(cons h t)
-            #:when (regexp-match? #rx".*\\.$" h)
-               (cons (list-ref (regexp-match #rx"(.*)\\.$" h) 1) (cons "dot" (process-dot t)))]
-        [(cons h t) (cons h (process-dot t))]))
+(define cmlex
+  (lexer
+   [(eof) eof]
+   ;; recursively call the lexer on the remaining input after a tab or space.  Returning the
+   ;; result of that operation.  This effectively skips all whitespace.
+   [(:or #\tab #\space) (cmlex input-port)]
+   [#\newline ":newline"]
+   ;; skip comment lines
+   [comment (cmlex input-port)]
+   [(:or "(" ")" "#") lexeme]
+   ["." "dot"]
+   ["`" "head"]
+   ["~" "tail"]
+   ["," "cons"]
+   [";" (list "cons" "null")]
+   ["()" "null"]
+   ["[" "("]
+   ["]" ")"]
+   ["{" "("]
+   ["}" ")"]
+   ["=" "equal"]
+   ["equals" "equal"]
+   ["<" "lt"]
+   [">" "gt"]
+   [">=" "ge"]
+   ["<=" "le"]
+   ["+" "plus"]
+   ["-" "minus"]
+   ["*" "mult"]
+   ["/" "div"]
+   ["^" "exp"]
+   ["%" "mod"]
+   ["&" "and"]
+   ["|" "or"]
+   ["!" "not"]
+   ["true" "1"]
+   ["false" "0"]
+   ["$" "cat"]
+   ["@" "print"]
+   ["lam" "lambda"]
+   [":" "apply"]
+   [(:+ digit) lexeme]
+   [(:: (:+ digit) #\. (:+ digit)) lexeme]
+   ;; TODO: allow escape sequence \" in string
+   [(:: #\" (:* string-char) #\") lexeme]
+   ;; everything else (vars and operators)
+   [(:+ (:& (:+ any-char) (:~ key-token) (:~ whitespace))) lexeme]
+   ;; custom error behavior
+   [any-char (match start-pos [(position linenum colnum _)
+                        (cm-error-linenum linenum error-id 
+                                (format "Lexing failure around column ~a" colnum))])]
+   ))
 
-;; removes comments
-(define (remove-comments tokens) 
-  (match tokens
-        ['() '()]
-        [(cons "#" t) (remove-comments (remove-comments-aux t))]
-        [(cons h t) (cons h (remove-comments t))]))
 
-;; when we found a token
-(define (remove-comments-aux tokens)
-  (match tokens 
-        ['() (cm-error error-id "No termination of comment")]
-        [(cons "\\#" t) (remove-comments t)]
-        [(cons h t) (remove-comments-aux t)]))
+;; calls the lexer with input port until 'EOF is reached 
+;(define (lex ip)
+  ;(port-count-lines! ip)
+  ;(let one-line ()
+    ;(define result
+      ;((lambda () (cmlex ip))))
+    ;(unless (and (symbol? result) (string=? "EOF" (symbol->string result)))
+      ;(printf "~a\n" result)
+      ;(one-line))))
 
-;; places spaces between all key characters given in the list lst
-(define (add-spaces s lst) 
-  (match lst 
-        ['() s] 
-        [(cons h t) #:when (string=? h "#")
-            (add-spaces
-              (regexp-replace*
-                (regexp "(?<!\\\\)#") s (string-append " " h " ")) t)]
-        [(cons h t) #:when (string=? h "\\#")
-            (add-spaces
-              (regexp-replace*
-                (regexp "\\\\#") s (string-append " " "\\\\#" " ")) t)]
-        [(cons h t) #:when (string=? h ">")
-            (add-spaces
-              (regexp-replace*
-                (regexp ">(?!=)") s (string-append " " h " ")) t)]
-        [(cons h t) #:when (string=? h "<")
-            (add-spaces
-              (regexp-replace*
-                (regexp "<(?!=)") s (string-append " " h " ")) t)]
-        [(cons h t) #:when (string=? h "=")
-            (add-spaces
-              (regexp-replace*
-                (regexp "(?<!>)(?<!<)=") s (string-append " " h " ")) t)]
-        [(cons h t)
-            (add-spaces
-              (regexp-replace*
-                (regexp-quote h) s (string-append " " h " ")) t)]))
+(define (tokenize-input ip) 
+  (port-count-lines! ip)
+    (flatten (port->list cmlex ip)))
+
+
+(define (tokenize-file name) (tokenize-input (open-input-file name)))
+(define (tokenize-string str) (tokenize-input (open-input-string str)))
+

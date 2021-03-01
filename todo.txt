@@ -1,24 +1,21 @@
 . figure out how to get lex to accept strings with \" in them
-. line numbers in tokens
-. standardized testing
+. standardized testing (always could use more)
 . how exactly should type system work
 
-. Change parse of let and def to accept args like int x
 . printf (print + format)
-. implement: format, splice, match, fun (if static type system), fun?
+. implement: format, slice, match, fun (if static type system), fun?
 . implement def, let, values, lam
 . when keyword for match statement and in general
     - a when b else c
     - match arg with [a, b when c;], [c,b;];
         - two different forms like this?
-. look into error handeling system
+. look into error handling system
 
 
 later...
 
 . self recurse keyword?
 . struct dataatype
-. def values x,y,z = ...
 . load
     - loads both racket modules and cm ones
     - takes a string or list of strings

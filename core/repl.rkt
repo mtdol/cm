@@ -1,7 +1,7 @@
 #lang racket
 (require cm/core/cm readline/readline)
 
-(define help "`#exit` exit\n`#e` exit\n`#help` display help\n`#run` run mode\n`#parse` parse mode\n`#token` tokenize mode\n\n")
+(define help "`#exit` exit\n`#e` exit\n`#help` display help\n`#run` run mode\n`#runxp` run expression mode\n`#parse` parse mode\n`#parsexp` parse expression mode\n`#token` tokenize mode\n\n")
 (define exit-text "exiting\n")
 
 ;; the cm function we will be calling
@@ -19,9 +19,17 @@
                          (set! mode cm-run)
                          (add-history "#run")
                          (repl))]
+         ["#runxp" (list (displayln "run expression mode")
+                         (set! mode cm-run-expr)
+                         (add-history "#runxp")
+                         (repl))]
          ["#parse" (list (displayln "parse mode")
                          (set! mode cm-parse)
                          (add-history "#parse")
+                         (repl))]
+         ["#parsexp" (list (displayln "parse expression mode")
+                         (set! mode cm-parse-expr)
+                         (add-history "#parsexp")
                          (repl))]
          ["#help" (list (display help) (add-history "#help") (repl))]
          [s (list (add-history s)

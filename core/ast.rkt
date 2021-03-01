@@ -28,15 +28,15 @@
 ;; | (With Expr)
 ;; | (Eval Expr)
 ;; | (Error Expr)
-;; | (Stat Expr Stat)
+;; | (Stat i Expr Stat)
 ;; | (EOP)
 ;;
 ;; type Stat =
-;; | (Stat Expr Stat)
+;; | (Stat i Expr Stat)
 ;; | (EOP)
 
 ;; type Op2 = 'apply | 'cons | and | 'or | 'xor | 'cat | 'add | 'sub |
-;;      'gt | 'lt | 'equal | 'ge | 'le | 'add | 'sub | 'mult |
+;;      'gt | 'lt | 'eq | 'ge | 'le | 'add | 'sub | 'mult |
 ;;      'div | 'mod | 'exp
 ;;
 ;; type Op1 = 'neg | 'pos | 'head | 'tail | 'not | 'type | 'int | 'float | 
@@ -70,5 +70,5 @@
 (struct Slice (e1 e2)       #:prefab)
 (struct Eval (e)            #:prefab)
 (struct Error (e)           #:prefab)
-(struct Stat (e st)         #:prefab)
+(struct Stat (i e st)       #:prefab) ;; middle item is line-number
 (struct EOP ()              #:prefab) ;; termination of all statements, end of program
