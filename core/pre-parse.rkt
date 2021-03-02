@@ -31,7 +31,8 @@
                                      (string=? (op-to-position h) "infix")))
                 (cm-error error-id (format "Missing operand(s) for ~a." h))]
            [(cons h1 (cons h2 t)) #:when 
-                      (and (or (string=? "(" h1) (is-operator? h1))
+                      (and (or (string=? "(" h1) 
+                               (and (is-operator? h1) (not (zero? (op-to-arity h1))))) 
                            (and (is-operator? h2) (string=? (op-to-position h2) "infix")))
                     (cond [(or (string=? "plus" h2) (string=? "minus" h2))
                         ;; call aux on uni since it is also an operator

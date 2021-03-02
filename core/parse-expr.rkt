@@ -102,6 +102,9 @@
         [(is-float-token? token) (Float (string->number token))]
         [(is-string-token? token) (String (substring token 1 (sub1 (string-length token))))]
         [(string=? "null" token) (Null)]
+        [(string=? "true" token) (Bool 1)]
+        [(string=? "false" token) (Bool 0)]
         [(is-var-token? token) (Var token)]
+        [(string=? token "end") (End)]
         [(is-operator? token)  (cm-error error-id (format "Operand(s) missing for ~a." token))]
         [else (cm-error error-id (format "Invalid variable name: ~a." token))]))

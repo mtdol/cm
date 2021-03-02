@@ -8,7 +8,6 @@
 
 (define-tokens value-tokens (NUM VAR STR))
 
-;;#rx"^[a-zA-Z_][a-zA-Z1-9_]*[?]*[']*$"
 (define-lex-abbrevs
   [digit (:/ "0" "9")]
 
@@ -50,12 +49,17 @@
    ["," "cons"]
    [";" (list "cons" "null")]
    ["()" "null"]
+   ["[]" "null"]
+   ["{}" "null"]
    ["[" "("]
    ["]" ")"]
    ["{" "("]
    ["}" ")"]
    ["=" "equal"]
+   ["!=" "not_equal"]
+   ["neq" "not_equal"]
    ["equals" "equal"]
+   ["eq" "equal"]
    ["<" "lt"]
    [">" "gt"]
    [">=" "ge"]
@@ -67,14 +71,14 @@
    ["^" "exp"]
    ["%" "mod"]
    ["&" "and"]
-   ["|" "or"]
+   ["||" "or"]
+   ["|" "case"]
    ["!" "not"]
-   ["true" "1"]
-   ["false" "0"]
    ["$" "cat"]
    ["@" "print"]
    ["lam" "lambda"]
    [":" "apply"]
+   ["->" "yields"]
    [(:+ digit) lexeme]
    [(:: (:+ digit) #\. (:+ digit)) lexeme]
    ;; TODO: allow escape sequence \" in string

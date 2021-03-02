@@ -3,18 +3,14 @@
 . how exactly should type system work
 
 . printf (print + format)
-. implement: format, slice, match, fun (if static type system), fun?
+. implement: format, slice, match, fun?
 . implement def, let, values, lam
-. when keyword for match statement and in general
-    - a when b else c
-    - match arg with [a, b when c;], [c,b;];
-        - two different forms like this?
 . look into error handling system
+. fun keyword as shorthand for def and lambda
 
 
 later...
 
-. self recurse keyword?
 . struct dataatype
 . load
     - loads both racket modules and cm ones
@@ -27,3 +23,28 @@ later...
     
 . installer (linux and windows)
     - look up racket distro info
+
+
+
+# "cond" expression
+fun fact n =
+    | n < 2 -> 1 
+    else n * (fact : sub1 : n).
+
+# aka: def last_item = lam lst = 
+fun last_item lst =
+    match lst
+    | null -> error "List was empty!"
+    | h, null -> h
+    | h, t -> last_item : t
+    | _ -> error "Not a list!"
+    end.
+
+# creates a list of all positive values
+fun acc_pos lst =
+    match lst
+    | h, t when pos? : h -> h, (acc_pos : t)
+    | h, t -> acc_pos : t
+    | null -> null
+    end.
+

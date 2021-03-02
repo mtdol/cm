@@ -3,9 +3,10 @@
 
 ;; type Expr =
 ;; | (Int i)
-;; | (String s)
 ;; | (Float f)
-;; | (Var String)
+;; | (Bool i)
+;; | (String s)
+;; | (Var s)
 ;; | (Null)
 ;; | (Noop)
 ;; | (Prim1 Op1 Expr)
@@ -20,7 +21,10 @@
 ;; | (If Expr Then)
 ;; | (Then Expr Else)
 ;; | (Else Expr)
-;; | (Cond Expr Else)
+;; | (Cond Case)
+;; | (Case Expr Expr Expr)
+;; | (Yields Expr)
+;; | (When Expr Expr)
 ;; | (Print Expr)
 ;; | (Format Expr With)
 ;; | (Match Expr With)
@@ -34,6 +38,11 @@
 ;; type Stat =
 ;; | (Stat i Expr Stat)
 ;; | (EOP)
+;;
+;; type Case =
+;; | (Case Expr Yields Case)
+;; | (Case Expr Yields End)
+;; | (Case Expr Yields Else)
 
 ;; type Op2 = 'apply | 'cons | and | 'or | 'xor | 'cat | 'add | 'sub |
 ;;      'gt | 'lt | 'eq | 'ge | 'le | 'add | 'sub | 'mult |
@@ -46,6 +55,7 @@
 
 (struct Int (i)             #:prefab)
 (struct Float (f)           #:prefab)
+(struct Bool (i)            #:prefab)
 (struct String (s)          #:prefab)
 (struct Var (v)             #:prefab)
 (struct Null ()             #:prefab)
@@ -62,7 +72,11 @@
 (struct If (e1 e2)          #:prefab)
 (struct Then (e1 e2)        #:prefab)
 (struct Else (e)            #:prefab)
-(struct Cond (e1 e2)        #:prefab)
+(struct Cond (e)            #:prefab)
+(struct Case (e1 e2 e3)     #:prefab)
+(struct Yields (e)          #:prefab)
+(struct When (e1 e2)        #:prefab)
+(struct End ()              #:prefab)
 (struct Print (e)           #:prefab)
 (struct Format (e1 e2)      #:prefab)
 (struct Match (e1 e2)       #:prefab)
@@ -70,5 +84,5 @@
 (struct Slice (e1 e2)       #:prefab)
 (struct Eval (e)            #:prefab)
 (struct Error (e)           #:prefab)
-(struct Stat (i e st)       #:prefab) ;; middle item is line-number
+(struct Stat (i e st)       #:prefab) ;; first item is line-number
 (struct EOP ()              #:prefab) ;; termination of all statements, end of program
