@@ -7,31 +7,41 @@
 ;; cm interpreter
 
 
-(define (interp ast) (string-coerce (interp-aux ast)))
+(define (interp-prep expr linenum)
+  (string-coerce (cm-error-with-line-handler linenum interp-expr expr)))
 
-(define (interp-aux ast)
+;; takes in an expr or a statement and returns a list of all accumulated values
+(define (interp ast) 
   (match ast
-        [(Stat i e st) (interp-statement i e st)]
-        [(EOP) (void)]
-        [(Prim2 op e1 e2) (interp-prim2 op (interp-aux e1) (interp-aux e2))]
-        [(Prim1 op e) (interp-prim1 op (interp-aux e))]
+        [(Stat i e st) 
+         (match st
+                [(EOP) (interp-prep e i)]
+                [_ (flatten (list (interp-prep e i) (interp st)))])]
+        [(EOP) (string-coerce (void))]
+        [_ (string-coerce (interp-expr ast))]))
+
+(define (interp-expr ast)
+  (match ast
+        [(Noop) (void)]
+        [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1) (interp-expr e2))]
+        [(Prim1 op e) (interp-prim1 op (interp-expr e))]
         [(If e1 e2) (interp-if e1 e2)]
         [(Cond e) 
          (match e
-                [(Case _ _ _) (interp-aux e)]
+                [(Case _ _ _) (interp-expr e)]
                 [_ (cm-error error-id "Cond is missing a case.")])]
         [(Case e1 e2 e3) 
-         (if (bool-to-racket (interp-aux e1)) (interp-aux e2) 
+         (if (bool-to-racket (interp-expr e1)) (interp-expr e2) 
            (match e3 
-                  [(Case _ _ _) (interp-aux e3)]
-                  [(Else _) (interp-aux e3)]
+                  [(Case _ _ _) (interp-expr e3)]
+                  [(Else _) (interp-expr e3)]
                   [(End) (cm-error error-id "Cond matching failed. Hit end.")]
                   [_ (cm-error error-id "Cond is missing its components.")]))]
-        [(Yields e) (interp-aux e)]
-        [(Else e) (interp-aux e)]
+        [(Yields e) (interp-expr e)]
+        [(Else e) (interp-expr e)]
         [(Print e) (interp-print e)]
-        [(Error e) (error (string-coerce (interp-aux e)))] 
-        [(Eval s) (eval-string (string-coerce (interp-aux s)))] 
+        [(Error e) (error (string-coerce (interp-expr e)))] 
+        [(Eval s) (eval-string (string-coerce (interp-expr s)))] 
         [(Int i) i]
         [(Float f) f]
         [(Bool i) (Bool i)]
@@ -43,12 +53,14 @@
 (define (or-op arg1 arg2) (or (bool-to-racket arg1) (bool-to-racket arg2)))
 (define (xor-op arg1 arg2) (xor (bool-to-racket arg1) (bool-to-racket arg2)))
 (define (not-equal? arg1 arg2) (not (equal? arg1 arg2)))
+(define (not-op arg) (not (bool-to-racket arg)))
 
 (define (interp-prim2 op v1 v2)
   (match op
         ['cons (cons v1 v2)]
         ['cat (string-append (string-coerce v1)
                            (string-coerce v2))]
+        ['comma v2]
         [op #:when (not (string=? (get-type v1) (get-type v2)))
           (cm-error error-id (string-append "Operands of " (symbol->string op)
                 " are not of the same type. Given " (get-type v1)
@@ -126,44 +138,26 @@
         ['list? (racket-to-bool (is-list? v))] 
         ['pair? (racket-to-bool (is-pair? v))] 
         ['null? (racket-to-bool (is-null? v))] 
-        ['not (racket-to-bool (not (bool-to-racket v)))]))
+        ['not (racket-to-bool
+            (apply-if-type-1 '("bool") not-op "not" v))]
+
+        ))
 
 ;;
 ;; sub cases
 ;;
-
-;; todo: string statements together
-(define (interp-statement linenum e st)
-  (match e
-         [(Noop) (match st [(EOP) (void)] [_ (interp-aux st)])]
-         [_ 
-           (match st 
-                  [(EOP) (cm-error-with-line-handler linenum interp-aux e)]
-                  [_ (cm-error-with-line-handler linenum interp-aux e) (interp-aux st)])]))
 
 (define (interp-if e1 e2)
   (match e2
          [(Then e3 e4) 
           (match e4
                  [(Else e5)
-                     (if (bool-to-racket (interp-aux e1)) (interp-aux e3) (interp-aux e5))]
+                     (if (bool-to-racket (interp-expr e1)) (interp-expr e3) (interp-expr e5))]
                  [_ (cm-error error-id "Then clause is missing an else.")])]
          [_ (cm-error error-id "If clause is missing a then.")]))
 
-;(define (interp-cond e1 e2)
-    ;(match e2
-           ;[(Else e3)
-                ;(let ([v1 (interp e1)] [v2 (interp e3)])
-                    ;(let aux ([args (check-argument-dimensions
-                                      ;(check-list-arguments v1 "cond") 2 2 "cond")]) 
-                           ;(match args
-                                  ;['() v2]
-                                  ;[(cons h t) #:when (bool-to-racket (car h)) (cadr h)]
-                                  ;[(cons h t) (aux t)])))]
-           ;[_ (cm-error error-id "Cond clause is missing an else.")]))
-
 (define (interp-print e)
-  (let ([v (interp-aux e)])
+  (let ([v (interp-expr e)])
      (match (cons (displayln (string-append (string-coerce v))) v)
             [(cons _ res) res])))
 
@@ -180,14 +174,19 @@
     (op arg1 arg2)
     (cm-error error-id 
         (format "Attempted to apply ~a onto ~a." op-name (get-type arg1)))))
+(define (apply-if-type-1 types op op-name arg)
+  (if (member (get-type arg) types)
+    (op arg)
+    (cm-error error-id 
+        (format "Attempted to apply ~a onto ~a." op-name (get-type arg)))))
 
 
 ;; converts a pair to a list if it wasn't already
-;(define (pair-to-list p)
-  ;(match p
-        ;['() '()] ;; already a list
-        ;[(cons h t) (cons h (pair-to-list t))]
-        ;[h (cons h '())]))
+(define (pair-to-list p)
+  (match p
+        ['() '()] ;; already a list
+        [(cons h t) (cons h (pair-to-list t))]
+        [h (cons h '())]))
 
 ;; Ensures that the subarguments given are all lists.
 (define (check-list-arguments args op)

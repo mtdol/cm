@@ -1,13 +1,24 @@
 #lang racket
 (require cm/core/lex cm/core/ast cm/core/parse-expr 
          cm/core/parse-stat cm/core/interp)
-(provide cm-run cm-run-expr cm-run-file cm-tokenize cm-tokenize-file
+(provide cm-run cm-run-list cm-run-expr cm-run-file cm-run-file-list
+         cm-tokenize cm-tokenize-file
          cm-parse cm-parse-expr cm-parse-file)
 
+;; converts the resulting list from interp into values
+(define (cm-values lst) (apply values (flatten lst)))
+
 ;; takes in a string, then tokenizes, parses, and interprets
-(define (cm-run input) (interp (parse-stat (tokenize-string input))))
+;; returns values
+(define (cm-run input) (cm-values (interp (parse-stat (tokenize-string input)))))
+;; returns a list of strings rather than string values.
+(define (cm-run-list input) (interp (parse-stat (tokenize-string input))))
+;; returns a string
 (define (cm-run-expr input) (interp (parse-expr (tokenize-string input))))
-(define (cm-run-file file) (interp (parse-stat (tokenize-file file))))
+;; interps file, returns values
+(define (cm-run-file file) (cm-values (interp (parse-stat (tokenize-file file)))))
+;; interps file, returns list
+(define (cm-run-file-list file) (interp (parse-stat (tokenize-file file))))
 
 (define (cm-tokenize input) (tokenize-string input))
 (define (cm-tokenize-file file) (tokenize-file file))

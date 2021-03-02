@@ -32,7 +32,8 @@
     (match tokens
         ;; probably something like (1 2), which is invalid
         ['() #:when (= preced max-precedences) 
-            (cm-error error-id "Could not find operator.")]
+            ;(cm-error error-id "Could not find operator.")]
+            (reverse acc)]
         ;; try again since we didn't find an op of current precedence
         ['() (tokens-to-prefix-form-aux (reverse acc) '() (add1 preced) 0)]
         ;; increment pcount

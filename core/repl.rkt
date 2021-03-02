@@ -5,7 +5,14 @@
 (define exit-text "exiting\n")
 
 ;; the cm function we will be calling
-(define mode cm-run)
+(define mode cm-run-list)
+
+(define (print-results lst)
+  (match lst
+         ['() (void)]
+         [(cons h t) (displayln h) (print-results t)]
+         [h (displayln h)]))
+
 
 (define (repl) 
   (match (request)
@@ -16,7 +23,7 @@
                          (add-history "#token")
                          (repl))]
          ["#run" (list (displayln "run mode")
-                         (set! mode cm-run)
+                         (set! mode cm-run-list)
                          (add-history "#run")
                          (repl))]
          ["#runxp" (list (displayln "run expression mode")
@@ -33,7 +40,9 @@
                          (repl))]
          ["#help" (list (display help) (add-history "#help") (repl))]
          [s (list (add-history s)
-                  (displayln (mode s))
+                  ;; run and print results
+                  (print-results (mode s))
+                  ;(displayln (mode s))
                   (repl)
                   )]))
 

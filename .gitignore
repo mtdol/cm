@@ -1,1 +1,4 @@
 **/compiled/
+*.out
+*.o
+*.exe
