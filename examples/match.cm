@@ -1,7 +1,8 @@
 def last_item = lam lst = 
-    match lst with
-        [(), (error "list is empty");],
-        [(h, ();), h;],
-        [(h, t), (last_item : t);];.
+    match lst
+    | () -> error "list is empty"
+    | h, () -> h
+    | h, t -> last_item : t
+    end.
 
 @ last_item : 1,2,3,"return me";.

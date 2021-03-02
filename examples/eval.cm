@@ -1,2 +1,2 @@
-@ int eval "(+ 1 2 3)".  # runs the following code in racket
+int eval "(+ 1 2 3)".  # runs the following code in racket
                            # and prints the result (6). 

@@ -3,16 +3,20 @@
 
 int main (int argc, char *argv[]) {
     int status = 0;
-
-    /*if (argc == 2) {*/
-        /*printf ("Arg supplied: %s\n", argv[1]);*/
-    /*} else {*/
-        /*printf ("cm requires a single argument.\n");*/
-        /*return 1;*/
-    /*}*/
+    char arg[100];
+    
+    if (argc == 1) {
+        status = system ("racket core/repl.rkt");
+    } if (argc == 2) {
+        // treats argv[1] as a file and runs it
+        sprintf (arg, "racket -e '(require cm/core/cm) (cm-run-file \"%s\")'", argv[1]);
+        status = system (arg);
+    } else {
+        printf ("Invalid number of args.\n");
+        return 1;
+    }
 
     // TODO: add more than just repl
-    status = system ("racket core/repl.rkt");
 
     return status;
 
