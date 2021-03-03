@@ -1,5 +1,5 @@
 #lang racket
-(require cm/core/ast cm/core/error cm/core/types)
+(require cm/core/ast cm/core/error cm/core/types cm/core/context)
 (provide interp)
 (define error-id 3)
 
@@ -8,7 +8,8 @@
 
 
 (define (interp-prep expr linenum)
-  (string-coerce (cm-error-with-line-handler linenum interp-expr expr)))
+  (string-coerce 
+    (cm-error-with-line-handler linenum interp-expr (list expr (hash)))))
 
 ;; takes in an expr or a statement and returns a list of all accumulated values
 (define (interp ast) 
@@ -18,30 +19,33 @@
                 [(EOP) (interp-prep e i)]
                 [_ (flatten (list (interp-prep e i) (interp st)))])]
         [(EOP) (string-coerce (void))]
-        [_ (string-coerce (interp-expr ast))]))
+        [_ (string-coerce (interp-expr ast (hash)))]))
 
-(define (interp-expr ast)
+(define (interp-expr ast context)
   (match ast
         [(Noop) (void)]
-        [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1) (interp-expr e2))]
-        [(Prim1 op e) (interp-prim1 op (interp-expr e))]
-        [(If e1 e2) (interp-if e1 e2)]
+        [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1 context) (interp-expr e2 context))]
+        [(Prim1 op e) (interp-prim1 op (interp-expr e context))]
+        [(If e1 e2) (interp-if e1 e2 context)]
         [(Cond e) 
          (match e
-                [(Case _ _ _) (interp-expr e)]
+                [(Case _ _ _) (interp-expr e context)]
                 [_ (cm-error error-id "Cond is missing a case.")])]
         [(Case e1 e2 e3) 
-         (if (bool-to-racket (interp-expr e1)) (interp-expr e2) 
+         (if (bool-to-racket (interp-expr e1 context)) (interp-expr e2 context) 
            (match e3 
-                  [(Case _ _ _) (interp-expr e3)]
-                  [(Else _) (interp-expr e3)]
+                  [(Case _ _ _) (interp-expr e3 context)]
+                  [(Else _) (interp-expr e3 context)]
                   [(End) (cm-error error-id "Cond matching failed. Hit end.")]
                   [_ (cm-error error-id "Cond is missing its components.")]))]
-        [(Yields e) (interp-expr e)]
-        [(Else e) (interp-expr e)]
-        [(Print e) (interp-print e)]
-        [(Error e) (error (string-coerce (interp-expr e)))] 
-        [(Eval s) (eval-string (string-coerce (interp-expr s)))] 
+        [(Yields e) (interp-expr e context)]
+        [(Else e) (interp-expr e context)]
+        [(Def e1 e2) (interp-def e1 e2 context)]
+        [(Let e1 e2) (interp-let e1 e2 context)]
+        [(Print e) (interp-print e context)]
+        [(Error e) (error (string-coerce (interp-expr e context)))] 
+        [(Eval s) (eval-string (string-coerce (interp-expr s context)))] 
+        [(Var v) (interp-var v context)]
         [(Int i) i]
         [(Float f) f]
         [(Bool i) (Bool i)]
@@ -147,17 +151,86 @@
 ;; sub cases
 ;;
 
-(define (interp-if e1 e2)
+(define (interp-if e1 e2 context)
   (match e2
          [(Then e3 e4) 
           (match e4
                  [(Else e5)
-                     (if (bool-to-racket (interp-expr e1)) (interp-expr e3) (interp-expr e5))]
+                     (if (bool-to-racket (interp-expr e1 context))
+                       (interp-expr e3 context) (interp-expr e5 context))]
                  [_ (cm-error error-id "Then clause is missing an else.")])]
          [_ (cm-error error-id "If clause is missing a then.")]))
 
-(define (interp-print e)
-  (let ([v (interp-expr e)])
+(define (interp-var var context)
+  ;; check local context first
+  (let ([res (get-local-var-data var context)])
+  (if (not (false? res)) res 
+  ;; then check global
+  (match (get-global-var-data var)
+         [#f (cm-error error-id (format "Var ~a has not yet been defined." var))]
+         [res res]))))
+
+
+(define (interp-def e1 e2 context)
+  (match e2
+         [(Assign1 e3) 
+          (let ([v3 (interp-expr e3 context)])
+            (match e1
+                   ;; sets var in global context hash and returns value to caller
+                   [(Prim1 'int (Var v))
+                    (assign-type-check 'int v3 v) (set-global-var! v 'int v3) v3]
+                   [(Prim1 'float (Var v))
+                    (assign-type-check 'float v3 v) (set-global-var! v 'float v3) v3]
+                   [(Prim1 'string (Var v))
+                    (assign-type-check 'string v3 v) (set-global-var! v 'string v3) v3]
+                   [(Prim1 'bool (Var v))
+                    (assign-type-check 'bool v3 v) (set-global-var! v 'bool v3) v3]
+                   [(Prim1 'list (Var v))
+                    (assign-type-check 'list v3 v) (set-global-var! v 'list v3) v3]
+                   [(Prim1 'pair (Var v))
+                    (assign-type-check 'pair v3 v) (set-global-var! v 'pair v3) v3]
+                   [(Prim1 'dynamic (Var v))
+                    (set-global-var! v 'dynamic v3) v3]
+                   ;; implied dynamic case
+                   [(Var v)
+                    (set-global-var! v 'dynamic v3) v3]
+                   [_ (cm-error error-id "Unknown Item on left hand of def.")]
+
+
+                   ))]
+         [_ (cm-error error-id "Def is missing an assignment.")]))
+
+(define (interp-let e1 e2 context)
+  (match e2
+         [(Assign2 e3 (In e4)) 
+          (let ([v3 (interp-expr e3 context)])
+            (match e1
+                   ;; sets var in global context hash and returns value to caller
+                   [(Prim1 'int (Var v))
+                    (assign-type-check 'int v3 v) (interp-expr e4 (set-local-var v 'int v3 context))]
+                   [(Prim1 'float (Var v))
+                    (assign-type-check 'float v3 v) (interp-expr e4 (set-local-var v 'float v3 context))]
+                   [(Prim1 'string (Var v))
+                    (assign-type-check 'string v3 v) (interp-expr e4 (set-local-var v 'string v3 context))]
+                   [(Prim1 'bool (Var v))
+                    (assign-type-check 'bool v3 v) (interp-expr e4 (set-local-var v 'bool v3 context))]
+                   [(Prim1 'list (Var v))
+                    (assign-type-check 'list v3 v) (interp-expr e4 (set-local-var v 'list v3 context))]
+                   [(Prim1 'pair (Var v))
+                    (assign-type-check 'pair v3 v) (interp-expr e4 (set-local-var v 'pair v3 context))]
+                   [(Prim1 'dynamic (Var v))
+                    (assign-type-check 'dynamic v3 v) (interp-expr e4 (set-local-var v 'dynamic v3 context))]
+                   ;; implied dynamic case
+                   [(Var v)
+                    (interp-expr e4 (set-local-var v 'dynamic v3 context))]
+                   [_ (cm-error error-id "Unknown Item on left hand of let.")]
+
+
+                   ))]
+         [_ (cm-error error-id "Let is missing an assignment or in.")]))
+
+(define (interp-print e context)
+  (let ([v (interp-expr e context)])
      (match (cons (displayln (string-append (string-coerce v))) v)
             [(cons _ res) res])))
 
@@ -180,6 +253,16 @@
     (cm-error error-id 
         (format "Attempted to apply ~a onto ~a." op-name (get-type arg)))))
 
+;; throws an exception if the given type and the type of the value do not match
+;; returns true if types match
+(define (assign-type-check type value var)
+  (if (equal? type 'dynamic) #t 
+  (let ([v-type (get-type value)]) 
+    (if (or (string=? (symbol->string type) v-type)
+            (and (equal? type 'list) (string=? v-type "null")))
+      #t
+      (cm-error error-id 
+        (format "Recieved type ~a for var ~a but expected ~a." v-type var type))))))
 
 ;; converts a pair to a list if it wasn't already
 (define (pair-to-list p)

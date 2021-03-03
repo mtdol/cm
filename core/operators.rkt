@@ -54,6 +54,7 @@
         (cons "tail"        (OpData 1 "prefix"  8   'Prim1   'tail))
         (cons "not"         (OpData 1 "prefix"  8   'Prim1   'not))
         (cons "type"        (OpData 1 "prefix"  8   'Prim1   'type))
+        (cons "dynamic"     (OpData 1 "prefix"  8   'Prim1   'dynamic))
         (cons "int"         (OpData 1 "prefix"  8   'Prim1   'int))
         (cons "int?"        (OpData 1 "prefix"  8   'Prim1   'int?))
         (cons "float"       (OpData 1 "prefix"  8   'Prim1   'float))

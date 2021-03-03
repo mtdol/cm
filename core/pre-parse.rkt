@@ -47,15 +47,15 @@
 (define (replace-assign-commas lst)
   (match lst
         ['() '()]
-        [(cons h1 (cons h2 (cons "cons" (cons h3 t)))) 
-            #:when (and
-                (or (string=? h1 "def") (string=? h1 "lambda"))
-                (is-operator? h3))
-            (cm-error error-id "Improperly formed assignment.")]
         [(cons h1 (cons h2 (cons "cons" t))) 
             #:when (or (string=? h1 "def") (string=? h1 "lambda"))
             (cons h1 (cons h2 (cons ":assign1"
                 (replace-assign-commas (cons h1 t)))))]
+        ;; def int x, y case
+        [(cons h1 (cons h2 (cons h3 (cons "cons" t))))
+            #:when (or (string=? h1 "def") (string=? h1 "lambda"))
+            (cons h1 (cons h2 (cons h3 (cons ":assign1"
+                (replace-assign-commas (cons h1 t))))))]
         [(cons h t) (cons h (replace-assign-commas t))]))
 
 ;; walks down the list, conses, and returns the list back with the first

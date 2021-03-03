@@ -10,7 +10,7 @@
            [(cons "dot" t) 
             ;; use error handler to display line numbers during errors
                 (Stat linenum (cm-error-with-line-handler
-                    curr-linenum parse-expr (reverse acc))
+                    curr-linenum parse-expr (list (reverse acc)))
                       (aux t '() curr-linenum curr-linenum))]
            [(cons ":newline" t) (aux t acc linenum (add1 curr-linenum))]
            [(cons h t) (aux t (cons h acc) linenum curr-linenum)]

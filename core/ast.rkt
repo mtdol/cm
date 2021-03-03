@@ -48,7 +48,7 @@
 ;;      'gt | 'lt | 'eq | 'ge | 'le | 'add | 'sub | 'mult |
 ;;      'div | 'mod | 'exp
 ;;
-;; type Op1 = 'neg | 'pos | 'head | 'tail | 'not | 'type | 'int | 'float | 
+;; type Op1 = 'neg | 'pos | 'head | 'tail | 'not | 'type | 'dynamic | 'int | 'float | 
 ;;      'string | 'bool | 'int? | 'float? | string? | bool? | list? | 'pair? |
 ;;      'null? | 'to | 'length
 

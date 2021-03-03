@@ -31,10 +31,11 @@
 
 ;; calls the given function with a handler that will intercept any error
 ;; messages recieved and raise them again with a line number included.
-(define (cm-error-with-line-handler linenum func arg) 
+;; args is always a list
+(define (cm-error-with-line-handler linenum func args) 
   (with-handlers* ([exn:fail?
             (lambda (e) 
                 (match e 
                   [(exn:fail m _)
                    (error (string-append (number->string linenum) ":" m))]))])
-    (func arg)))
+    (apply func args)))
