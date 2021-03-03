@@ -24,6 +24,7 @@
 (define (interp-expr ast context)
   (match ast
         [(Noop) (void)]
+        [(Prim2 'apply e1 e2) (interp-apply e1 e2 context)]
         [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1 context) (interp-expr e2 context))]
         [(Prim1 op e) (interp-prim1 op (interp-expr e context))]
         [(If e1 e2) (interp-if e1 e2 context)]
@@ -42,6 +43,7 @@
         [(Else e) (interp-expr e context)]
         [(Def e1 e2) (interp-def e1 e2 context)]
         [(Let e1 e2) (interp-let e1 e2 context)]
+        [(Lambda e1 e2) (interp-lambda e1 e2 context)]
         [(Print e) (interp-print e context)]
         [(Error e) (error (string-coerce (interp-expr e context)))] 
         [(Eval s) (eval-string (string-coerce (interp-expr s context)))] 
@@ -142,6 +144,7 @@
         ['list? (racket-to-bool (is-list? v))] 
         ['pair? (racket-to-bool (is-pair? v))] 
         ['null? (racket-to-bool (is-null? v))] 
+        ['fun? (racket-to-bool (is-fun? v))] 
         ['not (racket-to-bool
             (apply-if-type-1 '("bool") not-op "not" v))]
 
@@ -189,6 +192,8 @@
                     (assign-type-check 'list v3 v) (set-global-var! v 'list v3) v3]
                    [(Prim1 'pair (Var v))
                     (assign-type-check 'pair v3 v) (set-global-var! v 'pair v3) v3]
+                   [(Prim1 'fun (Var v))
+                    (assign-type-check 'fun v3 v) (set-global-var! v 'fun v3) v3]
                    [(Prim1 'dynamic (Var v))
                     (set-global-var! v 'dynamic v3) v3]
                    ;; implied dynamic case
@@ -218,6 +223,8 @@
                     (assign-type-check 'list v3 v) (interp-expr e4 (set-local-var v 'list v3 context))]
                    [(Prim1 'pair (Var v))
                     (assign-type-check 'pair v3 v) (interp-expr e4 (set-local-var v 'pair v3 context))]
+                   [(Prim1 'fun (Var v))
+                    (assign-type-check 'fun v3 v) (interp-expr e4 (set-local-var v 'fun v3 context))]
                    [(Prim1 'dynamic (Var v))
                     (assign-type-check 'dynamic v3 v) (interp-expr e4 (set-local-var v 'dynamic v3 context))]
                    ;; implied dynamic case
@@ -228,6 +235,30 @@
 
                    ))]
          [_ (cm-error error-id "Let is missing an assignment or in.")]))
+
+(define (interp-lambda e1 e2 context)
+  (match e2
+         [(Assign1 e3) 
+            (match e1
+                   ;; sets var in global context hash and returns value to caller
+                   [(Prim1 op (Var v)) #:when (member op '(int float string bool list pair dynamic))
+                     (Fun v op context e3)]
+                   ;; implied dynamic case
+                   [(Var v)
+                     (Fun v 'dynamic context e3)]
+                   [_ (cm-error error-id "Unknown Item on left hand of lambda")]
+                   )]
+         [_ (cm-error error-id "Lambda is missing an assignment.")]))
+
+(define (interp-apply e1 e2 context)
+  (match (interp-expr e2 context)
+         [(Fun var type fcontext fexpr) 
+          (let ([v1 (interp-expr e1 context)])
+            ;; check that the application matches the functions type
+            (assign-type-check type v1 var)
+            ;; interp with modified context
+            (interp-expr fexpr (set-local-var var type v1 fcontext)))]
+         [_ (cm-error error-id "Attempted to apply onto a non function.")]))
 
 (define (interp-print e context)
   (let ([v (interp-expr e context)])
@@ -259,7 +290,11 @@
   (if (equal? type 'dynamic) #t 
   (let ([v-type (get-type value)]) 
     (if (or (string=? (symbol->string type) v-type)
-            (and (equal? type 'list) (string=? v-type "null")))
+            ;; exceptions
+            ;; a null is a list
+            (and (equal? type 'list) (string=? v-type "null"))
+            ;; a non-null list is a pair
+            (and (equal? type 'pair) (string=? v-type "list")))
       #t
       (cm-error error-id 
         (format "Recieved type ~a for var ~a but expected ~a." v-type var type))))))

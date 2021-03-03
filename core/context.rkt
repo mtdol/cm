@@ -1,8 +1,11 @@
 #lang racket
-(provide set-global-var! get-global-var-type get-global-var-data
+(provide Fun
+         set-global-var! get-global-var-type get-global-var-data
          set-local-var get-local-var-type get-local-var-data)
 
 (struct ContextEntry (type value))
+;; what a lambda expr yields
+(struct Fun (var type context expr))
 
 (define global-context (make-hash))
 

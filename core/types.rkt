@@ -1,5 +1,5 @@
 #lang racket
-(require cm/core/error cm/core/reserved-keywords cm/core/ast)
+(require cm/core/error cm/core/reserved-keywords cm/core/ast cm/core/context)
 (provide (all-defined-out))
 (define error-id 4)
 
@@ -10,6 +10,7 @@
 (define (is-list? v) (list? v))
 (define (is-pair? v) (pair? v))
 (define (is-null? v) (null? v))
+(define (is-fun? v) (match v [(Fun _ _ _ _) #t] [_ #f]))
 
 (define (get-type v)
   (cond 
@@ -20,6 +21,7 @@
     [(is-null? v) "null"]
     [(is-list? v) "list"]
     [(is-pair? v) "pair"]
+    [(is-fun? v) "fun"]
     [else "unknown"]))
 
 (define (string-to-number v) 
@@ -49,6 +51,8 @@
          ["list" (string-append "(" (list-to-string v) ")")]
          ["pair" (string-append "(" (list-to-string v) ")")]
          ["null" "null"]
+         ["fun" (match v [(Fun var type context expr)
+                          (format "Fun ~a ~a -> ~a" type var expr)])]
          [_ (cm-error error-id "String coersion error.")])]))
 (define (int-coerce v) 
   (match (get-type v) 
@@ -56,9 +60,10 @@
          ["int" v]
          ["float" (exact-floor v)]
          ["bool" (match v [(Bool i) i])]
-         ["list" (cm-error error-id "Cannot coerce a List to an int.")]
-         ["pair" (cm-error error-id "Cannot coerce a Pair to an int.")]
-         ["null" (cm-error error-id "Cannot coerce a Null to an int.")]
+         ["list" (cm-error error-id "Cannot coerce a list to an int.")]
+         ["pair" (cm-error error-id "Cannot coerce a pair to an int.")]
+         ["null" (cm-error error-id "Cannot coerce a null to an int.")]
+         ["fun" (cm-error error-id "Cannot coerce a fun to an int.")]
          [_ (cm-error error-id "Int coersion error.")]))
 (define (float-coerce v) 
   (match (get-type v) 
@@ -66,9 +71,10 @@
          ["int" (+ v 0.0)]
          ["float" v]
          ["bool" (match v [(Bool 1) 1.0] [(Bool 0) 0.0])]
-         ["list" (cm-error error-id "Cannot coerce a List to a float.")]
-         ["pair" (cm-error error-id "Cannot coerce a Pair to a float.")]
-         ["null" (cm-error error-id "Cannot coerce a Null to a float.")]
+         ["list" (cm-error error-id "Cannot coerce a list to a float.")]
+         ["pair" (cm-error error-id "Cannot coerce a pair to a float.")]
+         ["null" (cm-error error-id "Cannot coerce a null to a float.")]
+         ["fun" (cm-error error-id "Cannot coerce a fun to a float.")]
          [_ (cm-error error-id "Float coersion error.")]))
 
 ;; turns a value into a cm bool
@@ -82,6 +88,7 @@
          ["list" (Bool 1)]
          ["pair" (Bool 1)]
          ["null" (Bool 1)]
+         ["fun" (cm-error error-id "Cannot coerce a fun to a bool.")]
          [#t (Bool 1)]
          [#f (Bool 0)]
          [_ (cm-error error-id "Bool coersion error.")]))
