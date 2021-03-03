@@ -1,0 +1,6 @@
+def fact = lam n = 
+    | n < 2 -> 1
+    else n * (n - 1 : fact).
+
+"factorial of 5 is".
+5 : fact.
