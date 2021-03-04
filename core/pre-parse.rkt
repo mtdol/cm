@@ -76,7 +76,7 @@
         [(cons h t) #:when (or (string=? "values" h) (string=? "let" h)) 
             (cons h
                 (replace-assign-equal (replace-first t "equal" ":assign2")))]
-        [(cons h t) #:when (or (string=? "def" h) (string=? "lambda" h)) 
+        [(cons h t) #:when (or (string=? "def" h) (string=? "lambda" h) (string=? "typedef" h)) 
             (cons h
                 (replace-assign-equal (replace-first t "equal" ":assign1")))]
         [(cons h t) (cons h (replace-assign-equal t))]))

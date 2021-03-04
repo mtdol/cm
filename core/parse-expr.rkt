@@ -30,10 +30,24 @@
 
 (define (tokens-to-prefix-form-aux tokens acc preced pcount) 
     (match tokens
-        ;; probably something like (1 2), which is invalid
+        ;; probably something like (1 2 + 3)
         ['() #:when (= preced max-precedences) 
-            ;(cm-error error-id "Could not find operator.")]
-            (reverse acc)]
+            ;; there is no operator which must mean that
+            ;; there is no operator or a null operator
+            (let find-null-op ([tokens (reverse acc)] [acc '()] [pcount 0])
+                (match tokens
+                [(cons ")" t) #:when (= 1 pcount) 
+                    (append (tokens-to-prefix-form (reverse (cons ")" acc)))
+                            (tokens-to-prefix-form t))]
+                ;; increment pcount
+                [(cons "(" t) (find-null-op t (cons "(" acc) (add1 pcount))]
+                ;; decrement pcount
+                [(cons ")" t) (find-null-op t (cons ")" acc) (sub1 pcount))]
+                ;; is not a paren or op, must be a value
+                [(cons h t) #:when (and (not (is-operator? h)) (zero? pcount)) 
+                    (append (list h)
+                            (tokens-to-prefix-form t))]
+                [(cons h t) (find-null-op t (cons h acc) pcount)]))]
         ;; try again since we didn't find an op of current precedence
         ['() (tokens-to-prefix-form-aux (reverse acc) '() (add1 preced) 0)]
         ;; increment pcount
@@ -63,7 +77,7 @@
 ;; Does not accept expressions with parenthesis.
 (define (parse-to-ast tokens)
   (match tokens
-         ['() (Noop)]
+         ['() (Void)]
          [(cons h '()) (parse-value h)]
          [(cons h t) #:when (is-operator? h) 
                      (match (parse-op h t) 
@@ -105,7 +119,8 @@
         [(string=? "null" token) (Null)]
         [(string=? "true" token) (Bool 1)]
         [(string=? "false" token) (Bool 0)]
-        [(is-var-token? token) (Var token)]
         [(string=? token "end") (End)]
+        [(string=? token "void") (Void)]
+        [(is-var-token? token) (Var token)]
         [(is-operator? token)  (cm-error error-id (format "Operand(s) missing for ~a." token))]
         [else (cm-error error-id (format "Invalid variable name: ~a." token))]))

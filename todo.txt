@@ -42,3 +42,21 @@ defun acc_pos lst =
     | null -> null
     end.
 
+
+# struct forms
+#
+
+# declaration of type
+typedef St = int a, b, string c;.
+
+# creating an instance
+struct St (4, 7.5, "stuff").
+
+# guard
+lam struct St x = x.
+
+# question
+struct? St x.
+
+# match case
+| struct St (a, b, c) -> a.

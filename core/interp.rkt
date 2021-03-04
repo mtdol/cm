@@ -8,22 +8,28 @@
 
 
 (define (interp-prep expr linenum)
-  (string-coerce 
-    (cm-error-with-line-handler linenum interp-expr (list expr (hash)))))
+    (cm-error-with-line-handler linenum interp-expr (list expr (hash))))
+
+;; converts values into the output format
+(define (prepare-for-output v)
+  (cond
+    [(is-fun? v) v]
+    [(is-struct? v) v]
+    [else (string-coerce v)]))
 
 ;; takes in an expr or a statement and returns a list of all accumulated values
 (define (interp ast) 
   (match ast
         [(Stat i e st) 
          (match st
-                [(EOP) (interp-prep e i)]
-                [_ (flatten (list (interp-prep e i) (interp st)))])]
-        [(EOP) (string-coerce (void))]
-        [_ (string-coerce (interp-expr ast (hash)))]))
+                [(EOP) (prepare-for-output (interp-prep e i))]
+                [_ (flatten (list (prepare-for-output (interp-prep e i)) (interp st)))])]
+        [(EOP) (prepare-for-output (interp-expr (Void) (hash)))]
+        [_ (prepare-for-output (interp-expr ast (hash)))]))
 
 (define (interp-expr ast context)
   (match ast
-        [(Noop) (void)]
+        [(Void) (Void)]
         [(Prim2 'apply e1 e2) (interp-apply e1 e2 context)]
         [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1 context) (interp-expr e2 context))]
         [(Prim1 op e) (interp-prim1 op (interp-expr e context))]
@@ -47,6 +53,7 @@
         [(Print e) (interp-print e context)]
         [(Error e) (error (string-coerce (interp-expr e context)))] 
         [(Eval s) (eval-string (string-coerce (interp-expr s context)))] 
+        [(Struct e1 e2) (interp-struct e1 e2 context)]
         [(Var v) (interp-var v context)]
         [(Int i) i]
         [(Float f) f]
@@ -144,6 +151,7 @@
         ['list? (racket-to-bool (is-list? v))] 
         ['pair? (racket-to-bool (is-pair? v))] 
         ['null? (racket-to-bool (is-null? v))] 
+        ['void? (racket-to-bool (is-void? v))] 
         ['fun? (racket-to-bool (is-fun? v))] 
         ['not (racket-to-bool
             (apply-if-type-1 '("bool") not-op "not" v))]
@@ -241,7 +249,8 @@
          [(Assign1 e3) 
             (match e1
                    ;; sets var in global context hash and returns value to caller
-                   [(Prim1 op (Var v)) #:when (member op '(int float string bool list pair dynamic))
+                   [(Prim1 op (Var v)) #:when (member op 
+                                '(int float string bool list pair fun dynamic))
                      (Fun v op context e3)]
                    ;; implied dynamic case
                    [(Var v)
@@ -259,6 +268,15 @@
             ;; interp with modified context
             (interp-expr fexpr (set-local-var var type v1 fcontext)))]
          [_ (cm-error error-id "Attempted to apply onto a non function.")]))
+
+(define (interp-struct e1 e2 context)
+  (match e1
+         [(Var v)
+          (match (interp-expr e2 context)
+                 ;; struct args must be a list (null for no args, still technically a list)
+                 [res #:when (list? res) (CmStruct v res)]
+                 [_ (cm-error error-id "Arguments to struct must be a list or null.")])]
+         [_ (cm-error error-id "Missing Label for struct.")]))
 
 (define (interp-print e context)
   (let ([v (interp-expr e context)])

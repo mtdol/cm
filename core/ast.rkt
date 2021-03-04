@@ -8,7 +8,7 @@
 ;; | (String s)
 ;; | (Var s)
 ;; | (Null)
-;; | (Noop)
+;; | (Void)
 ;; | (Prim1 Op1 Expr)
 ;; | (Prim2 Op2 Expr Expr)
 ;; | (Def Var Assign1)
@@ -30,6 +30,9 @@
 ;; | (Match Expr With)
 ;; | (Slice Expr With)
 ;; | (With Expr)
+;; | (Typedef Var Assign1)
+;; | (Struct Var Expr)
+;; | (Struct? Var Expr)
 ;; | (Eval Expr)
 ;; | (Error Expr)
 ;; | (Stat i Expr Stat)
@@ -50,7 +53,7 @@
 ;;
 ;; type Op1 = 'neg | 'pos | 'head | 'tail | 'not | 'type | 'dynamic | 'int | 'float | 
 ;;      'string | 'bool | 'int? | 'float? | string? | bool? | list? | 'pair? |
-;;      'null? | 'to | 'length
+;;      'null? | 'void? | 'length
 
 
 (struct Int (i)             #:prefab)
@@ -59,7 +62,7 @@
 (struct String (s)          #:prefab)
 (struct Var (v)             #:prefab)
 (struct Null ()             #:prefab)
-(struct Noop ()             #:prefab)
+(struct Void ()             #:prefab)
 (struct Prim1 (p e)         #:prefab)
 (struct Prim2 (p e1 e2)     #:prefab)
 (struct Def (e1 e2)         #:prefab)
@@ -82,6 +85,9 @@
 (struct Match (e1 e2)       #:prefab)
 (struct With (e)            #:prefab)
 (struct Slice (e1 e2)       #:prefab)
+(struct Typedef (e1 e2)     #:prefab)
+(struct Struct (e1 e2)      #:prefab)
+(struct IsStruct (e1 e2)    #:prefab)
 (struct Eval (e)            #:prefab)
 (struct Error (e)           #:prefab)
 (struct Stat (i e st)       #:prefab) ;; first item is line-number

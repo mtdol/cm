@@ -60,5 +60,8 @@
       [exn:fail? (lambda (e) (cons (displayln (match e [(exn:fail m _) m])) (repl-failsafe)))]
                   ) (repl)))
 
+;; import standard lib
+(cm-run-file-silent "std_lib/std.cm")
+
 (display "Welcome to the cm repl!\nType `#exit` or `#e` to exit. Type `#help` for help.\n\n")
 (cleanse repl-failsafe)
