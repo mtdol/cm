@@ -190,24 +190,24 @@
             (match e1
                    ;; sets var in global context hash and returns value to caller
                    [(Prim1 'int (Var v))
-                    (assign-type-check 'int v3 v) (set-global-var! v 'int v3) v3]
+                    (assign-type-check 'int v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'float (Var v))
-                    (assign-type-check 'float v3 v) (set-global-var! v 'float v3) v3]
+                    (assign-type-check 'float v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'string (Var v))
-                    (assign-type-check 'string v3 v) (set-global-var! v 'string v3) v3]
+                    (assign-type-check 'string v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'bool (Var v))
-                    (assign-type-check 'bool v3 v) (set-global-var! v 'bool v3) v3]
+                    (assign-type-check 'bool v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'list (Var v))
-                    (assign-type-check 'list v3 v) (set-global-var! v 'list v3) v3]
+                    (assign-type-check 'list v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'pair (Var v))
-                    (assign-type-check 'pair v3 v) (set-global-var! v 'pair v3) v3]
+                    (assign-type-check 'pair v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'fun (Var v))
-                    (assign-type-check 'fun v3 v) (set-global-var! v 'fun v3) v3]
+                    (assign-type-check 'fun v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'dynamic (Var v))
-                    (set-global-var! v 'dynamic v3) v3]
+                    (set-global-var! v v3) v3]
                    ;; implied dynamic case
                    [(Var v)
-                    (set-global-var! v 'dynamic v3) v3]
+                    (set-global-var! v v3) v3]
                    [_ (cm-error error-id "Unknown Item on left hand of def.")]
 
 
@@ -221,24 +221,24 @@
             (match e1
                    ;; sets var in global context hash and returns value to caller
                    [(Prim1 'int (Var v))
-                    (assign-type-check 'int v3 v) (interp-expr e4 (set-local-var v 'int v3 context))]
+                    (assign-type-check 'int v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'float (Var v))
-                    (assign-type-check 'float v3 v) (interp-expr e4 (set-local-var v 'float v3 context))]
+                    (assign-type-check 'float v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'string (Var v))
-                    (assign-type-check 'string v3 v) (interp-expr e4 (set-local-var v 'string v3 context))]
+                    (assign-type-check 'string v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'bool (Var v))
-                    (assign-type-check 'bool v3 v) (interp-expr e4 (set-local-var v 'bool v3 context))]
+                    (assign-type-check 'bool v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'list (Var v))
-                    (assign-type-check 'list v3 v) (interp-expr e4 (set-local-var v 'list v3 context))]
+                    (assign-type-check 'list v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'pair (Var v))
-                    (assign-type-check 'pair v3 v) (interp-expr e4 (set-local-var v 'pair v3 context))]
+                    (assign-type-check 'pair v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'fun (Var v))
-                    (assign-type-check 'fun v3 v) (interp-expr e4 (set-local-var v 'fun v3 context))]
+                    (assign-type-check 'fun v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'dynamic (Var v))
-                    (assign-type-check 'dynamic v3 v) (interp-expr e4 (set-local-var v 'dynamic v3 context))]
+                    (assign-type-check 'dynamic v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    ;; implied dynamic case
                    [(Var v)
-                    (interp-expr e4 (set-local-var v 'dynamic v3 context))]
+                    (interp-expr e4 (set-local-var v v3 context))]
                    [_ (cm-error error-id "Unknown Item on left hand of let.")]
 
 
@@ -267,7 +267,7 @@
             ;; check that the application matches the functions type
             (assign-type-check type v1 var)
             ;; interp with modified context
-            (interp-expr fexpr (set-local-var var type v1 fcontext)))]
+            (interp-expr fexpr (set-local-var var v1 fcontext)))]
          [_ (cm-error error-id "Attempted to apply onto a non function.")]))
 
 (define (interp-struct e1 e2 context)

@@ -60,3 +60,12 @@ struct? St x.
 
 # match case
 | struct St (a, b, c) -> a.
+
+#apply list operator
+appl f 3,4,5;
+# is equal to
+5 : 4 : 3 : f
+
+# null argument lambda, called with appl
+def oneplustwo = lam null = 1 + 2
+appl oneplustwo null
