@@ -47,6 +47,7 @@
                   [_ (cm-error error-id "Cond is missing its components.")]))]
         [(Yields e) (interp-expr e context)]
         [(Else e) (interp-expr e context)]
+        [(Wrap e) (interp-expr e context)]
         [(Def e1 e2) (interp-def e1 e2 context)]
         [(Let e1 e2) (interp-let e1 e2 context)]
         [(Lambda e1 e2) (interp-lambda e1 e2 context)]

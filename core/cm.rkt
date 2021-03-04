@@ -3,7 +3,7 @@
          cm/core/parse-stat cm/core/interp)
 (provide cm-run cm-run-silent cm-run-list cm-run-expr cm-run-file cm-run-file-list
          cm-run-file-silent cm-tokenize cm-tokenize-file
-         cm-parse cm-parse-expr cm-parse-file)
+         cm-parse cm-parse-expr cm-parse-file cm-prefix-form)
 
 ;; converts the resulting list from interp into values
 (define (cm-values lst) (apply values (flatten lst)))
@@ -30,3 +30,5 @@
 (define (cm-parse-expr input) (parse-expr (tokenize-string input)))
 (define (cm-parse input) (parse-stat (tokenize-string input)))
 (define (cm-parse-file file) (parse-stat (tokenize-file file)))
+
+(define (cm-prefix-form input) (half-parse-expr (tokenize-string input)))

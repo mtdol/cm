@@ -38,6 +38,10 @@
                          (set! mode cm-parse-expr)
                          (add-history "#parsexp")
                          (repl))]
+         ["#prefix" (list (displayln "prefix expression mode")
+                         (set! mode cm-prefix-form)
+                         (add-history "#prefix")
+                         (repl))]
          ["#help" (list (display help) (add-history "#help") (repl))]
          [s (list (add-history s)
                   ;; run and print results

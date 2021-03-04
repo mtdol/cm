@@ -11,7 +11,7 @@
       "|" "case" "->" "yields" "end"
       "if" "then" "else" "cond" "eval" "$" "cat" "type" "error" "catch" "dynamic"
       "int" "int?" "float" "float?" "string" "string?" "bool" "bool?" "list?"
-      "pair?" "null?" "fun" "fun?" "format" "match" "slice" "length" "with"
+      "pair?" "null?" "fun" "fun?" "format" "match" "slice" "length" "wrap"
       "typedef" "struct" "struct?" "while" "rec" "this" "to" "of" "_" "void" "void?"))
 
 

@@ -2,7 +2,7 @@
 (require cm/core/error cm/core/types cm/core/ast
          cm/core/operators cm/core/parse-auxiliaries
          cm/core/pre-parse)
-(provide (all-defined-out))
+(provide parse-expr half-parse-expr)
 (define error-id 2)
 
 ;; for use in eval of ast nodes
@@ -15,7 +15,9 @@
 
 (define (parse-expr tokens) 
   (parse-to-ast (tokens-to-prefix-form (pre-parse-expr tokens))))
-  ;(tokens-to-prefix-form (pre-parse-expr tokens)))
+
+(define (half-parse-expr tokens)
+  (tokens-to-prefix-form (pre-parse-expr tokens)))
 
 ;; (1 + 2 * 3) -> + 1 * 2 3
 ;; returned expresions are parenthesis free
@@ -26,17 +28,22 @@
            [(list h) #:when (not (is-operator? h)) (list h)] 
            ;; unwrap all outer parens from token list, convert to s-expr and
            ;; then rewrap with one layer of parens
-           [tokens (tokens-to-prefix-form-aux (unwrap-expr tokens) '() 0 0)])) 
+           [tokens (tokens-to-prefix-form-aux (unwrap-expr tokens) '() -1 0)])) 
 
 (define (tokens-to-prefix-form-aux tokens acc preced pcount) 
     (match tokens
-        ;; probably something like (1 2 + 3)
+        ;; shouldn't get here
         ['() #:when (= preced max-precedences) 
-            ;; there is no operator which must mean that
-            ;; there is no operator or a null operator
-            (let find-null-op ([tokens (reverse acc)] [acc '()] [pcount 0])
+            (cm-error error-id "Exhausted precedences.")]
+        ;; null op case
+        [_ #:when (= preced -1) 
+           ;; looks for things like (4 5 + 6), and splits around the null op.
+           ;; if we are the end of a sub-expr or a non-operator and the next
+           ;; item in the list is a non-operator, then a null op must be present
+            (let find-null-op ([tokens tokens] [acc '()] [pcount 0])
                 (match tokens
-                [(cons ")" t) #:when (= 1 pcount) 
+                [(cons ")" t) #:when (and (= 1 pcount) (not (null? t))
+                                                (not (is-operator? (car t)))) 
                     (append (tokens-to-prefix-form (reverse (cons ")" acc)))
                             (tokens-to-prefix-form t))]
                 ;; increment pcount
@@ -44,9 +51,12 @@
                 ;; decrement pcount
                 [(cons ")" t) (find-null-op t (cons ")" acc) (sub1 pcount))]
                 ;; is not a paren or op, must be a value
-                [(cons h t) #:when (and (not (is-operator? h)) (zero? pcount)) 
-                    (append (list h)
+                [(cons h t) #:when (and (zero? pcount) (not (is-operator? h))
+                                        (not (null? t)) (not (is-operator? (car t)))) 
+                    (append (tokens-to-prefix-form (reverse acc)) (list h)
                             (tokens-to-prefix-form t))]
+                ;; no null op, next precedence
+                ['() (tokens-to-prefix-form-aux (reverse acc) '() (add1 preced) 0)]
                 [(cons h t) (find-null-op t (cons h acc) pcount)]))]
         ;; try again since we didn't find an op of current precedence
         ['() (tokens-to-prefix-form-aux (reverse acc) '() (add1 preced) 0)]

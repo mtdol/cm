@@ -24,7 +24,7 @@
         (cons "def"         (OpData 2 "prefix"  0   'Def     '()))
         (cons "lambda"      (OpData 2 "prefix"  0   'Lambda  '()))
         (cons "in"          (OpData 1 "prefix"  0   'In      '()))
-        (cons "with"        (OpData 1 "prefix"  0   'With    '()))
+        (cons "wrap"        (OpData 1 "prefix"  0   'Wrap    '()))
         (cons "yields"      (OpData 1 "prefix"  0   'Yields  '()))
         (cons "case"        (OpData 3 "prefix"  0   'Case    '()))
         (cons "when"        (OpData 2 "infix"   0   'When    '()))
