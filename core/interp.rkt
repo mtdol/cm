@@ -12,10 +12,13 @@
 
 ;; converts values into the output format
 (define (prepare-for-output v)
-  (cond
-    [(is-fun? v) v]
-    [(is-struct? v) v]
-    [else (string-coerce v)]))
+  ;(cond
+    ;[(is-fun? v) v]
+    ;[(is-struct? v) v]
+    ;[else (string-coerce v)]
+    
+    ;))
+    v)
 
 ;; takes in an expr or a statement and returns a list of all accumulated values
 (define (interp ast) 
@@ -54,7 +57,9 @@
         [(Print e) (interp-print e context)]
         [(Error e) (error (string-coerce (interp-expr e context)))] 
         [(Eval s) (eval-string (string-coerce (interp-expr s context)))] 
+        [(Typedef e1 e2) (interp-typedef e1 e2)]
         [(Struct e1 e2) (interp-struct e1 e2 context)]
+        [(IsStruct e1 e2) (interp-struct? e1 e2 context)]
         [(Var v) (interp-var v context)]
         [(Int i) i]
         [(Float f) f]
@@ -190,21 +195,23 @@
             (match e1
                    ;; sets var in global context hash and returns value to caller
                    [(Prim1 'int (Var v))
-                    (assign-type-check 'int v3 v) (set-global-var! v v3) v3]
+                    (assign-type-check "int" v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'float (Var v))
-                    (assign-type-check 'float v3 v) (set-global-var! v v3) v3]
+                    (assign-type-check "float" v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'string (Var v))
-                    (assign-type-check 'string v3 v) (set-global-var! v v3) v3]
+                    (assign-type-check "string" v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'bool (Var v))
-                    (assign-type-check 'bool v3 v) (set-global-var! v v3) v3]
+                    (assign-type-check "bool" v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'list (Var v))
-                    (assign-type-check 'list v3 v) (set-global-var! v v3) v3]
+                    (assign-type-check "list" v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'pair (Var v))
-                    (assign-type-check 'pair v3 v) (set-global-var! v v3) v3]
+                    (assign-type-check "pair" v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'fun (Var v))
-                    (assign-type-check 'fun v3 v) (set-global-var! v v3) v3]
+                    (assign-type-check "fun" v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'dynamic (Var v))
                     (set-global-var! v v3) v3]
+                   [(Struct (Var label) (Var v))
+                    (assign-type-check (get-struct-type-string label) v3 v) (set-global-var! v v3) v3]
                    ;; implied dynamic case
                    [(Var v)
                     (set-global-var! v v3) v3]
@@ -221,21 +228,23 @@
             (match e1
                    ;; sets var in global context hash and returns value to caller
                    [(Prim1 'int (Var v))
-                    (assign-type-check 'int v3 v) (interp-expr e4 (set-local-var v v3 context))]
+                    (assign-type-check "int" v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'float (Var v))
-                    (assign-type-check 'float v3 v) (interp-expr e4 (set-local-var v v3 context))]
+                    (assign-type-check "float" v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'string (Var v))
-                    (assign-type-check 'string v3 v) (interp-expr e4 (set-local-var v v3 context))]
+                    (assign-type-check "string" v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'bool (Var v))
-                    (assign-type-check 'bool v3 v) (interp-expr e4 (set-local-var v v3 context))]
+                    (assign-type-check "bool" v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'list (Var v))
-                    (assign-type-check 'list v3 v) (interp-expr e4 (set-local-var v v3 context))]
+                    (assign-type-check "list" v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'pair (Var v))
-                    (assign-type-check 'pair v3 v) (interp-expr e4 (set-local-var v v3 context))]
+                    (assign-type-check "pair" v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'fun (Var v))
-                    (assign-type-check 'fun v3 v) (interp-expr e4 (set-local-var v v3 context))]
+                    (assign-type-check "fun" v3 v) (interp-expr e4 (set-local-var v v3 context))]
+                   [(Struct (Var label) (Var v))
+                    (assign-type-check (get-struct-type-string label) v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'dynamic (Var v))
-                    (assign-type-check 'dynamic v3 v) (interp-expr e4 (set-local-var v v3 context))]
+                    (interp-expr e4 (set-local-var v v3 context))]
                    ;; implied dynamic case
                    [(Var v)
                     (interp-expr e4 (set-local-var v v3 context))]
@@ -252,10 +261,13 @@
                    ;; sets var in global context hash and returns value to caller
                    [(Prim1 op (Var v)) #:when (member op 
                                 '(int float string bool list pair fun dynamic))
-                     (Fun v op context e3)]
+                     (Fun v (symbol->string op) context e3)]
+                   ;; struct guard
+                   [(Struct (Var label) (Var v)) 
+                     (Fun v (get-struct-type-string label) context e3)]
                    ;; implied dynamic case
                    [(Var v)
-                     (Fun v 'dynamic context e3)]
+                     (Fun v "dynamic" context e3)]
                    [_ (cm-error error-id "Unknown Item on left hand of lambda")]
                    )]
          [_ (cm-error error-id "Lambda is missing an assignment.")]))
@@ -270,14 +282,51 @@
             (interp-expr fexpr (set-local-var var v1 fcontext)))]
          [_ (cm-error error-id "Attempted to apply onto a non function.")]))
 
+(define (interp-typedef e1 e2)
+  (match e2 [(Assign1 e2-2)
+  (let ([lst2 (ast-cons-to-racket e2-2)])
+  (match e1
+         [(Var v) #:when (list? lst2)
+          (let verify-schema ([lst lst2] [acc '()])
+            (match lst
+                   ;; set schema if no errors were found
+                   ['() (set-type! v (reverse acc)) (Void)]
+                   [(cons (Var _) t) (verify-schema t (cons (car lst) acc))]
+                   [(cons (Prim1 grd (Var _)) t) #:when 
+                                (member grd '(int float string bool list pair fun dynamic)) 
+                        (verify-schema t (cons (car lst) acc))]
+                   ;; struct inside a struct
+                   [(cons (Struct label (Var _)) t) 
+                        (verify-schema t (cons (car lst) acc))]
+                   [(cons h t) (cm-error error-id 
+                        (format "Unknown element ~a inside typedef schema." h))]))]
+         [(Var v) (cm-error error-id "Invalid schema for typedef. Schema must be a list.")]
+         [_ (cm-error error-id "Missing Label for typedef.")]))
+    ]
+    [_ (cm-error error-id "Improperly formed typedef.")]))
+
 (define (interp-struct e1 e2 context)
   (match e1
          [(Var v)
           (match (interp-expr e2 context)
                  ;; struct args must be a list (null for no args, still technically a list)
-                 [res #:when (list? res) (CmStruct v res)]
+                 [res #:when (list? res) 
+                      (match (get-type-data v)
+                             [#f (cm-error error-id (format "Type ~a has not been declared." v))]
+                             [schema
+                            (match (valid-against-schema? v schema res)
+                                   [#t (CmStruct v res)]
+                                   [#f (cm-error error-id 
+                (format (string-append "Could not validate struct against type schema:"
+                                       "\nstruct:\n~a ~a\nschema:\n~a")
+                        v res (get-type-data v)))])])]
                  [_ (cm-error error-id "Arguments to struct must be a list or null.")])]
-         [_ (cm-error error-id "Missing Label for struct.")]))
+         [_ (cm-error error-id "Missing label for struct.")]))
+
+(define (interp-struct? e1 e2 context)
+  (match e1
+         [(Var label1) (racket-to-bool (is-struct-type? label1 (interp-expr e2 context)))]
+         [_ (cm-error error-id "Missing label for struct question.")]))
 
 (define (interp-print e context)
   (let ([v (interp-expr e context)])
@@ -290,6 +339,13 @@
 ;;
 
 (define (eval-string s) (eval (read (open-input-string s))))
+
+;; turns an ast cons node(s) into a racket pair, list
+(define (ast-cons-to-racket node)
+  (match node
+         [(Prim2 'cons a b) (cons (ast-cons-to-racket a) (ast-cons-to-racket b))]
+         [(Null) '()]
+         [a a]))
 
 ;; applies the op to the given arg list if the type of arg1 matches type
 (define (apply-if-type types op op-name arg1 arg2)
@@ -306,17 +362,51 @@
 ;; throws an exception if the given type and the type of the value do not match
 ;; returns true if types match
 (define (assign-type-check type value var)
-  (if (equal? type 'dynamic) #t 
+  (if (string=? type "dynamic") #t 
   (let ([v-type (get-type value)]) 
-    (if (or (string=? (symbol->string type) v-type)
+    (if (or (string=? type v-type)
             ;; exceptions
             ;; a null is a list
-            (and (equal? type 'list) (string=? v-type "null"))
+            (and (string=? type "list") (string=? v-type "null"))
             ;; a non-null list is a pair
-            (and (equal? type 'pair) (string=? v-type "list")))
+            (and (string=? type "pair") (string=? v-type "list")))
       #t
       (cm-error error-id 
         (format "Recieved type ~a for var ~a but expected ~a." v-type var type))))))
+
+;; checks if the given list matches the schema for the type
+(define (valid-against-schema? label schema lst)
+  ;(let ([schema (get-type-data label)])
+    (let aux ([lst lst] [schema-lst schema])
+      (match lst
+             ['() (null? schema-lst)]
+             [(cons h t) 
+              (match schema-lst
+                     ['() #f]
+                     [(cons (Var v) schema-t) (aux t schema-t)]
+                     [(cons (Prim1 'dynamic (Var v)) schema-t) (aux t schema-t)]
+                     [(cons (Prim1 'int (Var v)) schema-t)
+                      (if (is-int? h) (aux t schema-t) #f)]
+                     [(cons (Prim1 'float (Var v)) schema-t)
+                      (if (is-float? h) (aux t schema-t) #f)]
+                     [(cons (Prim1 'bool (Var v)) schema-t)
+                      (if (is-bool? h) (aux t schema-t) #f)]
+                     [(cons (Prim1 'string? (Var v)) schema-t)
+                      (if (is-string? h) (aux t schema-t) #f)]
+                     [(cons (Prim1 'pair (Var v)) schema-t)
+                      (if (is-pair? h) (aux t schema-t) #f)]
+                     [(cons (Prim1 'list (Var v)) schema-t)
+                      (if (is-list? h) (aux t schema-t) #f)]
+                     [(cons (Prim1 'fun (Var v)) schema-t)
+                      (if (is-fun? h) (aux t schema-t) #f)]
+                     [(cons (Struct (Var label) (Var v)) schema-t)
+                      (match h
+                             [(CmStruct l2 _) #:when (string=? l2 label) (aux t schema-t)]
+                             [_ #f])]
+                      ;; the schema should have been validated, so we will
+                      ;; only end up here if something is wrong
+                      [_ (cm-error error-id (format "Struct instance declaration could not be understood. Struct ~a" label))])]
+             )))
 
 ;; converts a pair to a list if it wasn't already
 (define (pair-to-list p)

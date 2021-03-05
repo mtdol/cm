@@ -56,6 +56,11 @@
             #:when (or (string=? h1 "def") (string=? h1 "lambda"))
             (cons h1 (cons h2 (cons h3 (cons ":assign1"
                 (replace-assign-commas (cons h1 t))))))]
+        ;; def struct S x, y case
+        [(cons h1 (cons h2 (cons h3 (cons h4 (cons "cons" t)))))
+            #:when (or (string=? h1 "def") (string=? h1 "lambda"))
+            (cons h1 (cons h2 (cons h3 (cons h4 (cons ":assign1"
+                (replace-assign-commas (cons h1 t)))))))]
         [(cons h t) (cons h (replace-assign-commas t))]))
 
 ;; walks down the list, conses, and returns the list back with the first

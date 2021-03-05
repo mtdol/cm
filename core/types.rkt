@@ -16,6 +16,14 @@
 (define (is-struct? v) (match v [(CmStruct _ _) #t] [_ #f]))
 (define (is-void? v) (match v [(Void) #t] [_ #f]))
 
+;; yields true if v is a struct with the same label as label1
+(define (is-struct-type? label1 v) 
+  (match v [(CmStruct label2 _) (string=? label1 label2)] [_ #f]))
+
+;; gives the type string for a label of a struct
+(define (get-struct-type-string label)
+    (format "struct ~a" label))
+
 (define (get-type v)
   (cond 
     [(is-string? v) "string"]
@@ -26,7 +34,7 @@
     [(is-list? v) "list"]
     [(is-pair? v) "pair"]
     [(is-fun? v) "fun"]
-    [(is-struct? v) (match v [(CmStruct label _) (format "struct ~a" label)])]
+    [(is-struct? v) (match v [(CmStruct label _) (get-struct-type-string label)])]
     [(is-void? v) "void"]
     [else "unknown"]))
 
@@ -49,8 +57,10 @@
 
 (define (string-coerce v) 
   (cond 
-        ;[(is-struct? v) (cm-error error-id "Cannot coerce a struct to a string.")]
-        [(is-struct? v) v]
+        [(is-struct? v) 
+         (match v
+                [(CmStruct label vals) (format "(struct ~a ~a)" label (string-coerce vals))]
+                )]
     [else
   (match (get-type v)
          ["string" v]
@@ -62,7 +72,7 @@
          ["null" "null"]
          ["void" ""]
          ["fun" (match v [(Fun var type context expr)
-                          (format "Fun ~a ~a -> ~a" type var expr)])]
+                          (format "Fun ~a ~a" type var)])]
          [_ (cm-error error-id "String coersion error.")])]))
 (define (int-coerce v) 
   (cond [(is-struct? v) (cm-error error-id "Cannot coerce a struct to an int.")]

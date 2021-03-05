@@ -32,7 +32,7 @@
 ;; | (Wrap Expr)
 ;; | (Typedef Var Assign1)
 ;; | (Struct Var Expr)
-;; | (Struct? Var Expr)
+;; | (IsStruct Var Expr)
 ;; | (Eval Expr)
 ;; | (Error Expr)
 ;; | (Stat i Expr Stat)
