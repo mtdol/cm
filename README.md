@@ -108,5 +108,5 @@ def fact = lam int n =
     else n * (n - 1 : fact).
     
 # prints 24
-@ 4 : fact
+@ 4 : fact.
 ```
