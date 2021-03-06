@@ -39,17 +39,9 @@
         [(If e1 e2) (interp-if e1 e2 context)]
         [(Cond e) 
          (match e
-                [(Case _ _ _) (interp-expr e context)]
+                [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
                 [_ (cm-error error-id "Cond is missing a case.")])]
-        [(Case e1 e2 e3) 
-         (if (bool-to-racket (interp-expr e1 context)) (interp-expr e2 context) 
-           (match e3 
-                  [(Case _ _ _) (interp-expr e3 context)]
-                  [(Else _) (interp-expr e3 context)]
-                  [(End) (cm-error error-id "Cond matching failed. Hit end.")]
-                  [_ (cm-error error-id "Cond is missing its components.")]))]
-        [(Yields e) (interp-expr e context)]
-        [(Else e) (interp-expr e context)]
+        [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
         [(Wrap e) (interp-expr e context)]
         [(Def e1 e2) (interp-def e1 e2 context)]
         [(Let e1 e2) (interp-let e1 e2 context)]
@@ -107,7 +99,8 @@
         ['add (apply-if-type '("int" "float") + "plus" v1 v2)]
         ['sub (apply-if-type '("int" "float") - "minus" v1 v2)]
         ['mult (apply-if-type '("int" "float") * "mult" v1 v2)]
-        ['div (apply-if-type '("float") / "div" v1 v2)]
+        ['div (if (zero? v2) (cm-error error-id "Divide by zero.")
+         (apply-if-type '("float") / "div" v1 v2))]
         ['mod (apply-if-type '("int") modulo "mod" v1 v2)]
         ['exp (apply-if-type '("int" "float") expt "exp" v1 v2)]))
  
@@ -177,6 +170,20 @@
                        (interp-expr e3 context) (interp-expr e5 context))]
                  [_ (cm-error error-id "Then clause is missing an else.")])]
          [_ (cm-error error-id "If clause is missing a then.")]))
+
+(define (interp-case e1 e2 e3 context)
+  (match e2
+         [(Yields e2-2)
+          (match e3
+                 [(Case e3-1 e3-2 e3-3) 
+                  (if (bool-to-racket (interp-expr e1 context)) (interp-expr e2-2 context)
+                    (interp-case e3-1 e3-2 e3-3 context))]
+                 [(Else e3-3)
+                  (if (bool-to-racket (interp-expr e1 context)) (interp-expr e2-2 context)
+                    (interp-expr e3-3 context))]
+                 [_ (cm-error error-id "Case must end in else or another case.")]
+                 )]
+         [_ (cm-error error-id "Case is missing yields.")]))
 
 (define (interp-var var context)
   ;; check local context first
