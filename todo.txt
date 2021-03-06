@@ -1,6 +1,4 @@
 . figure out how to get lex to accept strings with \" in them
-. standardized testing (always could use more)
-. how exactly should type system work
 
 . printf (print + format)
 . implement: format, slice, match
@@ -11,7 +9,6 @@
 
 later...
 
-. struct datatype
 . load
     - loads both racket modules and cm ones
     - takes a string or list of strings
@@ -42,30 +39,8 @@ defun acc_pos lst =
     | null -> null
     end.
 
-
-# struct forms
-#
-
-# declaration of type
-typedef St = int a, b, string c;.
-
-# creating an instance
-struct St (4, 7.5, "stuff").
-
-# guard
-lam struct St x = x.
-
-# question
-struct? St x.
-
-# match case
+# struct match case
 | struct St (a, b, c) -> a.
 
-#apply list operator
-appl f 3,4,5;
-# is equal to
-5 : 4 : 3 : f
-
-# null argument lambda, called with appl
+# null argument lambda
 def oneplustwo = lam null = 1 + 2
-appl oneplustwo null

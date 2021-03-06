@@ -25,6 +25,7 @@
 ;; | (Case Expr Expr Expr)
 ;; | (Yields Expr)
 ;; | (When Expr Expr)
+;; | (Appl Var Expr)
 ;; | (Print Expr)
 ;; | (Format Expr With)
 ;; | (Match Expr With)
@@ -88,6 +89,7 @@
 (struct Typedef (e1 e2)     #:prefab)
 (struct Struct (e1 e2)      #:prefab)
 (struct IsStruct (e1 e2)    #:prefab)
+(struct Appl (e1 e2)        #:prefab)
 (struct Eval (e)            #:prefab)
 (struct Error (e)           #:prefab)
 (struct Stat (i e st)       #:prefab) ;; first item is line-number

@@ -33,7 +33,7 @@
 (define (interp-expr ast context)
   (match ast
         [(Void) (Void)]
-        [(Prim2 'apply e1 e2) (interp-apply e1 e2 context)]
+        [(Prim2 'apply e1 e2) (interp-apply (interp-expr e1 context) (interp-expr e2 context))]
         [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1 context) (interp-expr e2 context))]
         [(Prim1 op e) (interp-prim1 op (interp-expr e context))]
         [(If e1 e2) (interp-if e1 e2 context)]
@@ -52,6 +52,7 @@
         [(Typedef e1 e2) (interp-typedef e1 e2)]
         [(Struct e1 e2) (interp-struct e1 e2 context)]
         [(IsStruct e1 e2) (interp-struct? e1 e2 context)]
+        [(Appl e1 e2) (interp-appl e1 e2 context)]
         [(Var v) (interp-var v context)]
         [(Int i) i]
         [(Float f) f]
@@ -279,15 +280,37 @@
                    )]
          [_ (cm-error error-id "Lambda is missing an assignment.")]))
 
-(define (interp-apply e1 e2 context)
-  (match (interp-expr e2 context)
+(define (interp-apply v1 v2)
+  (match v2
          [(Fun var type fcontext fexpr) 
-          (let ([v1 (interp-expr e1 context)])
             ;; check that the application matches the functions type
             (assign-type-check type v1 var)
             ;; interp with modified context
-            (interp-expr fexpr (set-local-var var v1 fcontext)))]
+            (interp-expr fexpr (set-local-var var v1 fcontext))]
          [_ (cm-error error-id "Attempted to apply onto a non function.")]))
+
+;(define (interp-apply e1 e2 context)
+  ;(match e2
+         ;[(Fun var type fcontext fexpr) 
+          ;(let ([v1 (interp-expr e1 context)])
+            ;;; check that the application matches the functions type
+            ;(assign-type-check type v1 var)
+            ;;; interp with modified context
+            ;(interp-expr fexpr (set-local-var var v1 fcontext)))]
+         ;[_ (cm-error error-id "Attempted to apply onto a non function.")]))
+
+(define (interp-appl e1 e2 context)
+  (match (interp-expr e2 context)
+    [l1 #:when (list? l1) 
+      (let aux ([lst l1] [res (interp-expr e1 context)])
+        (match lst
+               ['() res]
+               [(cons h t) (aux t (interp-apply h res))]
+
+               ))]
+    [_ (cm-error error-id "Arguments to appl must be a list.")]
+
+          ))
 
 (define (interp-typedef e1 e2)
   (match e2 [(Assign1 e2-2)

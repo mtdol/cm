@@ -1,21 +1,36 @@
-def _print = lam v = print v. # allows print to be used like a funtion
+def _print = lam v = print v. # allows print to be used like a function
 
-def _number? = lam v =
+def number? = lam v =
     let t = type v in
         t = "int" or t = "float".
 
-def _type_err = lam dynamic v, string t, string e, fun f =
-    if type v != t then error e else f.
+def add1 = lam int n = n + 1.
+def add1f = lam float n = n + 1.0.
+def sub1 = lam int n = n - 1.
+def sub1f = lam float n = n - 1.0.
+def zero? = lam int n = n = 0.
+def zerof? = lam float n = n = 0.0.
+def pos? = lam int n = n > 0.
+def posf? = lam float n = n > 0.0.
+def neg? = lam int n = n < 0.
+def negf? = lam float n = n < 0.0.
+def one? = lam int n = n = 1.
+def onef? = lam float n = n = 1.0.
+def even? = lam int n = n % 2 = 0.
+def odd? = lam int n = n % 2 = 1.
 
-# returns f2 if v : f1 equals true else throws exception e
-def _func_err = lam dynamic v, fun f1, string e, fun f2 =
-    if v : f2 then error e else f2.
+def to_int = lam n = int n.
+def to_float = lam n = float n.
+def to_string = lam n = string n.
+def to_bool = lam n = bool n.
 
+# maps f onto all members of list lst
+def map = lam fun f, list lst = 
+    | null? lst -> null 
+    else (`lst : f), (appl map f,~lst;).
 
-def _add1 = lam x = x + 1.
-def _sub1 = lam x = x - 1.
-def _zero? = lam x = x = 0.
-
-# string funcs
-#def _substring = lam string s, int n1, int n2 =
-#    eval ( "(substring \"" $ s $ "\" " $ n1 $ " " $ n2 $ ")" ).
+# returns a list with only the elements that are true according to f
+def filter = lam fun f, list lst = 
+    | null? lst -> null 
+    | `lst : f -> `lst, (appl filter f,~lst;)
+    else appl filter f,~lst;.
