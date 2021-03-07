@@ -1,5 +1,7 @@
 #lang racket
-(require cm/core/cm readline/readline)
+;(require cm/core/cm readline/readline)
+(require cm/core/cm)
+(define (add-history a) (void))
 
 (define help "`#exit` exit\n`#e` exit\n`#help` display help\n`#run` run mode\n`#runxp` run expression mode\n`#parse` parse mode\n`#parsexp` parse expression mode\n`#token` tokenize mode\n\n")
 (define exit-text "exiting\n")
@@ -56,7 +58,9 @@
          [_ (exit)]))
 
 (define (request) 
-       (readline "> "))
+  (display "> ")
+       (string-replace (read-line) "\r" ""))
+       ;(readline "> "))
         
 
 (define (repl-failsafe)
