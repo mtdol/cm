@@ -1,7 +1,27 @@
 #lang racket
-;(require cm/core/cm readline/readline)
 (require cm/core/cm)
-(define (add-history a) (void))
+
+(define-for-syntax WINDOWS? (equal? (system-type) 'windows))
+
+;; macros for windows versus linux
+(define-syntax (match-opsys stx)
+  (syntax-case stx ()
+    ((_ windows-expr other-expr)
+    (if WINDOWS?
+         #'windows-expr
+         #'other-expr
+        )
+        )))
+
+(match-opsys
+    (begin 
+      (define (request) (display "> ") (string-replace (read-line) "\r" ""))
+      (define (add-history item) (void)))
+    (begin 
+      (require readline/readline)
+      (define (request) (readline "> "))))
+
+
 
 (define help "`#exit` exit\n`#e` exit\n`#help` display help\n`#run` run mode\n`#runxp` run expression mode\n`#parse` parse mode\n`#parsexp` parse expression mode\n`#token` tokenize mode\n\n")
 (define exit-text "exiting\n")
@@ -57,11 +77,6 @@
   (match (cons (f) "")
          [_ (exit)]))
 
-(define (request) 
-  (display "> ")
-       (string-replace (read-line) "\r" ""))
-       ;(readline "> "))
-        
 
 (define (repl-failsafe)
   (with-handlers* (
