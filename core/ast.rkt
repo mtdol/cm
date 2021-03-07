@@ -80,6 +80,7 @@
 (struct Case (e1 e2 e3)     #:prefab)
 (struct Yields (e)          #:prefab)
 (struct When (e1 e2)        #:prefab)
+(struct Load (e)            #:prefab)
 (struct End ()              #:prefab)
 (struct Print (e)           #:prefab)
 (struct Format (e1 e2)      #:prefab)

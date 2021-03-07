@@ -6,7 +6,7 @@ int main (int argc, char *argv[]) {
     char arg[200];
     
     if (argc == 1) {
-        status = system ("racket core/repl.rkt");
+        status = system ("racket -e \"(require cm/core/repl)\"");
     } else if (argc == 2) {
         // treats argv[1] as a file and runs it
         sprintf (arg, "racket -e '(require cm/core/cm) (cm-run-file \"%s\")'", argv[1]);

@@ -1,3 +1,5 @@
+load "std_lib::std.cm".
+
 # filters so only non-negative floats are present,
 # then converts all to ints
 @ let vals =

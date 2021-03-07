@@ -7,6 +7,7 @@
         (cons 2     "Parse Error")
         (cons 3     "Interp Error")
         (cons 4     "Type Error")
+        (cons 5     "Import Error")
         )))
 
 (define (id-to-error-string id) 

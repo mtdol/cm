@@ -65,7 +65,7 @@
                   ) (repl)))
 
 ;; import standard lib
-(cm-run-file-silent "std_lib/std.cm")
+(begin (cm-run-expr "load \"std_lib::std.cm\"") (void))
 
 (display "Welcome to the cm repl!\nType `#exit` or `#e` to exit. Type `#help` for help.\n\n")
 (cleanse repl-failsafe)

@@ -6,21 +6,17 @@
 . look into error handling system
 . defun keyword as shorthand for def and lambda
 
-
-later...
+. repl doesn't work on windows, due to readline
 
 . load
     - loads both racket modules and cm ones
-    - takes a string or list of strings
-    - start strings with 'f:' to indicate file locations
+    - allow * wildcard
+
 . evalp
     - evaluates racket procedures
     - takes a proc name (string) and returns the results of the call as a string
     - prefix racket var names with 'v:'
     
-. installer (linux and windows)
-    - look up racket distro info
-
 
 # aka: def last_item = lam lst = 
 defun last_item lst =
@@ -40,7 +36,7 @@ defun acc_pos lst =
     end.
 
 # struct match case
-| struct St (a, b, c) -> a.
+| struct St (a, b, c;) -> a.
 
 # null argument lambda
 def oneplustwo = lam null = 1 + 2

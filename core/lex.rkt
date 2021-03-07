@@ -1,5 +1,5 @@
 #lang racket
-(provide tokenize-file tokenize-string)
+(provide tokenize-file tokenize-file-abs tokenize-string)
 (define error-id 1)
 
 (require cm/core/error cm/core/reserved-keywords
@@ -107,6 +107,9 @@
     (flatten (port->list cmlex ip)))
 
 
+;; path relative to current location
 (define (tokenize-file name) (tokenize-input (open-input-file name)))
+;; absolute file
+(define (tokenize-file-abs name) (tokenize-input (open-input-file (expand-user-path (build-path name)))))
 (define (tokenize-string str) (tokenize-input (open-input-string str)))
 

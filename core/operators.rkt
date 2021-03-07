@@ -29,6 +29,7 @@
         (cons "case"        (OpData 3 "prefix"  0   'Case    '()))
         (cons "when"        (OpData 2 "infix"   0   'When    '()))
         (cons "appl"        (OpData 2 "prefix"  0   'Appl    '()))
+        (cons "load"        (OpData 1 "prefix"  0   'Load    '()))
         (cons ":assign1"    (OpData 1 "prefix"  0   'Assign1 '()))
         (cons ":assign2"    (OpData 2 "prefix"  0   'Assign2 '()))
         (cons "typedef"     (OpData 2 "prefix"  0   'Typedef '()))
