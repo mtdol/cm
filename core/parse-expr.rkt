@@ -43,7 +43,8 @@
             (let find-null-op ([tokens tokens] [acc '()] [pcount 0])
                 (match tokens
                 [(cons ")" t) #:when (and (= 1 pcount) (not (null? t))
-                                                (not (is-operator? (car t)))) 
+                                     (or (not (is-operator? (car t))) 
+                                         (string=? (op-to-position (car t)) "prefix"))) 
                     (append (tokens-to-prefix-form (reverse (cons ")" acc)))
                             (tokens-to-prefix-form t))]
                 ;; increment pcount
@@ -52,7 +53,9 @@
                 [(cons ")" t) (find-null-op t (cons ")" acc) (sub1 pcount))]
                 ;; is not a paren or op, must be a value
                 [(cons h t) #:when (and (zero? pcount) (not (is-operator? h))
-                                        (not (null? t)) (not (is-operator? (car t)))) 
+                                        (not (null? t)) 
+                                        (or (not (is-operator? (car t))) 
+                                         (string=? (op-to-position (car t)) "prefix"))) 
                     (append (tokens-to-prefix-form (reverse acc)) (list h)
                             (tokens-to-prefix-form t))]
                 ;; no null op, next precedence

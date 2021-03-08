@@ -16,7 +16,7 @@
     - evaluates racket procedures
     - takes a proc name (string) and returns the results of the call as a string
     - prefix racket var names with 'v:'
-    
+
 
 # aka: def last_item = lam lst = 
 defun last_item lst =
