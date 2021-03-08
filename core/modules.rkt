@@ -14,6 +14,9 @@
 
 (define modules (make-hash))
 
+;(define (import-racket-abs name) (require (file name)))
+;(define (import-racket name) (require name))
+
 ;; imports the file into the namespace
 (define (do-import! file)
     (cm-run-file-silent-abs file) (void))

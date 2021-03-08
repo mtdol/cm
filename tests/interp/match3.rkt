@@ -1,0 +1,90 @@
+#lang racket
+(require cm/core/parse-expr cm/core/interp cm/core/lex)
+
+(module+ test
+           (require rackunit))
+
+(module+ test
+
+(interp (parse-expr (tokenize-string "typedef S = a;")))
+(interp (parse-expr (tokenize-string "typedef Si = int a;")))
+(interp (parse-expr (tokenize-string "typedef S2 = a, b;")))
+
+(check-equal? (interp (parse-expr (tokenize-string "match struct S 3; | struct S 3; -> 2 end")))
+2)
+(check-equal? (interp (parse-expr (tokenize-string "match struct S 3; | struct S a; -> 2 end")))
+2)
+(check-equal? (interp (parse-expr (tokenize-string "match struct S 3; | struct S a; -> a + 1 end")))
+4)
+(check-equal? (interp (parse-expr (tokenize-string "match struct Si 3; | struct Si a; -> a + 1 end")))
+4)
+(check-exn exn:fail? (lambda ()
+  (interp (parse-expr (tokenize-string "match struct S 3; | struct S float a; -> a + 1 end")))))
+(check-exn exn:fail? (lambda ()
+  (interp (parse-expr (tokenize-string "match struct Si 3; | struct S a; -> a + 1 end")))))
+
+(check-equal? (interp (parse-expr (tokenize-string "match struct S 3.0; | struct S float a; -> a + 1.0 end")))
+4.0)
+
+(check-equal? (interp (parse-expr (tokenize-string "match struct S2 4,5; | struct S2 a, b; -> 7 end")))
+7)
+
+(check-equal? (interp (parse-expr (tokenize-string "match struct S2 4,5; | struct S2 a, b; -> a + b end")))
+9)
+
+(check-equal? (interp (parse-expr (tokenize-string "match struct S2 4.2,5; | struct S2 float a, b; -> int a + b end")))
+9)
+(check-exn exn:fail? (lambda ()
+  (interp (parse-expr (tokenize-string "match struct S2 4,5; | struct S2 float a, b; -> int a + b end")))))
+(check-exn exn:fail? (lambda ()
+  (interp (parse-expr (tokenize-string "match struct S2 4,5; | struct S2 a, float b; -> int a + b end")))))
+
+
+(check-equal? (interp (parse-expr (tokenize-string "match struct S 3; | s -> 2 end")))
+2)
+
+(check-equal? (interp (parse-expr (tokenize-string "match struct S 3; | s -> string s end")))
+"(struct S (3, null))")
+
+(check-equal? (interp (parse-expr (tokenize-string "match (struct S 3;),4 | a,b -> string a end")))
+"(struct S (3, null))")
+(check-equal? (interp (parse-expr (tokenize-string "match (struct S 3;),4 | a,b -> b end")))
+4)
+
+(check-equal? (interp (parse-expr (tokenize-string "match (struct S 3;),4 | (struct S a;),b -> a end")))
+3)
+
+(check-equal? (interp (parse-expr (tokenize-string "match (struct S 3;),4 | (struct S a;),b -> a+b end")))
+7)
+(check-exn exn:fail? (lambda ()
+  (interp (parse-expr (tokenize-string "match (struct S2 3,2;),4 | (struct S a;),b -> a+b end")))))
+(check-exn exn:fail? (lambda ()
+  (interp (parse-expr (tokenize-string "match (struct S 3;),4 | (struct S a;), float b -> a+b end")))))
+
+(check-equal? (interp (parse-expr 
+    (tokenize-string "match (struct S 3;),4 | (struct S a;), float b -> a+b | (struct S a;), int b -> a + b end")))
+7)
+
+(check-equal? (interp (parse-expr 
+    (tokenize-string "match (struct S2 3,2;),4 | (struct S a;), b -> a+b | (struct S2 a,b;), c -> a + b + c end")))
+9)
+(check-equal? (interp (parse-expr 
+    (tokenize-string "match (struct S2 3,2;),4.1 | (struct S2 a, b;), c -> a + b + int c | (struct S2 a,b;), float c -> a + b + int c + 1 end")))
+9)
+(check-equal? (interp (parse-expr 
+    (tokenize-string "match (struct S2 3,2;),4.1 | (struct S2 a,b;), float c -> a + b + int c + 1 | (struct S2 a, b;), c -> a + b + int c end")))
+10)
+
+
+(check-equal? (interp (parse-expr 
+    (tokenize-string "match (struct S2 3,2.2;),4.1 | (struct S2 a, bool b;), c -> a + b + c | (struct S2 int a, float b;), c -> float a + b + c end")))
+9.3)
+
+
+(check-equal? (interp (parse-expr 
+    (tokenize-string "match (struct S 3;),4 | (struct S a;), b when a + b = 7 -> a+b+1 | (struct S a;), b -> a + b end")))
+8)
+(check-equal? (interp (parse-expr 
+    (tokenize-string "match (struct S 3;),4 | (struct S a;), b when a + b = 8 -> a+b+1 | (struct S a;), b -> a + b end")))
+7)
+)

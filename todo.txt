@@ -2,11 +2,11 @@
 
 . printf (print + format)
 . implement: format, slice, match
-. implement values
+. implement let values
 . look into error handling system
 . defun keyword as shorthand for def and lambda
 
-. repl doesn't work on windows, due to readline
+. cm.exe doesnt work on windows due to the racket syscall
 
 . load
     - loads both racket modules and cm ones

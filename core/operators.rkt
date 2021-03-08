@@ -20,7 +20,7 @@
         (cons "else"        (OpData 1 "prefix"  0   'Else    '()))
         (cons "cond"        (OpData 1 "prefix"  0   'Cond    '()))
         (cons "let"         (OpData 2 "prefix"  0   'Let     '()))
-        (cons "values"      (OpData 2 "prefix"  0   'Values  '()))
+        (cons "values"      (OpData 1 "prefix"  0   'Values  '()))
         (cons "def"         (OpData 2 "prefix"  0   'Def     '()))
         (cons "lambda"      (OpData 2 "prefix"  0   'Lambda  '()))
         (cons "in"          (OpData 1 "prefix"  0   'In      '()))

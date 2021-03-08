@@ -43,6 +43,7 @@
                 [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
                 [_ (cm-error error-id "Cond is missing a case.")])]
         [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
+        [(Match e1 e2) (interp-match (interp-expr e1 context) e2 context)]
         [(Wrap e) (interp-expr e context)]
         [(Def e1 e2) (interp-def e1 e2 context)]
         [(Let e1 e2) (interp-let e1 e2 context)]
@@ -177,6 +178,38 @@
                        (interp-expr e3 context) (interp-expr e5 context))]
                  [_ (cm-error error-id "Then clause is missing an else.")])]
          [_ (cm-error error-id "If clause is missing a then.")]))
+
+(define (interp-match v e context)
+  (match e 
+         [(Case ce1 ce2 ce3)
+          (match ce2
+               [(Yields ce2-1)
+                (match ce1
+                       [(When ce1-1 ce1-2)
+                        (let ([context-2 (match-cons ce1-1 v context)])
+                        (if (and context-2 (bool-to-racket (interp-expr ce1-2 context-2)))
+                          (interp-expr ce2-1 context-2)
+                          (interp-match v ce3 context)
+                          ))
+                        ]
+                       [_ 
+                        (let ([context-2 (match-cons ce1 v context)])
+                          ;; hashes evaluate to #t in racket
+                        (if context-2
+                          (interp-expr ce2-1 context-2)
+                          (interp-match v ce3 context)
+                          ))
+
+                         ]
+                       )
+                ]
+               [_ (cm-error error-id "Missing yields for match case.")])
+          ]
+         [(End) (cm-error error-id (format "Matching failed for ~a." (string-coerce v)))]
+         [_ (cm-error error-id "Invalid match syntax.")]))
+
+(define (match-cons e v context)
+  (if (equal? (interp-expr e context) v) context #f))
 
 (define (interp-case e1 e2 e3 context)
   (match e2
