@@ -87,4 +87,25 @@
 (check-equal? (interp (parse-expr 
     (tokenize-string "match (struct S 3;),4 | (struct S a;), b when a + b = 8 -> a+b+1 | (struct S a;), b -> a + b end")))
 7)
+
+
+(check-equal? (interp (parse-expr 
+    (tokenize-string "match (struct S (struct S 2;);),4 | (struct S a;), b -> b | (struct S a;), b -> 0 end")))
+4)
+
+(check-equal? (interp (parse-expr 
+    (tokenize-string "match (struct S (struct S 2;);),4 | (struct S (struct S a;);), b -> a | (struct S a;), b -> 0 end")))
+2)
+
+(check-exn exn:fail? (lambda ()
+(interp (parse-expr 
+    (tokenize-string "match (struct S (struct S 2;);),4 | (struct S (struct S a);), b -> b | (struct S a;), b -> 0 end")))))
+
+(check-equal? (interp (parse-expr 
+    (tokenize-string "match (struct S (struct S2 2,3;);),4 | (struct S (struct S a;);), b -> a | (struct S (struct S2 a,b;);), c  -> a + b end")))
+5)
+
+(check-equal? (interp (parse-expr 
+    (tokenize-string "match (struct S (struct S2 2,3;);),4 | (struct S (struct S2 a, float b;);), c -> a | (struct S (struct S2 a, int b;);), c  -> a + b end")))
+5)
 )

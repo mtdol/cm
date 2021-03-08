@@ -88,4 +88,16 @@
 (check-equal? (interp (parse-expr 
                 (tokenize-string "match 5.0,3; | a, b when type a = \"int\" -> a | _ -> 2 end")))
 2)
+
+(check-equal? (interp (parse-expr 
+                (tokenize-string "match 5.0,3 | _, b -> b | a, b -> 2 end")))
+3)
+
+(check-equal? (interp (parse-expr 
+                (tokenize-string "match 5.0,3,4 | a, _, c -> c | a, b -> 2 end")))
+4)
+
+(check-equal? (interp (parse-expr 
+                (tokenize-string "match 5.0, (3, 6), 4 | a, (b, c), d -> b + c | a, b -> 2 end")))
+9)
 )

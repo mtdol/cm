@@ -4,7 +4,10 @@
 (define error-id 4)
 
 (struct CmStruct (label args))
+;; all types used in guards minus structs
+(define guard-types '(int float string bool list pair fun dynamic))
 
+;; value -> bool
 (define (is-string? v) (string? v))
 (define (is-int? v) (and (not (flonum? v) ) (integer? v)))
 (define (is-float? v) (flonum? v))
@@ -17,13 +20,30 @@
 (define (is-void? v) (match v [(Void) #t] [_ #f]))
 
 ;; yields true if v is a struct with the same label as label1
+;; string, value -> bool
 (define (is-struct-type? label1 v) 
   (match v [(CmStruct label2 _) (string=? label1 label2)] [_ #f]))
 
+;; string, value -> bool
+(define (is-type? type value)
+  (let ([vtype (get-type value)])
+    (or (string=? type "dynamic") (string=? vtype type))))
+
 ;; gives the type string for a label of a struct
+;; string -> string
 (define (get-struct-type-string label)
     (format "struct ~a" label))
 
+
+;; true if the expr is a list, false otherwise
+;; ast -> bool
+(define (expr-is-list? e)
+  (match e
+         [(Prim2 'cons h t) (expr-is-list? t)]
+         [(Null) #t]
+         [_ #f]))
+
+;; value -> string
 (define (get-type v)
   (cond 
     [(is-string? v) "string"]
@@ -37,6 +57,11 @@
     [(is-struct? v) (match v [(CmStruct label _) (get-struct-type-string label)])]
     [(is-void? v) "void"]
     [else "unknown"]))
+
+;; checks if the values and subvalues of the two args represent the same thing
+(define (deep-equal? v1 v2)
+  ;; TODO, generalize further, if necessary
+  (equal? v1 v2))
 
 (define (string-to-number v) 
     (let ([v2 (string->number v)]) 

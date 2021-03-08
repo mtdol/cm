@@ -186,14 +186,14 @@
                [(Yields ce2-1)
                 (match ce1
                        [(When ce1-1 ce1-2)
-                        (let ([context-2 (match-cons ce1-1 v context)])
+                        (let ([context-2 (match-expr ce1-1 v (hash))])
                         (if (and context-2 (bool-to-racket (interp-expr ce1-2 context-2)))
                           (interp-expr ce2-1 context-2)
                           (interp-match v ce3 context)
                           ))
                         ]
                        [_ 
-                        (let ([context-2 (match-cons ce1 v context)])
+                        (let ([context-2 (match-expr ce1 v (hash))])
                           ;; hashes evaluate to #t in racket
                         (if context-2
                           (interp-expr ce2-1 context-2)
@@ -208,8 +208,55 @@
          [(End) (cm-error error-id (format "Matching failed for ~a." (string-coerce v)))]
          [_ (cm-error error-id "Invalid match syntax.")]))
 
-(define (match-cons e v context)
-  (if (equal? (interp-expr e context) v) context #f))
+;; ast, value, hash -> hash | #f
+(define (match-expr e v context)
+  (match e
+         [(Int i) (if (equal? i v) context #f)]
+         [(Float f) (if (equal? f v) context #f)]
+         [(Bool i1) (match v [(Bool i2) (if (equal? i1 i2) context #f)] [_ #f])]
+         [(Null) (if (null? v) context #f)]
+         [(Void) (match v [(Void) context] [_ #f])]
+         [(String s) (if (string=? s v) context #f)]
+         ;; wildcard, always match
+         [(Var "_") context]
+         ;; implied dynamic var
+         [(Var id) (match-var id "dynamic" v context)]
+         [(Prim1 op (Var id)) #:when (member op guard-types)
+                        (match-var id (symbol->string op) v context)]
+         [(Struct (Var label) lst) #:when (expr-is-list? lst)
+          (match v
+            [(CmStruct label2 lst2) #:when (equal? label label2)
+                    (match-expr lst lst2 context)]
+            [_ #f])]
+         ;[(Lambda id (Assign1 e2))]
+         [(Prim2 'cons e1 e2)
+          (match v
+                 [(cons v1 v2)
+                    (let ([c2 (match-expr e1 v1 context)])
+                        (if (not (equal? c2 #f)) (match-expr e2 v2 c2) #f))]
+                 [_ #f])]
+
+         [_ (cm-error error-id "Invalid syntax for match.")]))
+
+;; Checks that types of var and value match (if they don't returns false).
+;; If types match then returns modified context with itself included
+;;
+;; string, string, value, hash -> hash | #f
+(define (match-var id type v context)
+  (if (is-type? type v)
+    ;; check if we have already seen the var
+    (if (hash-has-key? context id)
+      (if (deep-equal? v (get-local-var-data id context))
+        ;; successful match
+        context
+        ;; does not match earlier var, failed match
+        #f
+        )
+      (set-local-var id v context)
+      )
+    ;; false if types don't match
+    #f
+    ))
 
 (define (interp-case e1 e2 e3 context)
   (match e2
@@ -306,8 +353,7 @@
          [(Assign1 e3) 
             (match e1
                    ;; sets var in global context hash and returns value to caller
-                   [(Prim1 op (Var v)) #:when (member op 
-                                '(int float string bool list pair fun dynamic))
+                   [(Prim1 op (Var v)) #:when (member op guard-types)
                      (Fun v (symbol->string op) context e3)]
                    ;; struct guard
                    [(Struct (Var label) (Var v)) 
@@ -353,7 +399,7 @@
                    ['() (set-type! v (reverse acc)) (Void)]
                    [(cons (Var _) t) (verify-schema t (cons (car lst) acc))]
                    [(cons (Prim1 grd (Var _)) t) #:when 
-                                (member grd '(int float string bool list pair fun dynamic)) 
+                                (member grd guard-types) 
                         (verify-schema t (cons (car lst) acc))]
                    ;; struct inside a struct
                    [(cons (Struct label (Var _)) t) 

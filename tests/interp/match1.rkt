@@ -24,17 +24,12 @@
 (check-equal? (interp (parse-expr (tokenize-string "string match 5 | 5,3 -> 2 | 5 -> 7, 3 end")))
 "(7, 3)")
 
-(check-equal? (interp (parse-expr (tokenize-string "match 5 | match 5 + 1 | 4 -> 0 | 6 -> 5 end -> 3 | 5,3 -> 7 end")))
-3)
+(check-exn exn:fail? (lambda ()
+    (interp (parse-expr (tokenize-string "match 5 | match 5 + 1 | 4 -> 0 | 6 -> 5 end -> 3 | 5,3 -> 7 end")))))
 
-(check-equal? (interp (parse-expr (tokenize-string "match 5 | (match 5 + 1 | 4 -> 0 | 6 -> 5 end) -> 3 | 5,3 -> 7 end")))
-3)
 
-(check-equal? (interp (parse-expr (tokenize-string "match 5 | match 5 + 1 | 4 -> 0 | 6 -> 4 end -> 3 | 5 -> 7 end")))
-7)
-
-(check-equal? (interp (parse-expr (tokenize-string "match 5 | (match 5 + 1 | 4 -> 0 | 6 -> 4 end) -> 3 | 5 -> 7 end")))
-7)
+(check-equal? (interp (parse-expr (tokenize-string "match 5 | 5 -> (match 5 + 1 | 4 -> 0 | 6 -> 8 end) | 5,3 -> 7 end")))
+8)
 
 
 (check-equal? (interp (parse-expr 
