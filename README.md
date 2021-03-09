@@ -63,9 +63,9 @@ Substitute expr for any expression.
 All statements must end in the "dot" operator:
 ```
 # Invalid
-let x = lam n = n + 1 in 1 : n
+let x = lam n = n + 1 in 1 : x
 # Valid
-let x = lam n = n + 1 in 1 : n.
+let x = lam n = n + 1 in 1 : x.
 ```
 
 Construct | Effect | Example | Yields | Explanation
@@ -80,7 +80,7 @@ expr ^ expr | exponentiation | `2 ^ 3` | 8 | Operands must be of same type
 expr % expr | modulus | `4 % 3` | 1 | Operands must be of same type
 ! expr | not | `! true` | 0 | Operands must be of bools
 expr, expr | cons | `1,4,(5,6)` | (1, 4, (5, 6))
-` expr | head | \``(1, 2, 3)` | 1 
+\` expr | head | `head (1, 2, 3)` | 1 
 ~ expr | tail | `~(1, 2, 3)` | 2,3
 null | empty list () | `1,2,3,null` | (1, 2, 3, null)
 ; | cons null | `1,2,3;` | (1, 2, 3, null)
