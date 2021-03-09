@@ -34,3 +34,11 @@ def filter = lam fun f, list lst =
     | null? lst -> null 
     | `lst : f -> `lst, (appl filter f,~lst;)
     else appl filter f,~lst;.
+
+# int | float -> int | float
+def max = lam n1, n2 =
+    if n1 > n2 then n1 else n2.
+
+# int | float -> int | float
+def min = lam n1, n2 =
+    if n1 < n2 then n1 else n2.
