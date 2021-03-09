@@ -90,7 +90,7 @@
 ;; Does not accept expressions with parenthesis.
 (define (parse-to-ast tokens)
   (match tokens
-         ['() (Void)]
+         ['() (Prim0 'void)]
          [(cons h '()) (parse-value h)]
          [(cons h t) #:when (is-operator? h) 
                      (match (parse-op h t) 
@@ -132,8 +132,8 @@
         [(string=? "null" token) (Null)]
         [(string=? "true" token) (Bool 1)]
         [(string=? "false" token) (Bool 0)]
-        [(string=? token "end") (End)]
-        [(string=? token "void") (Void)]
+        [(string=? token "end") (Prim0 'end)]
+        [(string=? token "void") (Prim0 'void)]
         [(is-var-token? token) (Var token)]
         [(is-operator? token)  (cm-error error-id (format "Operand(s) missing for ~a." token))]
         [else (cm-error error-id (format "Invalid variable name: ~a." token))]))

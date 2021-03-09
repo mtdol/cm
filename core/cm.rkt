@@ -1,9 +1,10 @@
 #lang racket
 (require cm/core/lex cm/core/ast cm/core/parse-expr 
-         cm/core/parse-stat cm/core/interp)
+         cm/core/parse-stat cm/core/interp cm/core/ast-to-string)
 (provide cm-run cm-run-silent cm-run-list cm-run-expr cm-run-file cm-run-file-list
          cm-run-file-silent cm-run-file-silent-abs cm-tokenize cm-tokenize-file
-         cm-parse cm-parse-expr cm-parse-file cm-prefix-form)
+         cm-parse cm-parse-expr cm-parse-file cm-prefix-form
+         cm-ast-to-string)
 
 ;; converts the resulting list from interp into values
 (define (cm-values lst) (apply values (flatten lst)))
@@ -37,3 +38,5 @@
 (define (cm-parse-file file) (parse-stat (tokenize-file file)))
 
 (define (cm-prefix-form input) (half-parse-expr (tokenize-string input)))
+
+(define (cm-ast-to-string input) (ast-to-string (parse-stat (tokenize-string input))))

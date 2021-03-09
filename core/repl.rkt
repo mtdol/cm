@@ -23,7 +23,18 @@
 
 
 
-(define help "`#exit` exit\n`#e` exit\n`#help` display help\n`#run` run mode\n`#runxp` run expression mode\n`#parse` parse mode\n`#parsexp` parse expression mode\n`#token` tokenize mode\n\n")
+(define help (string-append "`#exit` exit\n"
+                            "`#e` exit\n"
+                            "`#help` display help\n" 
+                            "`#run` run mode\n" 
+                            "`#runxp` run expression mode\n"
+                            "`#parse` parse mode\n"
+                            "`#parsexp` parse expression mode\n"
+                            "`#prefix` tokens to prefix form mode\n"
+                            "`#tostring` tokens to ast to string mode\n"
+                            "`#token` tokenize mode\n"
+                            "\n"))
+
 (define exit-text "exiting\n")
 
 ;; the cm function we will be calling
@@ -64,11 +75,14 @@
                          (set! mode cm-prefix-form)
                          (add-history "#prefix")
                          (repl))]
+         ["#tostring" (list (displayln "ast to string mode")
+                         (set! mode cm-ast-to-string)
+                         (add-history "#tostring")
+                         (repl))]
          ["#help" (list (display help) (add-history "#help") (repl))]
          [s (list (add-history s)
                   ;; run and print results
                   (print-results (mode s))
-                  ;(displayln (mode s))
                   (repl)
                   )]))
 

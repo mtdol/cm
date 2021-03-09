@@ -60,6 +60,8 @@
    ["neq" "not_equal"]
    ["equals" "equal"]
    ["eq" "equal"]
+   ["==" "eqq"]
+   ["!==" "neqq"]
    ["<" "lt"]
    [">" "gt"]
    [">=" "ge"]

@@ -1,7 +1,7 @@
 . figure out how to get lex to accept strings with \" in them
 
 . printf (print + format)
-. implement: format, slice, match
+. implement: format, slice, length
 . implement let values
 . look into error handling system
 . defun keyword as shorthand for def and lambda
@@ -17,26 +17,6 @@
     - takes a proc name (string) and returns the results of the call as a string
     - prefix racket var names with 'v:'
 
-
-# aka: def last_item = lam lst = 
-defun last_item lst =
-    match lst
-    | null -> error "List was empty!"
-    | h, null -> h
-    | h, t -> t : last_item
-    | _ -> error "Not a list!"
-    end.
-
-# creates a list of all positive values
-defun acc_pos lst =
-    match lst
-    | h, t when h : pos? -> h, (t : acc_pos)
-    | h, t -> t : acc_pos
-    | null -> null
-    end.
-
-# struct match case
-| struct St (a, b, c;) -> a.
 
 # null argument lambda
 def oneplustwo = lam null = 1 + 2

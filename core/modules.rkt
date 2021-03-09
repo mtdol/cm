@@ -40,8 +40,7 @@
     (load-module-hash!))
 
   (match (regexp-match #rx"^f\\:(.+)$" str)
-    ;[(list _ file) (do-import! file) (Void)]
-    [(list _ file) (do-import! file) (Void)]
+    [(list _ file) (do-import! file) (Prim0 'void)]
     ;; else is a module or relative path
     [_ (match (regexp-match #rx"^(.+)\\:\\:(.+)$" str)
               ;; reference module and append onto provided sub-path
@@ -52,7 +51,7 @@
                                         (cm-error error-id (format "Could not find module ~a." module))))))
                     file-path))]
               ;; else assume relative path
-              [_ (do-import-relative! str) (Void)]
+              [_ (do-import-relative! str) (Prim0 'void)]
          )]
    )
   )

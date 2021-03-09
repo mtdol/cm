@@ -69,7 +69,7 @@
                       (if (is-list? h) (aux t schema-t) #f)]
                      [(cons (Prim1 'fun (Var v)) schema-t)
                       (if (is-fun? h) (aux t schema-t) #f)]
-                     [(cons (Struct (Var label) (Var v)) schema-t)
+                     [(cons (Prefix2 'struct (Var label) (Var v)) schema-t)
                       (match h
                              [(CmStruct l2 _) #:when (string=? l2 label) (aux t schema-t)]
                              [_ #f])]

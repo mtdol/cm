@@ -75,5 +75,5 @@
 '#s(Prim2 apply #s(Int 3) #s(Prim2 cons #s(Int 5) #s(Int 7))))
 
 (check-equal? (parse-expr (tokenize-string "3 : 5 + print 7"))
-'#s(Prim2 apply #s(Int 3) #s(Prim2 add #s(Int 5) #s(Print #s(Int 7)))))
+'#s(Prim2 apply #s(Int 3) #s(Prim2 add #s(Int 5) #s(Prim1 print #s(Int 7)))))
 )

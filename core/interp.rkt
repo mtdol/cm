@@ -28,13 +28,25 @@
          (match st
                 [(EOP) (prepare-for-output (interp-prep e i))]
                 [_ (flatten (list (prepare-for-output (interp-prep e i)) (interp st)))])]
-        [(EOP) (prepare-for-output (interp-expr (Void) (hash)))]
+        [(EOP) (prepare-for-output (interp-expr (Prim0 'void) (hash)))]
         [_ (prepare-for-output (interp-expr ast (hash)))]))
 
 (define (interp-expr ast context)
   (match ast
-        [(Void) (Void)]
+        [(Prim0 'void) (Prim0 'void)]
         [(Prim2 'apply e1 e2) (interp-apply (interp-expr e1 context) (interp-expr e2 context))]
+        [(Prim1 'print e) (interp-print e context)]
+        [(Prim1 'error e) (error (string-coerce (interp-expr e context)))] 
+        [(Prim1 'eval s) (eval-string (string-coerce (interp-expr s context)))] 
+        [(Prefix2 'struct e1 e2) (interp-struct e1 e2 context)]
+        [(Prefix2 'struct? e1 e2) (interp-struct? e1 e2 context)]
+        [(Prefix2 'appl e1 e2) (interp-appl e1 e2 context)]
+        [(Prim1 'load e) 
+         (match (interp-expr e context)
+                [s #:when (string? s) (process-import-string s)]
+                [_ (cm-error error-id "Argument to load must be a file.")])
+             ]
+        ;; general prim cases
         [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1 context) (interp-expr e2 context))]
         [(Prim1 op e) (interp-prim1 op (interp-expr e context))]
         [(If e1 e2) (interp-if e1 e2 context)]
@@ -44,22 +56,10 @@
                 [_ (cm-error error-id "Cond is missing a case.")])]
         [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
         [(Match e1 e2) (interp-match (interp-expr e1 context) e2 context)]
-        [(Wrap e) (interp-expr e context)]
         [(Def e1 e2) (interp-def e1 e2 context)]
         [(Let e1 e2) (interp-let e1 e2 context)]
         [(Lambda e1 e2) (interp-lambda e1 e2 context)]
-        [(Print e) (interp-print e context)]
-        [(Error e) (error (string-coerce (interp-expr e context)))] 
-        [(Eval s) (eval-string (string-coerce (interp-expr s context)))] 
         [(Typedef e1 e2) (interp-typedef e1 e2)]
-        [(Struct e1 e2) (interp-struct e1 e2 context)]
-        [(IsStruct e1 e2) (interp-struct? e1 e2 context)]
-        [(Appl e1 e2) (interp-appl e1 e2 context)]
-        [(Load e) 
-         (match (interp-expr e context)
-                [s #:when (string? s) (process-import-string s)]
-                [_ (cm-error error-id "Argument to load must be a file.")])
-             ]
         [(Var v) (interp-var v context)]
         [(Int i) i]
         [(Float f) f]
@@ -72,6 +72,7 @@
 (define (or-op arg1 arg2) (or (bool-to-racket arg1) (bool-to-racket arg2)))
 (define (xor-op arg1 arg2) (xor (bool-to-racket arg1) (bool-to-racket arg2)))
 (define (not-equal? arg1 arg2) (not (equal? arg1 arg2)))
+(define (not-eqq? arg1 arg2) (not (deep-equal? arg1 arg2)))
 (define (not-op arg) (not (bool-to-racket arg)))
 
 (define (interp-prim2 op v1 v2)
@@ -80,6 +81,8 @@
         ['cat (string-append (string-coerce v1)
                            (string-coerce v2))]
         ['comma v2]
+        ['eqq (racket-to-bool (deep-equal? v1 v2))]
+        ['neqq (racket-to-bool (not-eqq? v1 v2))]
         [op #:when (not (string=? (get-type v1) (get-type v2)))
           (cm-error error-id (string-append "Operands of " (symbol->string op)
                 " are not of the same type. Given " (get-type v1)
@@ -185,7 +188,7 @@
           (match ce2
                [(Yields ce2-1)
                 (match ce1
-                       [(When ce1-1 ce1-2)
+                       [(Prim2 'when ce1-1 ce1-2)
                         (let ([context-2 (match-expr ce1-1 v (hash))])
                         (if (and context-2 (bool-to-racket (interp-expr ce1-2 context-2)))
                           (interp-expr ce2-1 context-2)
@@ -205,7 +208,7 @@
                 ]
                [_ (cm-error error-id "Missing yields for match case.")])
           ]
-         [(End) (cm-error error-id (format "Matching failed for ~a." (string-coerce v)))]
+         [(Prim0 'end) (cm-error error-id (format "Matching failed for ~a." (string-coerce v)))]
          [_ (cm-error error-id "Invalid match syntax.")]))
 
 ;; ast, value, hash -> hash | #f
@@ -215,7 +218,7 @@
          [(Float f) (if (equal? f v) context #f)]
          [(Bool i1) (match v [(Bool i2) (if (equal? i1 i2) context #f)] [_ #f])]
          [(Null) (if (null? v) context #f)]
-         [(Void) (match v [(Void) context] [_ #f])]
+         [(Prim0 'void) (match v [(Prim0 'void) context] [_ #f])]
          [(String s) (if (string=? s v) context #f)]
          ;; wildcard, always match
          [(Var "_") context]
@@ -223,7 +226,7 @@
          [(Var id) (match-var id "dynamic" v context)]
          [(Prim1 op (Var id)) #:when (member op guard-types)
                         (match-var id (symbol->string op) v context)]
-         [(Struct (Var label) lst) #:when (expr-is-list? lst)
+         [(Prefix2 'struct (Var label) lst) #:when (expr-is-list? lst)
           (match v
             [(CmStruct label2 lst2) #:when (equal? label label2)
                     (match-expr lst lst2 context)]
@@ -304,7 +307,7 @@
                     (assign-type-check "fun" v3 v) (set-global-var! v v3) v3]
                    [(Prim1 'dynamic (Var v))
                     (set-global-var! v v3) v3]
-                   [(Struct (Var label) (Var v))
+                   [(Prefix2 'struct (Var label) (Var v))
                     (assign-type-check (get-struct-type-string label) v3 v) (set-global-var! v v3) v3]
                    ;; implied dynamic case
                    [(Var v)
@@ -335,7 +338,7 @@
                     (assign-type-check "pair" v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'fun (Var v))
                     (assign-type-check "fun" v3 v) (interp-expr e4 (set-local-var v v3 context))]
-                   [(Struct (Var label) (Var v))
+                   [(Prefix2 'struct (Var label) (Var v))
                     (assign-type-check (get-struct-type-string label) v3 v) (interp-expr e4 (set-local-var v v3 context))]
                    [(Prim1 'dynamic (Var v))
                     (interp-expr e4 (set-local-var v v3 context))]
@@ -356,7 +359,7 @@
                    [(Prim1 op (Var v)) #:when (member op guard-types)
                      (Fun v (symbol->string op) context e3)]
                    ;; struct guard
-                   [(Struct (Var label) (Var v)) 
+                   [(Prefix2 'struct (Var label) (Var v)) 
                      (Fun v (get-struct-type-string label) context e3)]
                    ;; implied dynamic case
                    [(Var v)
@@ -396,13 +399,13 @@
           (let verify-schema ([lst lst2] [acc '()])
             (match lst
                    ;; set schema if no errors were found
-                   ['() (set-type! v (reverse acc)) (Void)]
+                   ['() (set-type! v (reverse acc)) (Prim0 'void)]
                    [(cons (Var _) t) (verify-schema t (cons (car lst) acc))]
                    [(cons (Prim1 grd (Var _)) t) #:when 
                                 (member grd guard-types) 
                         (verify-schema t (cons (car lst) acc))]
                    ;; struct inside a struct
-                   [(cons (Struct label (Var _)) t) 
+                   [(cons (Prefix2 'struct label (Var _)) t) 
                         (verify-schema t (cons (car lst) acc))]
                    [(cons h t) (cm-error error-id 
                         (format "Unknown element ~a inside typedef schema." h))]))]

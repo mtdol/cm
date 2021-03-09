@@ -17,7 +17,7 @@
 (define (is-null? v) (null? v))
 (define (is-fun? v) (match v [(Fun _ _ _ _) #t] [_ #f]))
 (define (is-struct? v) (match v [(CmStruct _ _) #t] [_ #f]))
-(define (is-void? v) (match v [(Void) #t] [_ #f]))
+(define (is-void? v) (match v [(Prim0 'void) #t] [_ #f]))
 
 ;; yields true if v is a struct with the same label as label1
 ;; string, value -> bool
@@ -60,8 +60,12 @@
 
 ;; checks if the values and subvalues of the two args represent the same thing
 (define (deep-equal? v1 v2)
-  ;; TODO, generalize further, if necessary
-  (equal? v1 v2))
+  (match (cons v1 v2)
+         [(cons (CmStruct lab lst1) (CmStruct lab lst2)) (deep-equal? lst1 lst2)]
+         [(cons (Bool i) (Bool i)) #t]
+         [(cons (cons h1 t1) (cons h2 t2)) (and (deep-equal? h1 h2) (deep-equal? t1 t2))]
+         ;; otherwise punt to the more conservative equal? proc
+         [_ (equal? v1 v2)]))
 
 (define (string-to-number v) 
     (let ([v2 (string->number v)]) 
