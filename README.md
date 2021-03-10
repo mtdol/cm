@@ -12,13 +12,29 @@ cd "path to cm dir"
 raco pkg install
 ```
 
+The modules system must also be installed:
+```
+# windows
+cd "path to cm dir"
+./install.ps1
+
+# linux
+cd "path to cm dir"
+./install.sh
+```
+
 Optionally, use
 ```
 gcc cm.c -o cm.exe
 ```
-To compile the cm excecutable, which can make it easier to run files or the repl.
+or `make` to compile the cm excecutable, which can make it easier to run files or the repl.
 
-_Note that currently the cm executable is having trouble running on windows._
+When the executable is compiled, you can use:
+```
+cd "path to cm dir"
+./cm.exe -install
+```
+to automatically install the module system.
 
 ## Repl
 When build is stable, use:
@@ -56,7 +72,40 @@ To run cm.exe silently (printed output only,) use:
 
 There are example files in the `examples` directory, although some may not work at the moment.
 
-### Testing
+## Modules
+There is a file under config/ called `modules.txt`.
+This file is used by cm to determine the absolute paths of modules that can be imported with the `load` keyword.
+
+The file has this form:
+```
+# comment
+"module_name":"absolute_module_path"
+# another comment
+"module2":"path_to_module2"
+```
+
+As of right now there is no package manager, so modules must be added manually to `modules.txt`.
+
+The module installation during setup replaces or adds the `modules.txt` file and fills it
+with the `std_lib` module (required for the repl.)
+
+To import files in the language use one of the three forms:
+```
+load "module::path_to_file_in_module".
+load "f:absolute_path_to_file".
+load "relative_path_to_file".
+```
+For example, `std_lib/std.cm` can be loaded with:
+```
+# as a module
+load "std_lib::std.cm".
+# as an absolute path
+load "f:~/code/cm/std_lib/std.cm".
+# relative to working directory
+load "cm/std_lib/std.cm".
+```
+
+## Testing
 ```
 cd "path to cm dir"
 raco test test/*
@@ -100,6 +149,7 @@ int? expr | is int? | `int? 6` | 1
 ```cond case, case = "\|" Expr1 "->" Expr2 case \| "\|" Expr1 "->" Expr2 Else Expr3``` | cond expression | `cond \| false -> 3 \| 3 -> 5 else 7` | 5 | the "cond" marker is actually optional.
 ```match Expr Case, Case -> Expr1 Yields Expr2 Case \| Expr1 Yields Expr2 end``` | match expression | `match 3,5.1 \| int a, int b -> a - b \| int a, float b -> a + int b end` | 8 | variables and guards can be used in a match expr
 ```match expr1 when expr2 -> expr3 ``` | match conditional | `match 3,5.1 \| a, b when int? b -> a - b \| a, b -> a + int b end` | 8 | `when` adds an extra condition to the match
+_ | wildcard in match | `match 5 \| float a -> "is float" \| _ -> "not a float" end` | "not a float"
 def var = Expr | global binding of var | `def x = 1 + 3` | 4 | def will return the value of var, in addition to binding it
 def guard var = Expr | guarded binding of var | `def int x = 3.5` | type exception | var is only guarded once and can be rewritten as float later
 def dynamic var = Expr | dynamic binding of var | `def dynamic x = 3.5` | binds x to 3.5 | dynamic accepts all bindings and is implied when not present
