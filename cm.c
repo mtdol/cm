@@ -5,8 +5,8 @@
 
 char* replacechr (char* chs, char targ, char rep);
 
-const int WIN32 = 1;
-const int OTHER = 2;
+const int win32 = 1;
+const int other = 2;
 // figure out if windows or "other" (linux)
 #ifdef _WIN32
 const int os = 1;
@@ -22,7 +22,7 @@ int main (int argc, char *argv[]) {
     if (argc == 1) {
         strcpy (query, "racket -e \"(require cm/core/repl)\"");
     } else if (argc == 2 && !(strcmp (argv[1], "-install"))) {
-        if (os == WIN32) {
+        if (os == win32) {
             strcpy (query, ".\\install.ps1");
         } else {
             strcpy (query, "./install.sh");
