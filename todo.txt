@@ -6,8 +6,6 @@
 . look into error handling system
 . defun keyword as shorthand for def and lambda
 
-. cm.exe doesnt work on windows due to the racket syscall
-
 . load
     - loads both racket modules and cm ones
     - allow * wildcard
