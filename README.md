@@ -134,6 +134,7 @@ expr % expr \| mod | modulus | `4 % 3` | 1 | Operands must be of same type
 = < <= > >= !=  \| (eq\|equal\|equals), lt, le, gt, ge, ne | equality operators | `1 = 2` | false | Operands must be of same type
 & \|\| xor \| and or xor | logical binary operators | `true and false` | false | Operands must be bools
 ! expr \| not | not | `! true` | false | Operands must be of bools
+expr $ expr \| cat | string concatenation | "abc" cat 3 | abc3 | auto coerces operands to strings
 expr, expr \| cons | cons | `1,4,(5,6)` | (1, 4, (5, 6))
 \` expr \| head | head | `head (1, 2, 3)` | 1 
 ~ expr \| tail | tail | `~(1, 2, 3)` | 2,3
