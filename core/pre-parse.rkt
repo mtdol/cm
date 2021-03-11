@@ -10,11 +10,9 @@
 ;; prepares tokens for parsing
 (define (pre-parse-expr tokens)
   (replace-assign-commas
-  (replace-assign-equal
   (replace-unary-plus-minus
-  ;(check-missing-operator
   (check-balanced-parens 
-        tokens)))));)
+        tokens))))
 
 ;; replaces unary minus with :uni_minus and unary plus with :uni_plus
 ;; additionally, throws an exception when a infix operator is treated as
@@ -49,17 +47,17 @@
         ['() '()]
         [(cons h1 (cons h2 (cons "cons" t))) 
             #:when (or (string=? h1 "def") (string=? h1 "lambda"))
-            (cons h1 (cons h2 (cons ":assign1"
+            (cons h1 (cons h2 (cons "assign"
                 (replace-assign-commas (cons h1 t)))))]
         ;; def int x, y case
         [(cons h1 (cons h2 (cons h3 (cons "cons" t))))
             #:when (or (string=? h1 "def") (string=? h1 "lambda"))
-            (cons h1 (cons h2 (cons h3 (cons ":assign1"
+            (cons h1 (cons h2 (cons h3 (cons "assign"
                 (replace-assign-commas (cons h1 t))))))]
         ;; def struct S x, y case
         [(cons h1 (cons h2 (cons h3 (cons h4 (cons "cons" t)))))
             #:when (or (string=? h1 "def") (string=? h1 "lambda"))
-            (cons h1 (cons h2 (cons h3 (cons h4 (cons ":assign1"
+            (cons h1 (cons h2 (cons h3 (cons h4 (cons "assign"
                 (replace-assign-commas (cons h1 t)))))))]
         [(cons h t) (cons h (replace-assign-commas t))]))
 
@@ -72,16 +70,3 @@
          [(cons h t) #:when (string=? h target)
                 (cons replacement t)]
          [(cons h t) (cons h (replace-first t target replacement))]))
-
-;; def x equal 2 -> def x :assign1 2
-;; let x equal 2 in x + y -> let x :assign2 2 in x + y 
-(define (replace-assign-equal lst)
-  (match lst
-        ['() '()]
-        [(cons h t) #:when (or (string=? "values" h) (string=? "let" h)) 
-            (cons h
-                (replace-assign-equal (replace-first t "equal" ":assign2")))]
-        [(cons h t) #:when (or (string=? "def" h) (string=? "lambda" h) (string=? "typedef" h)) 
-            (cons h
-                (replace-assign-equal (replace-first t "equal" ":assign1")))]
-        [(cons h t) (cons h (replace-assign-equal t))]))

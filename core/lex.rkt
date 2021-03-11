@@ -79,6 +79,7 @@
    ["$" "cat"]
    ["@" "print"]
    ["lam" "lambda"]
+   [":=" "assign"]
    [":" "apply"]
    ["->" "yields"]
    [(:+ digit) lexeme]

@@ -12,12 +12,11 @@
 ;; | (Prim1 Op1 Expr)
 ;; | (Prim2 Op2 Expr Expr)
 ;; | (Prefix2 Pop2 Expr Expr)
-;; | (Def Var Assign1)
-;; | (Let Var Assign2)
-;; | (Lambda Var Assign1)
+;; | (Def Var Assign)
+;; | (Let Var Assign In)
+;; | (Lambda Var Assign)
 ;; | (In Expr)
-;; | (Assign1 Expr)
-;; | (Assign2 Expr In)
+;; | (Assign Expr)
 ;; | (If Expr Then)
 ;; | (Then Expr Else)
 ;; | (Else Expr)
@@ -46,7 +45,7 @@
 ;;      'gt | 'lt | 'eq | 'ge | 'le | 'add | 'sub | 'mult |
 ;;      'div | 'mod | 'exp | 'when | 'eqq | 'neqq
 ;;
-;; type Pop2 = 'appl | 'struct | 'struct?
+;; type Pop2 = 'appl | 'struct | 'struct? | 'types
 ;;
 ;; type Op1 = 'neg | 'pos | 'head | 'tail | 'not | 'type | 'dynamic | 'int | 'float | 
 ;;      'string | 'bool | 'int? | 'float? | string? | bool? | list? | 'pair? |
@@ -66,11 +65,10 @@
 (struct Prim2 (p e1 e2)     #:prefab)
 (struct Prefix2 (p e1 e2)   #:prefab)
 (struct Def (e1 e2)         #:prefab)
-(struct Let (e1 e2)         #:prefab)
+(struct Let (e1 e2 e3)         #:prefab)
 (struct Lambda (e1 e2)      #:prefab)
 (struct In (e)              #:prefab)
-(struct Assign1 (e)         #:prefab)
-(struct Assign2 (e1 e2)     #:prefab)
+(struct Assign (e)         #:prefab)
 (struct If (e1 e2)          #:prefab)
 (struct Then (e1 e2)        #:prefab)
 (struct Else (e)            #:prefab)

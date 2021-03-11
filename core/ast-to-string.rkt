@@ -32,14 +32,12 @@
                                 (ast-to-string e) ")")]
            [(Typedef v e) (list "(" "typedef " (ast-to-string v) " "
                                 (ast-to-string e) ")")]
-           [(Let e1 e2) (list "(" "let " (ast-to-string e1) " "
-                                (ast-to-string e2) ")")]
+           [(Let e1 e2 e3) (list "(" "let " (ast-to-string e1) " := "
+                                (ast-to-string e2) " in " (ast-to-string e3) ")")]
            [(Lambda v e) (flatten (list "(" "lambda "
                         (ast-to-string-aux v) " " (ast-to-string-aux e) ")"))]
-           [(Assign1 e) (flatten (list "= "
+           [(Assign e) (flatten (list "= "
                         (ast-to-string-aux e)))]
-           [(Assign2 e1 e2) (flatten (list "= "
-                        (ast-to-string-aux e1) " " (ast-to-string e2)))]
            [(If e1 e2) (flatten
                                (list "(" "if " (ast-to-string-aux e1) " "
                                   (ast-to-string-aux e2) ")"))]

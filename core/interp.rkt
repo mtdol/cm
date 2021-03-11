@@ -42,7 +42,7 @@
         [(Try e1 e2) (interp-try-catch e1 e2 context)]
         [(Match e1 e2) (interp-match (interp-expr e1 context) e2 context)]
         [(Def e1 e2) (interp-def e1 e2 context)]
-        [(Let e1 e2) (interp-let e1 e2 context)]
+        [(Let e1 e2 e3) (interp-let e1 e2 e3 context)]
         [(Lambda e1 e2) (interp-lambda e1 e2 context)]
         [(Typedef e1 e2) (interp-typedef e1 e2)]
         [(Var v) (interp-var v context)]
@@ -253,7 +253,7 @@
             [(CmStruct label2 lst2) #:when (equal? label label2)
                     (match-expr lst lst2 context)]
             [_ #f])]
-         ;[(Lambda id (Assign1 e2))]
+         ;[(Lambda id (Assign e2))]
          [(Prim2 'cons e1 e2)
           (match v
                  [(cons v1 v2)
@@ -303,34 +303,29 @@
   (if (not (false? res)) res 
   ;; then check global
   (match (get-global-var-data var)
-         [#f (cm-error "GENERIC" (format "Var ~a has not yet been defined." var))]
+         [#f (cm-error "UNDEFINED" (format "Var ~a has not yet been defined." var))]
          [res res]))))
 
 
 (define (interp-def e1 e2 context)
   (match e2
-         [(Assign1 e3) 
+         [(Assign e3) 
           (let ([v3 (interp-expr e3 context)])
             (match e1
                    ;; sets var in global context hash and returns value to caller
-                   [(Prim1 'int (Var v))
-                    (assign-type-check "int" v3 v) (set-global-var! v v3) v3]
-                   [(Prim1 'float (Var v))
-                    (assign-type-check "float" v3 v) (set-global-var! v v3) v3]
-                   [(Prim1 'string (Var v))
-                    (assign-type-check "string" v3 v) (set-global-var! v v3) v3]
-                   [(Prim1 'bool (Var v))
-                    (assign-type-check "bool" v3 v) (set-global-var! v v3) v3]
-                   [(Prim1 'list (Var v))
-                    (assign-type-check "list" v3 v) (set-global-var! v v3) v3]
-                   [(Prim1 'pair (Var v))
-                    (assign-type-check "pair" v3 v) (set-global-var! v v3) v3]
-                   [(Prim1 'fun (Var v))
-                    (assign-type-check "fun" v3 v) (set-global-var! v v3) v3]
+                   [(Prim1 op (Var v)) #:when (member op guard-types)
+                    (assign-type-check (list (symbol->string op)) v3 v) (set-global-var! v v3) v3]
+                   [(Prefix2 'types types-expr (Var v))
+                    (match (interp-expr types-expr context)
+                           [types-lst #:when (list? types-lst)
+                                (assign-type-check types-lst v3 v)
+                                (set-global-var! v v3) v3]
+                           [_ (cm-error "CONTRACT" "Type arguments to types must be a list.")])]
                    [(Prim1 'dynamic (Var v))
                     (set-global-var! v v3) v3]
                    [(Prefix2 'struct (Var label) (Var v))
-                    (assign-type-check (get-struct-type-string label) v3 v) (set-global-var! v v3) v3]
+                    (assign-type-check (list (get-struct-type-string label)) v3 v)
+                    (set-global-var! v v3) v3]
                    ;; implied dynamic case
                    [(Var v)
                     (set-global-var! v v3) v3]
@@ -340,33 +335,23 @@
                    ))]
          [_ (cm-error "SYNTAX" "Def is missing an assignment.")]))
 
-(define (interp-let e1 e2 context)
-  (match e2
-         [(Assign2 e3 (In e4)) 
-          (let ([v3 (interp-expr e3 context)])
+(define (interp-let e1 e2 e3 context)
+  (match (cons e2 e3)
+         [(cons (Assign e2-2) (In e3-2)) 
+          (let ([v2 (interp-expr e2-2 context)])
             (match e1
                    ;; sets var in global context hash and returns value to caller
-                   [(Prim1 'int (Var v))
-                    (assign-type-check "int" v3 v) (interp-expr e4 (set-local-var v v3 context))]
-                   [(Prim1 'float (Var v))
-                    (assign-type-check "float" v3 v) (interp-expr e4 (set-local-var v v3 context))]
-                   [(Prim1 'string (Var v))
-                    (assign-type-check "string" v3 v) (interp-expr e4 (set-local-var v v3 context))]
-                   [(Prim1 'bool (Var v))
-                    (assign-type-check "bool" v3 v) (interp-expr e4 (set-local-var v v3 context))]
-                   [(Prim1 'list (Var v))
-                    (assign-type-check "list" v3 v) (interp-expr e4 (set-local-var v v3 context))]
-                   [(Prim1 'pair (Var v))
-                    (assign-type-check "pair" v3 v) (interp-expr e4 (set-local-var v v3 context))]
-                   [(Prim1 'fun (Var v))
-                    (assign-type-check "fun" v3 v) (interp-expr e4 (set-local-var v v3 context))]
+                   [(Prim1 op (Var v)) #:when (member op guard-types)
+                    (assign-type-check (list (symbol->string op)) v2 v)
+                    (interp-expr e3-2 (set-local-var v v2 context))]
                    [(Prefix2 'struct (Var label) (Var v))
-                    (assign-type-check (get-struct-type-string label) v3 v) (interp-expr e4 (set-local-var v v3 context))]
+                    (assign-type-check (list (get-struct-type-string label)) v2 v)
+                    (interp-expr e3-2 (set-local-var v v2 context))]
                    [(Prim1 'dynamic (Var v))
-                    (interp-expr e4 (set-local-var v v3 context))]
+                    (interp-expr e3-2 (set-local-var v v2 context))]
                    ;; implied dynamic case
                    [(Var v)
-                    (interp-expr e4 (set-local-var v v3 context))]
+                    (interp-expr e3-2 (set-local-var v v2 context))]
                    [_ (cm-error "SYNTAX" "Unknown Item on left hand of let.")]
 
 
@@ -375,7 +360,7 @@
 
 (define (interp-lambda e1 e2 context)
   (match e2
-         [(Assign1 e3) 
+         [(Assign e3) 
             (match e1
                    ;; sets var in global context hash and returns value to caller
                    [(Prim1 op (Var v)) #:when (member op guard-types)
@@ -394,7 +379,7 @@
   (match v2
          [(Fun var type fcontext fexpr) 
             ;; check that the application matches the functions type
-            (assign-type-check type v1 var)
+            (assign-type-check (list type) v1 var)
             ;; interp with modified context
             (interp-expr fexpr (set-local-var var v1 fcontext))]
          [_ (cm-error "CONTRACT" "Attempted to apply onto a non function.")]))
@@ -414,7 +399,7 @@
           ))
 
 (define (interp-typedef e1 e2)
-  (match e2 [(Assign1 e2-2)
+  (match e2 [(Assign e2-2)
   (let ([lst2 (ast-cons-to-racket e2-2)])
   (match e1
          [(Var v) #:when (list? lst2)

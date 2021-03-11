@@ -6,9 +6,9 @@
 
 (module+ test
 
-(interp (parse-expr (tokenize-string "typedef S = a;")))
-(interp (parse-expr (tokenize-string "typedef Si = int a;")))
-(interp (parse-expr (tokenize-string "typedef S2 = a, b;")))
+(interp (parse-expr (tokenize-string "typedef S := a;")))
+(interp (parse-expr (tokenize-string "typedef Si := int a;")))
+(interp (parse-expr (tokenize-string "typedef S2 := a, b;")))
 
 (check-equal? (interp (parse-expr (tokenize-string "match struct S 3; | struct S 3; -> 2 end")))
 2)

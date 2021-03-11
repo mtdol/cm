@@ -6,14 +6,14 @@
 
 (module+ test
 
-(check-equal? (interp (parse-expr (tokenize-string "def x = match 5 | 5 -> 2 end")))
+(check-equal? (interp (parse-expr (tokenize-string "def x := match 5 | 5 -> 2 end")))
 2)
 
 (check-equal? (interp (parse-expr (tokenize-string "x")))
 2)
 
 
-(interp (parse-expr (tokenize-string "def x = lam n = match n | 5 -> 3 end")))
+(interp (parse-expr (tokenize-string "def x := lam n := match n | 5 -> 3 end")))
 
 (check-equal? (interp (parse-expr (tokenize-string "5 : x")))
 3)
@@ -22,7 +22,7 @@
 (check-exn exn:fail? (lambda ()
   (interp (parse-expr (tokenize-string "4,2:x")))))
 
-(interp (parse-expr (tokenize-string "def x = lam n = match n | 5 -> 3 | 7 -> 1 end")))
+(interp (parse-expr (tokenize-string "def x := lam n := match n | 5 -> 3 | 7 -> 1 end")))
 
 (check-equal? (interp (parse-expr (tokenize-string "5 : x")))
 3)
@@ -37,7 +37,7 @@
 3)
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "def x = match 5 | 6 -> 2 end")))))
+  (interp (parse-expr (tokenize-string "def x := match 5 | 6 -> 2 end")))))
 
 
 ;; variable time

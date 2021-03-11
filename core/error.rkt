@@ -5,6 +5,7 @@
 (define error-types
     (set (list
         "GENERIC" "LEX" "PARSE" "INTERP" "IMPORT" "CONTRACT" "SYNTAX"
+        "UNDEFINED"
         )))
 
 ;; line-number belonging to the current statement

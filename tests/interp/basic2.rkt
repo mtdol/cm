@@ -11,7 +11,7 @@
   (interp (parse-expr (tokenize-string "x")))))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "def 9x = 3")))))
+  (interp (parse-expr (tokenize-string "def 9x := 3")))))
 
 (check-exn exn:fail? (lambda ()
   (interp (parse-expr (tokenize-string "-x")))))
@@ -107,5 +107,5 @@
   (interp (parse-expr (tokenize-string "int \"not a number\"")))))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "let x = 3 in y")))))
+  (interp (parse-expr (tokenize-string "let x := 3 in y")))))
 )

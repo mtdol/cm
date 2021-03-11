@@ -28,20 +28,30 @@
     (cm-error "CONTRACT" 
         (format "Attempted to apply ~a onto ~a." op-name (get-type arg)))))
 
-;; throws an exception if the given type and the type of the value do not match
-;; returns true if types match
-(define (assign-type-check type value var)
+;; tells if the guard type matches for the given value
+;; string, value, string -> bool
+(define (assign-types-match? type value var)
   (if (string=? type "dynamic") #t 
   (let ([v-type (get-type value)]) 
-    (if (or (string=? type v-type)
+    (or (string=? type v-type)
             ;; exceptions
             ;; a null is a list
             (and (string=? type "list") (string=? v-type "null"))
             ;; a non-null list is a pair
-            (and (string=? type "pair") (string=? v-type "list")))
-      #t
-      (cm-error "CONTRACT" 
-        (format "Recieved type ~a for var ~a but expected ~a." v-type var type))))))
+            (and (string=? type "pair") (string=? v-type "list"))))))
+
+
+;; throws an exception if the given type and the type of the value do not match
+;; returns true if types match
+;;
+;; string list, value, string -> void | exception
+(define (assign-type-check types value id)
+   (if (ormap (lambda (type) (assign-types-match? type value id)) types)
+     (void)
+     (cm-error "CONTRACT" 
+       (format "Recieved type ~a for var ~a but expected one of ~a." 
+               (get-type value) id (string-coerce types)))))
+
 
 ;; checks if the given list matches the schema for the type
 (define (valid-against-schema? label schema lst)
