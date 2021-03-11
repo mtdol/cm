@@ -2,7 +2,6 @@
 (require cm/core/ast cm/core/types cm/core/error)
 (provide eval-string ast-cons-to-racket apply-if-type
          apply-if-type-1 assign-type-check valid-against-schema?)
-(define error-id 3)
 
 ;;
 ;; Utilities for interpretation
@@ -21,12 +20,12 @@
 (define (apply-if-type types op op-name arg1 arg2)
   (if (member (get-type arg1) types)
     (op arg1 arg2)
-    (cm-error error-id 
+    (cm-error "CONTRACT" 
         (format "Attempted to apply ~a onto ~a." op-name (get-type arg1)))))
 (define (apply-if-type-1 types op op-name arg)
   (if (member (get-type arg) types)
     (op arg)
-    (cm-error error-id 
+    (cm-error "CONTRACT" 
         (format "Attempted to apply ~a onto ~a." op-name (get-type arg)))))
 
 ;; throws an exception if the given type and the type of the value do not match
@@ -41,7 +40,7 @@
             ;; a non-null list is a pair
             (and (string=? type "pair") (string=? v-type "list")))
       #t
-      (cm-error error-id 
+      (cm-error "CONTRACT" 
         (format "Recieved type ~a for var ~a but expected ~a." v-type var type))))))
 
 ;; checks if the given list matches the schema for the type
@@ -75,7 +74,7 @@
                              [_ #f])]
                       ;; the schema should have been validated, so we will
                       ;; only end up here if something is wrong
-                      [_ (cm-error error-id (format "Struct instance declaration could not be understood. Struct ~a" label))])]
+                      [_ (cm-error "SYNTAX" (format "Struct instance declaration could not be understood. Struct ~a" label))])]
              )))
 
 ;; converts a pair to a list if it wasn't already
@@ -88,13 +87,13 @@
 ;; Ensures that the subarguments given are all lists.
 (define (check-list-arguments args op)
     (if (not (list? args))
-        (cm-error error-id (string-append "Arguments to " op " were not a list. "
+        (cm-error "SYNTAX" (string-append "Arguments to " op " were not a list. "
                               "Perhaps you forgot a semicolon."))
     (let aux ([lst args])
         (match lst
             ['() '()]
             [(cons h t) #:when (not (list? h)) 
-                (cm-error error-id (string-append "All subarguments to " op 
+                (cm-error "SYNTAX" (string-append "All subarguments to " op 
                         " must be lists. "
                        "Perhaps you forgot a semicolon."))]
             [(cons h t) (cons h (aux t))]))))
@@ -105,7 +104,7 @@
             ['() '()]
             [(cons h t) #:when 
               (or (> (length h) maxargs) (< (length h) minargs))
-                (cm-error error-id
+                (cm-error "CONTRACT"
                   (string-append "Incorrect number of subarguments to " op ". "
                        "Min number of args: " (number->string minargs) ". "
                        "Max number of args: " (number->string maxargs) ". "))]

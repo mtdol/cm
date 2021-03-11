@@ -3,7 +3,7 @@
          cm/core/operators cm/core/parse-auxiliaries
          cm/core/pre-parse)
 (provide parse-expr half-parse-expr)
-(define error-id 2)
+(define error-id "PARSE")
 
 ;; for use in eval of ast nodes
 (define ns (module->namespace 'cm/core/ast))

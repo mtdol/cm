@@ -1,7 +1,6 @@
 #lang racket
 (require cm/core/error cm/core/reserved-keywords cm/core/ast cm/core/context)
 (provide (all-defined-out))
-(define error-id 4)
 
 (struct CmStruct (label args))
 ;; all types used in guards minus structs
@@ -70,7 +69,7 @@
 (define (string-to-number v) 
     (let ([v2 (string->number v)]) 
         (match v2
-            [#f (cm-error error-id 
+            [#f (cm-error "GENERIC" 
                     (string-append "String could not be coerced into a number.\n" 
                                       "The string was: " v))]
             [_ v2])))
@@ -102,40 +101,40 @@
          ["void" ""]
          ["fun" (match v [(Fun var type context expr)
                           (format "Fun ~a ~a" type var)])]
-         [_ (cm-error error-id "String coersion error.")])]))
+         [_ (cm-error "GENERIC" "String coersion error.")])]))
 (define (int-coerce v) 
-  (cond [(is-struct? v) (cm-error error-id "Cannot coerce a struct to an int.")]
+  (cond [(is-struct? v) (cm-error "CONTRACT" "Cannot coerce a struct to an int.")]
     [else
   (match (get-type v) 
          ["string" (exact-floor (string-to-number v))]
          ["int" v]
          ["float" (exact-floor v)]
          ["bool" (match v [(Bool i) i])]
-         ["list" (cm-error error-id "Cannot coerce a list to an int.")]
-         ["pair" (cm-error error-id "Cannot coerce a pair to an int.")]
-         ["null" (cm-error error-id "Cannot coerce a null to an int.")]
-         ["void" (cm-error error-id "Cannot coerce a void to an int.")]
-         ["fun" (cm-error error-id "Cannot coerce a fun to an int.")]
-         [_ (cm-error error-id "Int coersion error.")])]))
+         ["list" (cm-error "CONTRACT" "Cannot coerce a list to an int.")]
+         ["pair" (cm-error "CONTRACT" "Cannot coerce a pair to an int.")]
+         ["null" (cm-error "CONTRACT" "Cannot coerce a null to an int.")]
+         ["void" (cm-error "CONTRACT" "Cannot coerce a void to an int.")]
+         ["fun" (cm-error "CONTRACT" "Cannot coerce a fun to an int.")]
+         [_ (cm-error "GENERIC" "Int coersion error.")])]))
 (define (float-coerce v) 
-  (cond [(is-struct? v) (cm-error error-id "Cannot coerce a struct to a float.")]
+  (cond [(is-struct? v) (cm-error "CONTRACT" "Cannot coerce a struct to a float.")]
     [else
   (match (get-type v) 
          ["string" (+ (string-to-number v) 0.0)]
          ["int" (+ v 0.0)]
          ["float" v]
          ["bool" (match v [(Bool 1) 1.0] [(Bool 0) 0.0])]
-         ["list" (cm-error error-id "Cannot coerce a list to a float.")]
-         ["pair" (cm-error error-id "Cannot coerce a pair to a float.")]
-         ["null" (cm-error error-id "Cannot coerce a null to a float.")]
-         ["void" (cm-error error-id "Cannot coerce a void to a float.")]
-         ["fun" (cm-error error-id "Cannot coerce a fun to a float.")]
-         [_ (cm-error error-id "Float coersion error.")])]))
+         ["list" (cm-error "CONTRACT" "Cannot coerce a list to a float.")]
+         ["pair" (cm-error "CONTRACT" "Cannot coerce a pair to a float.")]
+         ["null" (cm-error "CONTRACT" "Cannot coerce a null to a float.")]
+         ["void" (cm-error "CONTRACT" "Cannot coerce a void to a float.")]
+         ["fun" (cm-error "CONTRACT" "Cannot coerce a fun to a float.")]
+         [_ (cm-error "GENERIC" "Float coersion error.")])]))
 
 ;; turns a value into a cm bool
 ;; zero int is the only false value in the language
 (define (bool-coerce v) 
-  (cond [(is-struct? v) (cm-error error-id "Cannot coerce a struct to a bool.")]
+  (cond [(is-struct? v) (cm-error "CONTRACT" "Cannot coerce a struct to a bool.")]
     [else
   (match (get-type v) 
          ["string" (Bool 1)]
@@ -145,11 +144,11 @@
          ["list" (Bool 1)]
          ["pair" (Bool 1)]
          ["null" (Bool 1)]
-         ["void" (cm-error error-id "Cannot coerce a void to a bool")]
-         ["fun" (cm-error error-id "Cannot coerce a fun to a bool.")]
+         ["void" (cm-error "CONTRACT" "Cannot coerce a void to a bool")]
+         ["fun" (cm-error "CONTRACT" "Cannot coerce a fun to a bool.")]
          [#t (Bool 1)]
          [#f (Bool 0)]
-         [_ (cm-error error-id "Bool coersion error.")])]))
+         [_ (cm-error "GENERIC" "Bool coersion error.")])]))
 
 ;; converts a cm bool to a racket bool
 (define (bool-to-racket v) 

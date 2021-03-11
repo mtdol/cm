@@ -1,4 +1,4 @@
-def _print = lam v = print v. # allows print to be used like a function
+def print2 = lam v = print v. # allows print to be used like a function
 
 def number? = lam v =
     let t = type v in

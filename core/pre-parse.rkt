@@ -2,7 +2,7 @@
 ;(require "error.rkt" "operators.rkt" "parse-auxiliaries.rkt")
 (require cm/core/error cm/core/operators cm/core/parse-auxiliaries)
 (provide pre-parse-expr)
-(define error-id 2)
+(define error-id "PARSE")
 
 ;; this file is for performing adjustments to the token list, so it
 ;; will be parsable by the main parser

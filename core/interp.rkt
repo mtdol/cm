@@ -2,7 +2,6 @@
 (require cm/core/ast cm/core/error cm/core/types cm/core/context
          cm/core/parse-stat cm/core/lex cm/core/interp-utils cm/core/modules)
 (provide interp)
-(define error-id 3)
 
 ;; Matthew Dolinka
 ;; cm interpreter
@@ -13,12 +12,6 @@
 
 ;; converts values into the output format
 (define (prepare-for-output v)
-  ;(cond
-    ;[(is-fun? v) v]
-    ;[(is-struct? v) v]
-    ;[else (string-coerce v)]
-    
-    ;))
     v)
 
 ;; takes in an expr or a statement and returns a list of all accumulated values
@@ -44,7 +37,7 @@
         [(Cond e) 
          (match e
                 [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
-                [_ (cm-error error-id "Cond is missing a case.")])]
+                [_ (cm-error "SYNTAX" "Cond is missing a case.")])]
         [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
         [(Try e1 e2) (interp-try-catch e1 e2 context)]
         [(Match e1 e2) (interp-match (interp-expr e1 context) e2 context)]
@@ -58,7 +51,7 @@
         [(Bool i) (Bool i)]
         [(Null) null]
         [(String s) s]
-        [e (cm-error error-id (format "Unknown expression: ~a." e))]))
+        [e (cm-error "SYNTAX" (format "Unknown expression: ~a." e))]))
 
 (define (and-op arg1 arg2) (and (bool-to-racket arg1) (bool-to-racket arg2)))
 (define (or-op arg1 arg2) (or (bool-to-racket arg1) (bool-to-racket arg2)))
@@ -78,7 +71,7 @@
         ['neqq (racket-to-bool (not-eqq? v1 v2))]
         ;; everything below is checked for same operands
         [op #:when (not (string=? (get-type v1) (get-type v2)))
-          (cm-error error-id (string-append "Operands of " (symbol->string op)
+          (cm-error "CONTRACT" (string-append "Operands of " (symbol->string op)
                 " are not of the same type. Given " (get-type v1)
                 ", " (get-type v2) "."))]
         ['and (racket-to-bool 
@@ -104,7 +97,7 @@
         ['add (apply-if-type '("int" "float") + "plus" v1 v2)]
         ['sub (apply-if-type '("int" "float") - "minus" v1 v2)]
         ['mult (apply-if-type '("int" "float") * "mult" v1 v2)]
-        ['div (if (zero? v2) (cm-error error-id "Divide by zero.")
+        ['div (if (zero? v2) (cm-error "CONTRACT" "Divide by zero.")
          (apply-if-type '("float") / "div" v1 v2))]
         ['mod (apply-if-type '("int") modulo "mod" v1 v2)]
         ['exp (apply-if-type '("int" "float") expt "exp" v1 v2)]))
@@ -112,35 +105,40 @@
 (define (interp-prim1 op v)
   (match op
         ['print (interp-print v)]
-        ['error (error (string-coerce v))] 
+        ['error 
+         (match v
+                ;; TODO use cm error struct and use id
+                [(list id msg) (cm-error-no-linenum id msg)]
+                [msg #:when (string? msg) (cm-error-no-linenum "GENERIC" msg)]
+                [_ (cm-error "CONTRACT" "Invalid argument(s) to error.")])]
         ['eval (eval-string (string-coerce v))] 
         ['load 
          (match v 
                 [s #:when (string? s) (process-import-string s)]
-                [_ (cm-error error-id "Argument to load must be a file.")])
+                [_ (cm-error "CONTRACT" "Argument to load must be a file.")])
              ]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]
-        ['pos (cm-error error-id (string-append 
+        ['pos (cm-error "CONTRACT" (string-append 
             "Applied positive to non number. Given type "
             (get-type v) "."))]
         ['neg  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (- v)]
-        ['neg (cm-error error-id (string-append 
+        ['neg (cm-error "CONTRACT" (string-append 
             "Applied negative to non number. Given type "
             (get-type v) "."))]
         ['head  #:when (or (string=? (get-type v) "list" ) 
                         (string=? (get-type v) "pair"))
         (car v)]
-        ['head (cm-error error-id (string-append 
+        ['head (cm-error "CONTRACT" (string-append 
             "Applied head to non list or pair. Given type "
             (get-type v) "."))]
         ['tail  #:when (or (string=? (get-type v) "list" ) 
                         (string=? (get-type v) "pair"))
         (cdr v)]
-        ['tail (cm-error error-id (string-append 
+        ['tail (cm-error "CONTRACT" (string-append 
             "Applied tail to non list or pair. Given type "
             (get-type v) "."))]
         ['length  #:when (or (string=? (get-type v) "list")
@@ -148,7 +146,7 @@
         (length v)]
         ['length  #:when (string=? (get-type v) "string" ) 
         (string-length v)]
-        ['length (cm-error error-id (string-append 
+        ['length (cm-error "CONTRACT" (string-append 
             "Applied length to non list or string. Given type "
             (get-type v) "."))]
         ['type (get-type v)] 
@@ -186,22 +184,23 @@
                  [(Else e5)
                      (if (bool-to-racket (interp-expr e1 context))
                        (interp-expr e3 context) (interp-expr e5 context))]
-                 [_ (cm-error error-id "Then clause is missing an else.")])]
-         [_ (cm-error error-id "If clause is missing a then.")]))
+                 [_ (cm-error "SYNTAX" "Then clause is missing an else.")])]
+         [_ (cm-error "SYNTAX" "If clause is missing a then.")]))
 
 (define (interp-try-catch e1 e2 context)
   (match e2
          [(Catch (Var id) (With e3)) 
             (with-handlers* ([exn:fail? (lambda err 
                 (match err [(list (exn:fail err-msg _))
-                    (let ([err-struct (CmStruct "Error" (list "generic" err-msg))])
+                    (let ([err-struct 
+                        (CmStruct "Error" (list (get-id-from-message err-msg) err-msg))])
                (interp-expr e3 (set-local-var id err-struct context) ))
                                         ])
                                                     )])
                             (interp-expr e1 context))
 
           ]
-         [_ (cm-error error-id "Improperly formed try-catch.")]
+         [_ (cm-error "SYNTAX" "Improperly formed try-catch.")]
 
          ))
 
@@ -229,10 +228,10 @@
                          ]
                        )
                 ]
-               [_ (cm-error error-id "Missing yields for match case.")])
+               [_ (cm-error "SYNTAX" "Missing yields for match case.")])
           ]
-         [(Prim0 'end) (cm-error error-id (format "Matching failed for ~a." (string-coerce v)))]
-         [_ (cm-error error-id "Invalid match syntax.")]))
+         [(Prim0 'end) (cm-error "GENERIC" (format "Matching failed for ~a." (string-coerce v)))]
+         [_ (cm-error "SYNTAX" "Invalid match syntax.")]))
 
 ;; ast, value, hash -> hash | #f
 (define (match-expr e v context)
@@ -262,7 +261,7 @@
                         (if (not (equal? c2 #f)) (match-expr e2 v2 c2) #f))]
                  [_ #f])]
 
-         [_ (cm-error error-id "Invalid syntax for match.")]))
+         [_ (cm-error "SYNTAX" "Invalid syntax for match.")]))
 
 ;; Checks that types of var and value match (if they don't returns false).
 ;; If types match then returns modified context with itself included
@@ -294,9 +293,9 @@
                  [(Else e3-3)
                   (if (bool-to-racket (interp-expr e1 context)) (interp-expr e2-2 context)
                     (interp-expr e3-3 context))]
-                 [_ (cm-error error-id "Case must end in else or another case.")]
+                 [_ (cm-error "SYNTAX" "Case must end in else or another case.")]
                  )]
-         [_ (cm-error error-id "Case is missing yields.")]))
+         [_ (cm-error "SYNTAX" "Case is missing yields.")]))
 
 (define (interp-var var context)
   ;; check local context first
@@ -304,7 +303,7 @@
   (if (not (false? res)) res 
   ;; then check global
   (match (get-global-var-data var)
-         [#f (cm-error error-id (format "Var ~a has not yet been defined." var))]
+         [#f (cm-error "GENERIC" (format "Var ~a has not yet been defined." var))]
          [res res]))))
 
 
@@ -335,11 +334,11 @@
                    ;; implied dynamic case
                    [(Var v)
                     (set-global-var! v v3) v3]
-                   [_ (cm-error error-id "Unknown Item on left hand of def.")]
+                   [_ (cm-error "SYNTAX" "Unknown Item on left hand of def.")]
 
 
                    ))]
-         [_ (cm-error error-id "Def is missing an assignment.")]))
+         [_ (cm-error "SYNTAX" "Def is missing an assignment.")]))
 
 (define (interp-let e1 e2 context)
   (match e2
@@ -368,11 +367,11 @@
                    ;; implied dynamic case
                    [(Var v)
                     (interp-expr e4 (set-local-var v v3 context))]
-                   [_ (cm-error error-id "Unknown Item on left hand of let.")]
+                   [_ (cm-error "SYNTAX" "Unknown Item on left hand of let.")]
 
 
                    ))]
-         [_ (cm-error error-id "Let is missing an assignment or in.")]))
+         [_ (cm-error "SYNTAX" "Let is missing an assignment or in.")]))
 
 (define (interp-lambda e1 e2 context)
   (match e2
@@ -387,9 +386,9 @@
                    ;; implied dynamic case
                    [(Var v)
                      (Fun v "dynamic" context e3)]
-                   [_ (cm-error error-id "Unknown Item on left hand of lambda")]
+                   [_ (cm-error "SYNTAX" "Unknown Item on left hand of lambda")]
                    )]
-         [_ (cm-error error-id "Lambda is missing an assignment.")]))
+         [_ (cm-error "SYNTAX" "Lambda is missing an assignment.")]))
 
 (define (interp-apply v1 v2)
   (match v2
@@ -398,7 +397,7 @@
             (assign-type-check type v1 var)
             ;; interp with modified context
             (interp-expr fexpr (set-local-var var v1 fcontext))]
-         [_ (cm-error error-id "Attempted to apply onto a non function.")]))
+         [_ (cm-error "CONTRACT" "Attempted to apply onto a non function.")]))
 
 
 (define (interp-appl e1 e2 context)
@@ -410,7 +409,7 @@
                [(cons h t) (aux t (interp-apply h res))]
 
                ))]
-    [_ (cm-error error-id "Arguments to appl must be a list.")]
+    [_ (cm-error "CONTRACT" "Arguments to appl must be a list.")]
 
           ))
 
@@ -430,12 +429,12 @@
                    ;; struct inside a struct
                    [(cons (Prefix2 'struct label (Var _)) t) 
                         (verify-schema t (cons (car lst) acc))]
-                   [(cons h t) (cm-error error-id 
+                   [(cons h t) (cm-error "SYNTAX" 
                         (format "Unknown element ~a inside typedef schema." h))]))]
-         [(Var v) (cm-error error-id "Invalid schema for typedef. Schema must be a list.")]
-         [_ (cm-error error-id "Missing Label for typedef.")]))
+         [(Var v) (cm-error "SYNTAX" "Invalid schema for typedef. Schema must be a list.")]
+         [_ (cm-error "SYNTAX" "Missing Label for typedef.")]))
     ]
-    [_ (cm-error error-id "Improperly formed typedef.")]))
+    [_ (cm-error "SYNTAX" "Improperly formed typedef.")]))
 
 (define (interp-struct e1 e2 context)
   (match e1
@@ -444,21 +443,21 @@
                  ;; struct args must be a list (null for no args, still technically a list)
                  [res #:when (list? res) 
                       (match (get-type-data v)
-                             [#f (cm-error error-id (format "Type ~a has not been declared." v))]
+                             [#f (cm-error "GENERIC" (format "Type ~a has not been declared." v))]
                              [schema
                             (match (valid-against-schema? v schema res)
                                    [#t (CmStruct v res)]
-                                   [#f (cm-error error-id 
+                                   [#f (cm-error "GENERIC" 
                 (format (string-append "Could not validate struct against type schema:"
                                        "\nstruct:\n~a ~a\nschema:\n~a")
                         v res (get-type-data v)))])])]
-                 [_ (cm-error error-id "Arguments to struct must be a list or null.")])]
-         [_ (cm-error error-id "Missing label for struct.")]))
+                 [_ (cm-error "SYNTAX" "Arguments to struct must be a list or null.")])]
+         [_ (cm-error "SYNTAX" "Missing label for struct.")]))
 
 (define (interp-struct? e1 e2 context)
   (match e1
          [(Var label1) (racket-to-bool (is-struct-type? label1 (interp-expr e2 context)))]
-         [_ (cm-error error-id "Missing label for struct question.")]))
+         [_ (cm-error "SYNTAX" "Missing label for struct question.")]))
 
 (define (interp-print v)
  (begin (displayln (string-append (string-coerce v))) 

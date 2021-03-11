@@ -3,7 +3,6 @@
 . printf (print + format)
 . implement: format, slice, length
 . implement let values
-. look into error handling system
 . defun keyword as shorthand for def and lambda
 
 typecheck keyword:
@@ -14,10 +13,6 @@ typecheck keyword:
 
 # x doesn't know that it is called x
 let x = lam z = match z | ( -> ( | z1, zs -> z1 + 1, (zs : x) end in (4,6,8;) : x.))
-
-# unary minus operator sometimes doesn't flip to unary:
-# the following produces an error
-appl f -5,4;
 
 . load
     - loads both racket modules and cm ones

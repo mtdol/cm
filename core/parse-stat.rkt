@@ -1,7 +1,7 @@
 #lang racket
 (require cm/core/ast cm/core/error cm/core/parse-expr)
 (provide parse-stat)
-(define error-id 2)
+(define error-id "PARSE")
 
 ;; takes a master token list and parses its sub-expressions
 

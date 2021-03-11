@@ -1,6 +1,6 @@
 #lang racket
 (provide tokenize-file tokenize-file-abs tokenize-string)
-(define error-id 1)
+(define error-id "LEX")
 
 (require cm/core/error cm/core/reserved-keywords
   parser-tools/lex

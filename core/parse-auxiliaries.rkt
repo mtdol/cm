@@ -8,7 +8,7 @@
   check-missing-operator
   missing-operator?
   )
-(define error-id 2)
+(define error-id "PARSE")
 
 
 

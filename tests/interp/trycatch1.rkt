@@ -13,7 +13,16 @@
 8)
 
 (check-equal? (interp (parse-expr (tokenize-string "try 3 + 4.0 catch e with match e | struct Error id,msg; -> id end")))
-"generic")
+"CONTRACT")
+
+(check-equal? (interp (parse-expr (tokenize-string "try error \"my error\" catch e with match e | struct Error id,msg; -> msg end")))
+"NL:GENERIC: my error")
+
+(check-equal? (interp (parse-expr (tokenize-string "try error \"MY_ID\",\"my error\"; catch e with match e | struct Error id,msg; -> id end")))
+"MY_ID")
+
+(check-equal? (interp (parse-expr (tokenize-string "try error \"MY_ID\",\"my error\"; catch e with match e | struct Error id,msg; -> msg end")))
+"NL:MY_ID: my error")
 
 (check-exn exn:fail? (lambda ()
   (interp (parse-expr (tokenize-string "try 3 + 4.0 catch 6")))))
