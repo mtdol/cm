@@ -117,9 +117,9 @@ Substitute expr for any expression.
 All statements must end in the "dot" operator:
 ```
 # Invalid
-let x = lam n = n + 1 in 1 : x
+let x := lam n := n + 1 in 1 : x
 # Valid
-let x = lam n = n + 1 in 1 : x.
+let x := lam n := n + 1 in 1 : x.
 ```
 
 Construct | Effect | Example | Yields | Explanation
@@ -134,6 +134,7 @@ expr % expr \| mod | modulus | `4 % 3` | 1 | Operands must be of same type
 = < <= > >= !=  \| (eq\|equal\|equals), lt, le, gt, ge, ne | equality operators | `1 = 2` | false | Operands must be of same type
 & \|\| xor \| and or xor | logical binary operators | `true and false` | false | Operands must be bools
 ! expr \| not | not | `! true` | false | Operands must be of bools
+expr $ expr \| cat | string concatenation | "abc" cat 3 | abc3 | auto coerces operands to strings
 expr, expr \| cons | cons | `1,4,(5,6)` | (1, 4, (5, 6))
 \` expr \| head | head | `head (1, 2, 3)` | 1 
 ~ expr \| tail | tail | `~(1, 2, 3)` | 2,3
@@ -150,29 +151,30 @@ int? expr | is int? | `int? 6` | 1
 ```match Expr Case, Case -> Expr1 Yields Expr2 Case \| Expr1 Yields Expr2 end``` | match expression | `match 3,5.1 \| int a, int b -> a - b \| int a, float b -> a + int b end` | 8 | variables and guards can be used in a match expr
 ```match expr1 when expr2 -> expr3 ``` | match conditional | `match 3,5.1 \| a, b when int? b -> a - b \| a, b -> a + int b end` | 8 | `when` adds an extra condition to the match
 _ | wildcard in match | `match 5 \| float a -> "is float" \| _ -> "not a float" end` | "not a float"
-def var = Expr | global binding of var | `def x = 1 + 3` | 4 | def will return the value of var, in addition to binding it
-def guard var = Expr | guarded binding of var | `def int x = 3.5` | contract exception | var is only guarded once and can be rewritten as float later
-def dynamic var = Expr | dynamic binding of var | `def dynamic x = 3.5` | binds x to 3.5 | dynamic accepts all bindings and is implied when not present
-let var = Expr in Expr | local binding of var | `let x = 3 in x + 1` | 4 
-let guard var = Expr in Expr | guarded local binding of var | `let int x = not true in x + 1` | contract exception
-lambda var = Expr | lambda expression | `lam x = x + 1` | function | `lambda` can  be shortened to `lam`
-lambda var1, var2,... = Expr | multiple lambda expression | `lam x, y = x + y` | function | equivalent to lam x = lam y = ...
-Expr1 : Expr2, where Expr2 -> Function | function application | `3 : lam x = x + 1` | 4 | also written as `apply`
-lambda guard var = Expr | guarded lambda expression | `3 : lam float x = x + 1.0` | contract exception
-def var1 = lambda var2 = ... | global mapping to function | `def add1 = lam n = n + 1` | Function | add1 can be applied at any time
-typedef label = list | struct definition | `typedef S = a,b;` | instantiates struct type schema | allows you to create structs of the given type
+:= \| assign | assign operator used in certain contexts 
+def var := Expr | global binding of var | `def x := 1 + 3` | 4 | def will return the value of var, in addition to binding it
+def guard var := Expr | guarded binding of var | `def int x := 3.5` | contract exception | var is only guarded once and can be rewritten as float later
+def dynamic var := Expr | dynamic binding of var | `def dynamic x := 3.5` | binds x to 3.5 | dynamic accepts all bindings and is implied when not present
+let var := Expr in Expr | local binding of var | `let x := 3 in x + 1` | 4 
+let guard var := Expr in Expr | guarded local binding of var | `let int x := not true in x + 1` | contract exception
+lambda var := Expr | lambda expression | `lam x = x + 1` | function | `lambda` can  be shortened to `lam`
+lambda var1, var2,... = Expr | multiple lambda expression | `lam x, y := x + y` | function | equivalent to lam x = lam y = ...
+Expr1 : Expr2, where Expr2 -> Function | function application | `3 : lam x := x + 1` | 4 | also written as `apply`
+lambda guard var := Expr | guarded lambda expression | `3 : lam float x := x + 1.0` | contract exception
+def var1 := lambda var2 = ... | global mapping to function | `def add1 := lam n := n + 1` | Function | add1 can be applied at any time
+typedef label := list | struct definition | `typedef S := a,b;` | instantiates struct type schema | allows you to create structs of the given type
 struct label list | struct | `match struct S 3,5; \| struct S a,b; -> a + b end` | 8 
-struct label | struct guard | `struct S2 4,5; : lam struct S x = print x` | contract exception | struct S and struct S2 have differing labels
+struct label | struct guard | `struct S2 4,5; : lam struct S x := print x` | contract exception | struct S and struct S2 have differing labels
 == \| eqq | strong equality | `struct S (struct S2 3,4;); == struct S (struct S2 3,4;);` | true | == works for all language objects and yields true if all their sub-components equal
 !== \| neqq | strong inequality | `struct S (struct S2 5,4;); !== struct S (struct S2 3,4;);` | true
 struct? label | struct type question | `struct? S2 (struct S2 4,5;)` | true
-appl func list | list to function applier | `appl (lam x, y = x + y) 4,5;` | 9 | applies each element to the result of the previous function application. Equivalent to `5:4:(lam x,y = x + y)`
-Expr comma Expr | execute first expr and ignore result, then run second and yield its value | `(def x = 4) comma 7` | 7 | x is still bound to 4 in the global scope (a side effect)
+appl func list | list to function applier | `appl (lam x, y := x + y) 4,5;` | 9 | applies each element to the result of the previous function application. Equivalent to `5:4:(lam x,y := x + y)`
+Expr comma Expr | execute first expr and ignore result, then run second and yield its value | `(def x := 4) comma 7` | 7 | x is still bound to 4 in the global scope (a side effect)
 
 ## Basics and Assignment
 `def` is used to create global variables.
 ```
-> def x = 3.
+> def x := 3.
 > x.
 3
 ```
@@ -185,15 +187,15 @@ Accessing variables before they have been defined yields an error:
 
 Local bindings can be created with the `let` keyword.
 ```
-> let x = 5 in x + 3.
+> let x := 5 in x + 3.
 8
 ```
 
 Local bindings replace global bindings in local scope:
 ```
-> def z = 7.
+> def z := 7.
 7
-> let z = 4 in z.
+> let z := 4 in z.
 4
 > z.
 7
@@ -201,12 +203,12 @@ Local bindings replace global bindings in local scope:
 
 Bindings can be guarded, but will only be guarded for their first assignment
 ```
-> def int x = 3.0.
+> def int x := 3.0.
 1:CONTRACT: Recieved type float for var x but expected int.
-> def int x = 3.
+> def int x := 3.
 > x.
 3
-> def x = "hello".
+> def x := "hello".
 > x.
 hello
 ```
@@ -233,7 +235,7 @@ Every cond expr must end in an else clause that will be run if all other cases t
 
 The `cond` keyword is technically optional
 ```
-def odd? = lam int n =
+def odd? := lam int n :=
 | n % 2 = 0 -> false
 else true.
 
@@ -245,7 +247,7 @@ else true.
 `match` is designed to pattern match results of computations, namely structs, values, and pairs.
 `match` uses cases in its body and is terminated with the `end` keyword:
 ```
-def get_str = lam int i =
+def get_str := lam int i :=
     match i
     | 0 -> "zero"
     | 1 -> "one"
@@ -272,12 +274,12 @@ Finally the `when` keyword can be used to add extra conditions to a match case
 ## structs
 The type of a structt must first be created using the `typedef` keyword.
 ```
-typedef label = list
+typedef label := list
 ```
 
 Struct instances can then be created using the `struct` keyword.
 ```
-typedef S = a,b;.
+typedef S := a,b;.
 struct S (4,5;).
 ```
 
@@ -295,7 +297,7 @@ Structs can also contain other structs:
 
 Also you can ask if something is a certain struct using the `struct?` keyword:
 ```
-> typedef S2 = a;.
+> typedef S2 := a;.
 > struct? S 5.
 false
 > struct? S (struct S 5,6;).
@@ -316,33 +318,33 @@ true
 Functions can be created with the `lambda` keyword, often shortened to `lam`.
 ```
 # creates a function that adds one to its argument
-lam x = x + 1.
+lam x := x + 1.
 ```
 
 Functions are applied to using the `apply` keyword, often shortened to `:`
 ```
 # yields 3
-2 apply lam x = x + 1.
+2 apply lam x := x + 1.
 ```
 
 Lambdas can be assigned to variables to be used throughout a program:
 ```
-def add2 = lam x = x + 2.
+def add2 := lam x := x + 2.
 # yields 7
 5:add2.
 ```
 
 Lambdas can be guarded with type notations:
 ```
-def add2 = lam int x = x + 2.
+def add2 := lam int x := x + 2.
 # contract exception
 5.0:add2.
 ```
 
 Lambdas remember the local context of when they were created:
 ```
-def add_to_3 = 
-    let v = 3 in lam x = x + v.
+def add_to_3 := 
+    let v := 3 in lam x := x + v.
     
 # yields 8
 5:add_to_3.
@@ -350,7 +352,7 @@ def add_to_3 =
 
 Lambdas can be chained together:
 ```
-def add_both = lam x = lam y = x + y.
+def add_both := lam x := lam y := x + y.
 
 # yields a function
 4:add_both.
@@ -360,17 +362,17 @@ def add_both = lam x = lam y = x + y.
 
 This chaining of lambdas can be simplified with `,`
 ```
-def add_both = lam x, y = x + y.
+def add_both := lam x, y := x + y.
 ```
 
 You can check whether something is a function using the `fun?` question and `fun` guard.
 ```
-> fun? lam x = x.
+> fun? lam x := x.
 true
-> def fun_app = lam fun f, v = v:f.
+> def fun_app := lam fun f, v := v:f.
 > 3 : fun_app.
 1:CONTRACT: Recieved type int for var f but expected fun.
-> 3 : (lam x = x - 1) : fun_app.
+> 3 : (lam x := x - 1) : fun_app.
 2
 ```
 
@@ -380,7 +382,7 @@ appl func list
 ```
 for example:
 ```
-> def cat3 = lam x,y,z = x$y$z.
+> def cat3 := lam x,y,z := x$y$z.
 
 # equivalent to "C":"B":"A":cat3
 > appl cat3 ("A", "B", "C";).
@@ -455,7 +457,7 @@ Error IDs are written in all caps with underscore seperators.
 ## Code Examples
 ```
 # Find Factorial n
-def fact = lam int n =
+def fact := lam int n :=
     | n < 2 -> 1
     else n * (n - 1 : fact).
     
@@ -464,7 +466,7 @@ def fact = lam int n =
 ######################################
 
 # yields larger number
-def max = lam int n1, int n2 =
+def max := lam int n1, int n2 :=
     if n1 > n2 then n1 else n2.
 
 # prints 7
@@ -475,7 +477,7 @@ def max = lam int n1, int n2 =
 
 
 # Finds last element of list, or errors if list is null
-def get_last = lam list lst = 
+def get_last := lam list lst := 
     match lst 
     | () -> error "List was empty." 
     | h; -> h 
@@ -494,16 +496,16 @@ def get_last = lam list lst =
 
 
 # creates binary tree node schema
-typedef Bn = val, left, right;.
+typedef Bn := val, left, right;.
 # creates leaf schema (notice no args to type constructor)
-typedef Leaf = null.
+typedef Leaf := null.
 # simple binary node (parens are necessary around sub struct constructors for syntax reasons)
-def b1 = struct Bn (5, (struct Leaf null), (struct Leaf null);).
+def b1 := struct Bn (5, (struct Leaf null), (struct Leaf null);).
 # another with a deeper subtree
-def b2 = struct Bn (5, (struct Bn 3, (struct Leaf null), (struct Leaf null);), (struct Leaf null);).
+def b2 := struct Bn (5, (struct Bn 3, (struct Leaf null), (struct Leaf null);), (struct Leaf null);).
 
 # yields the height of a binary tree
-def bn_height = lam n = 
+def bn_height := lam n := 
     match n
     | struct Leaf null -> 1 
     | struct Bn _, left, right; ->
