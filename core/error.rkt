@@ -1,5 +1,5 @@
 #lang racket
-(provide cm-error cm-error-with-line-handler cm-error-linenum)
+(provide cm-error cm-error-with-line-handler cm-error-linenum current-linenum)
 
 (define error-types
     (make-hash (list
@@ -13,12 +13,12 @@
 (define (id-to-error-string id) 
         (hash-ref error-types id (lambda () "Unknown Error")))
 
+;; line-number belonging to the current statement
+(define current-linenum 0)
+
 ;; general error function
 (define (cm-error id message)
-  (error (string-append 
-                 (id-to-error-string id)
-                 ": "
-                 message)))
+  (cm-error-linenum current-linenum id message))
 
 
 ;; sends error with line number included
@@ -30,13 +30,7 @@
                  ": "
                  message)))
 
-;; calls the given function with a handler that will intercept any error
-;; messages recieved and raise them again with a line number included.
-;; args is always a list
-(define (cm-error-with-line-handler linenum func args) 
-  (with-handlers* ([exn:fail?
-            (lambda (e) 
-                (match e 
-                  [(exn:fail m _)
-                   (error (string-append (number->string linenum) ":" m))]))])
-    (apply func args)))
+;; sets current linenum and execs the proc
+(define (cm-error-with-line-handler linenum proc args) 
+  (set! current-linenum linenum)
+    (apply proc args))

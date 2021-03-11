@@ -33,28 +33,20 @@
 
 (define (interp-expr ast context)
   (match ast
-        [(Prim0 'void) (Prim0 'void)]
-        [(Prim2 'apply e1 e2) (interp-apply (interp-expr e1 context) (interp-expr e2 context))]
-        [(Prim1 'print e) (interp-print e context)]
-        [(Prim1 'error e) (error (string-coerce (interp-expr e context)))] 
-        [(Prim1 'eval s) (eval-string (string-coerce (interp-expr s context)))] 
         [(Prefix2 'struct e1 e2) (interp-struct e1 e2 context)]
         [(Prefix2 'struct? e1 e2) (interp-struct? e1 e2 context)]
         [(Prefix2 'appl e1 e2) (interp-appl e1 e2 context)]
-        [(Prim1 'load e) 
-         (match (interp-expr e context)
-                [s #:when (string? s) (process-import-string s)]
-                [_ (cm-error error-id "Argument to load must be a file.")])
-             ]
         ;; general prim cases
         [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1 context) (interp-expr e2 context))]
         [(Prim1 op e) (interp-prim1 op (interp-expr e context))]
+        [(Prim0 op) (interp-prim0 op)]
         [(If e1 e2) (interp-if e1 e2 context)]
         [(Cond e) 
          (match e
                 [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
                 [_ (cm-error error-id "Cond is missing a case.")])]
         [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
+        [(Try e1 e2) (interp-try-catch e1 e2 context)]
         [(Match e1 e2) (interp-match (interp-expr e1 context) e2 context)]
         [(Def e1 e2) (interp-def e1 e2 context)]
         [(Let e1 e2) (interp-let e1 e2 context)]
@@ -78,11 +70,13 @@
 (define (interp-prim2 op v1 v2)
   (match op
         ['cons (cons v1 v2)]
+        ['apply (interp-apply v1 v2)]
         ['cat (string-append (string-coerce v1)
                            (string-coerce v2))]
         ['comma v2]
         ['eqq (racket-to-bool (deep-equal? v1 v2))]
         ['neqq (racket-to-bool (not-eqq? v1 v2))]
+        ;; everything below is checked for same operands
         [op #:when (not (string=? (get-type v1) (get-type v2)))
           (cm-error error-id (string-append "Operands of " (symbol->string op)
                 " are not of the same type. Given " (get-type v1)
@@ -117,6 +111,14 @@
  
 (define (interp-prim1 op v)
   (match op
+        ['print (interp-print v)]
+        ['error (error (string-coerce v))] 
+        ['eval (eval-string (string-coerce v))] 
+        ['load 
+         (match v 
+                [s #:when (string? s) (process-import-string s)]
+                [_ (cm-error error-id "Argument to load must be a file.")])
+             ]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]
@@ -168,6 +170,11 @@
 
         ))
 
+(define (interp-prim0 op)
+  (match op
+         ['void (Prim0 'void)]
+         ))
+
 ;;
 ;; non-standard interp cases
 ;;
@@ -181,6 +188,22 @@
                        (interp-expr e3 context) (interp-expr e5 context))]
                  [_ (cm-error error-id "Then clause is missing an else.")])]
          [_ (cm-error error-id "If clause is missing a then.")]))
+
+(define (interp-try-catch e1 e2 context)
+  (match e2
+         [(Catch (Var id) (With e3)) 
+            (with-handlers* ([exn:fail? (lambda err 
+                (match err [(list (exn:fail err-msg _))
+                    (let ([err-struct (CmStruct "Error" (list "generic" err-msg))])
+               (interp-expr e3 (set-local-var id err-struct context) ))
+                                        ])
+                                                    )])
+                            (interp-expr e1 context))
+
+          ]
+         [_ (cm-error error-id "Improperly formed try-catch.")]
+
+         ))
 
 (define (interp-match v e context)
   (match e 
@@ -437,7 +460,6 @@
          [(Var label1) (racket-to-bool (is-struct-type? label1 (interp-expr e2 context)))]
          [_ (cm-error error-id "Missing label for struct question.")]))
 
-(define (interp-print e context)
-  (let ([v (interp-expr e context)])
-     (match (cons (displayln (string-append (string-coerce v))) v)
-            [(cons _ res) res])))
+(define (interp-print v)
+ (begin (displayln (string-append (string-coerce v))) 
+        v))

@@ -6,9 +6,23 @@
 . look into error handling system
 . defun keyword as shorthand for def and lambda
 
+typecheck keyword:
+    - def f = lam n1, n2 =
+        typecheck n1 with ("int", "float";) in
+            typecheck n2 with ("struct S", "struct Leaf";) in ...
+    - throws exception when types don't match
+
+# x doesn't know that it is called x
+let x = lam z = match z | ( -> ( | z1, zs -> z1 + 1, (zs : x) end in (4,6,8;) : x.))
+
+# unary minus operator sometimes doesn't flip to unary:
+# the following produces an error
+appl f -5,4;
+
 . load
     - loads both racket modules and cm ones
     - allow * wildcard
+    - private (not shared) variables starting in _ (ie _f, private var f)
 
 . evalp
     - evaluates racket procedures

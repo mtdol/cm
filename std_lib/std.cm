@@ -42,3 +42,12 @@ def max = lam n1, n2 =
 # int | float -> int | float
 def min = lam n1, n2 =
     if n1 < n2 then n1 else n2.
+
+# int, int, int -> int list
+def range = lam int n1, int n2, int inc = 
+    | inc = 0 -> error "invalid range"
+    | inc > 0 and n1 > n2 -> error "invalid range"
+    | inc < 0 and n1 < n2 ->  error "invalid range"
+    else 
+      | n1 >= n2 or n1 + inc > n2 -> n1; 
+      else n1, (appl range (n1+inc, n2, inc;)).
