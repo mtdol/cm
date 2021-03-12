@@ -157,18 +157,18 @@ def guard var := Expr | guarded binding of var | `def int x := 3.5` | contract e
 def dynamic var := Expr | dynamic binding of var | `def dynamic x := 3.5` | binds x to 3.5 | dynamic accepts all bindings and is implied when not present
 let var := Expr in Expr | local binding of var | `let x := 3 in x + 1` | 4 
 let guard var := Expr in Expr | guarded local binding of var | `let int x := not true in x + 1` | contract exception
-lambda var := Expr | lambda expression | `lam x = x + 1` | function | `lambda` can  be shortened to `lam`
+lambda var := Expr | lambda expression | `lam x := x + 1` | function | `lambda` can  be shortened to `lam`
 lambda var1, var2,... = Expr | multiple lambda expression | `lam x, y := x + y` | function | equivalent to lam x = lam y = ...
 Expr1 : Expr2, where Expr2 -> Function | function application | `3 : lam x := x + 1` | 4 | also written as `apply`
 lambda guard var := Expr | guarded lambda expression | `3 : lam float x := x + 1.0` | contract exception
 def var1 := lambda var2 = ... | global mapping to function | `def add1 := lam n := n + 1` | Function | add1 can be applied at any time
 typedef label := list | struct definition | `typedef S := a,b;` | instantiates struct type schema | allows you to create structs of the given type
-struct label list | struct | `match struct S 3,5; \| struct S a,b; -> a + b end` | 8 
+struct label list | struct | `match struct S (3,5;) \| struct S (a,b;) -> a + b end` | 8 
 struct label | struct guard | `struct S2 4,5; : lam struct S x := print x` | contract exception | struct S and struct S2 have differing labels
-== \| eqq | strong equality | `struct S (struct S2 3,4;); == struct S (struct S2 3,4;);` | true | == works for all language objects and yields true if all their sub-components equal
-!== \| neqq | strong inequality | `struct S (struct S2 5,4;); !== struct S (struct S2 3,4;);` | true
+== \| eqq | strong equality | `struct S (struct S2 (3,4;);) == struct S (struct S2 (3,4;);)` | true | == works for all language objects and yields true if all their sub-components equal
+!== \| neqq | strong inequality | `struct S (struct S2 (5,4;);) !== struct S (struct S2 (3,4;);)` | true
 struct? label | struct type question | `struct? S2 (struct S2 4,5;)` | true
-appl func list | list to function applier | `appl (lam x, y := x + y) 4,5;` | 9 | applies each element to the result of the previous function application. Equivalent to `5:4:(lam x,y := x + y)`
+appl func list | list to function applier | `appl (lam x, y := x + y) (4,5;)` | 9 | applies each element to the result of the previous function application. Equivalent to `5:4:(lam x,y := x + y)`
 Expr comma Expr | execute first expr and ignore result, then run second and yield its value | `(def x := 4) comma 7` | 7 | x is still bound to 4 in the global scope (a side effect)
 
 ## Basics and Assignment
@@ -285,13 +285,13 @@ struct S (4,5;).
 
 Struct contents can be accessed using the match keyword:
 ```
-> match struct S (4,5;) | struct S a,b; -> a + b end.
+> match struct S (4,5;) | struct S (a,b;) -> a + b end.
 9
 ```
 
 Structs can also contain other structs:
 ```
-> match struct S ((struct S (3,2;)),5;) | struct S (struct S a,b;),c; -> a + b + c end.
+> match struct S ((struct S (3,2;)),5;) | struct S ((struct S (a,b;)),c;) -> a + b + c end.
 10
 ```
 
@@ -300,17 +300,17 @@ Also you can ask if something is a certain struct using the `struct?` keyword:
 > typedef S2 := a;.
 > struct? S 5.
 false
-> struct? S (struct S 5,6;).
+> struct? S (struct S (5,6;)).
 true
-> struct? S (struct S2 5;).
+> struct? S (struct S2 (5;)).
 false
 ```
 
 Structs can be compared with the "strong equality" operators `==` and `!==`, also known as `eqq` and `neqq`.
 ```
-> struct S 5,6; == struct S 5,6;.
+> struct S (5,6;) == struct S (5,6;).
 true
-> struct S2 5; !== struct S 5,6;.
+> struct S2 (5;) !== struct S (5,6;).
 true
 ```
 
@@ -431,9 +431,9 @@ try
     5.0 / 0.0 
 catch err with
     match err
-    | struct Error "GENERIC",msg; -> 1
-    | struct Error "CONTRACT",msg; -> 2
-    | struct Error _,msg; -> 3
+    | struct Error ("GENERIC",msg;) -> 1
+    | struct Error ("CONTRACT",msg;) -> 2
+    | struct Error (_,msg;) -> 3
     end.
 ```
 
@@ -470,9 +470,9 @@ def max := lam int n1, int n2 :=
     if n1 > n2 then n1 else n2.
 
 # prints 7
-@ appl max 4,7;.
+@ appl max (4,7;).
 # still prints 7
-@ appl max 7,4;.
+@ appl max (7,4;).
 ######################################
 
 
@@ -502,14 +502,21 @@ typedef Leaf := null.
 # simple binary node (parens are necessary around sub struct constructors for syntax reasons)
 def b1 := struct Bn (5, (struct Leaf null), (struct Leaf null);).
 # another with a deeper subtree
-def b2 := struct Bn (5, (struct Bn 3, (struct Leaf null), (struct Leaf null);), (struct Leaf null);).
+def b2 := 
+    struct Bn 
+        (5,
+        (struct Bn 
+            (3,
+            (struct Leaf null),
+            (struct Leaf null);)),
+        (struct Leaf null);).
 
 # yields the height of a binary tree
 def bn_height := lam n := 
     match n
     | struct Leaf null -> 1 
-    | struct Bn _, left, right; ->
-        1 + appl max (left : bn_height), (right : bn_height);
+    | struct Bn (_, left, right;) ->
+        1 + appl max ((left : bn_height), (right : bn_height);)
     end.
 
 # prints 2
