@@ -157,7 +157,7 @@ def guard var := Expr | guarded binding of var | `def int x := 3.5` | contract e
 def dynamic var := Expr | dynamic binding of var | `def dynamic x := 3.5` | binds x to 3.5 | dynamic accepts all bindings and is implied when not present
 let var := Expr in Expr | local binding of var | `let x := 3 in x + 1` | 4 
 let guard var := Expr in Expr | guarded local binding of var | `let int x := not true in x + 1` | contract exception
-lambda var := Expr | lambda expression | `lam x = x + 1` | function | `lambda` can  be shortened to `lam`
+lambda var := Expr | lambda expression | `lam x := x + 1` | function | `lambda` can  be shortened to `lam`
 lambda var1, var2,... = Expr | multiple lambda expression | `lam x, y := x + y` | function | equivalent to lam x = lam y = ...
 Expr1 : Expr2, where Expr2 -> Function | function application | `3 : lam x := x + 1` | 4 | also written as `apply`
 lambda guard var := Expr | guarded lambda expression | `3 : lam float x := x + 1.0` | contract exception
