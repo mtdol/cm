@@ -7,11 +7,10 @@
 ;; zero, where zero is lowest precedence
 (struct OpData (arity pos preced node-name extra-node-name))
 
+;; note that prefix2 operators must have highest precedence
 (define op-data 
     (make-hash (list
         (cons "print"       (OpData 1 "prefix"  0   'Prim1   'print))
-        (cons "format"      (OpData 2 "prefix"  0   'Prefix2 'format))
-        (cons "slice"       (OpData 2 "prefix"  0   'Prefix2 'slice))
         (cons "eval"        (OpData 1 "prefix"  0   'Prim1   'eval))
         (cons "error"       (OpData 1 "prefix"  0   'Prim1   'error))
         (cons "match"       (OpData 2 "prefix"  0   'Match   '()))
@@ -33,8 +32,6 @@
         (cons "load"        (OpData 1 "prefix"  0   'Prim1   'load))
         (cons "assign"      (OpData 1 "prefix"  0   'Assign  '()))
         (cons "typedef"     (OpData 2 "prefix"  0   'Typedef '()))
-        (cons "struct"      (OpData 2 "prefix"  0   'Prefix2 'struct))
-        (cons "struct?"     (OpData 2 "prefix"  0   'Prefix2 'struct?))
         (cons "apply"       (OpData 2 "infix"   1   'Prim2   'apply))
         (cons "comma"       (OpData 2 "infix"   1   'Prim2   'comma))
         (cons "cons"        (OpData 2 "infix"   2   'Prim2   'cons))
@@ -77,10 +74,14 @@
         (cons "fun?"        (OpData 1 "prefix"  8   'Prim1   'fun?))
         (cons "null?"       (OpData 1 "prefix"  8   'Prim1   'null?))
         (cons "void?"       (OpData 1 "prefix"  8   'Prim1   'void?))
-        (cons "types"       (OpData 2 "prefix"  8   'Prefix2 'types))
         (cons "length"      (OpData 1 "prefix"  8   'Prim1   'length))
         (cons ":uni_plus"   (OpData 1 "prefix"  8   'Prim1   'pos))
         (cons ":uni_minus"  (OpData 1 "prefix"  8   'Prim1   'neg))
+        (cons "struct"      (OpData 2 "prefix"  8   'Prefix2 'struct))
+        (cons "struct?"     (OpData 2 "prefix"  8   'Prefix2 'struct?))
+        (cons "types"       (OpData 2 "prefix"  8   'Prefix2 'types))
+        (cons "format"      (OpData 2 "prefix"  8   'Prefix2 'format))
+        (cons "slice"       (OpData 2 "prefix"  8   'Prefix2 'slice))
 
         )))
 

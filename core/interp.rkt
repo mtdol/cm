@@ -41,9 +41,15 @@
         [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
         [(Try e1 e2) (interp-try-catch e1 e2 context)]
         [(Match e1 e2) (interp-match (interp-expr e1 context) e2 context)]
-        [(Def e1 e2) (interp-def e1 e2 context)]
+        [(Def e1 (Assign e2)) 
+          (match (interp-def-list e1 e2)
+                 [(Def e1-2 e2-2) (interp-def e1-2 e2-2 context)])]
+        [(Def _ _) (cm-error "SYNTAX" "Def is missing an assignment.")]
         [(Let e1 e2 e3) (interp-let e1 e2 e3 context)]
-        [(Lambda e1 e2) (interp-lambda e1 e2 context)]
+        [(Lambda e1 (Assign e2)) 
+          (match (interp-lambda-list e1 e2)
+                 [(Lambda e1-2 e2-2) (interp-lambda e1-2 e2-2 context)])]
+        [(Lambda _ _) (cm-error "SYNTAX" "Lambda is missing an assignment.")]
         [(Typedef e1 e2) (interp-typedef e1 e2)]
         [(Var v) (interp-var v context)]
         [(Int i) i]

@@ -64,8 +64,8 @@
 (check-exn exn:fail? (lambda ()
   (interp (parse-expr (tokenize-string "| 1 -> 2 else else")))))
 
-;(check-exn exn:fail? (lambda ()
-  ;(interp (parse-expr (tokenize-string "| 1 2 else 5")))))
+(check-exn exn:fail? (lambda ()
+  (interp (parse-expr (tokenize-string "| 1 2 else 5")))))
 
 (check-exn exn:fail? (lambda ()
   (interp (parse-expr (tokenize-string "| -> 2 else 5")))))
@@ -73,8 +73,8 @@
 (check-exn exn:fail? (lambda ()
   (interp (parse-expr (tokenize-string "| bool 0 -> 2 end")))))
 
-;(check-exn exn:fail? (lambda ()
-  ;(interp (parse-expr (tokenize-string "| 1 else 2 else 5")))))
+(check-exn exn:fail? (lambda ()
+  (interp (parse-expr (tokenize-string "| 1 else 2 else 5")))))
 
 
 )

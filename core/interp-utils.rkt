@@ -1,7 +1,8 @@
 #lang racket
 (require cm/core/ast cm/core/types cm/core/error)
 (provide eval-string ast-cons-to-racket apply-if-type
-         apply-if-type-1 assign-type-check valid-against-schema?)
+         apply-if-type-1 assign-type-check valid-against-schema?
+         interp-def-list interp-lambda-list)
 
 ;;
 ;; Utilities for interpretation
@@ -93,6 +94,18 @@
         ['() '()] ;; already a list
         [(cons h t) (cons h (pair-to-list t))]
         [h (cons h '())]))
+
+;; repackages def x,y = 5 as def x = def y = 5
+;; es = "x,y", rexpr = "5"
+;; ast pair | ast, ast -> ast
+(define (interp-def-list es rexpr)
+  (match es
+         [(Prim2 'cons e1 e2) (Def e1 (Assign (interp-def-list e2 rexpr)))]
+         [e (Def e (Assign rexpr))]))
+(define (interp-lambda-list es rexpr)
+  (match es
+         [(Prim2 'cons e1 e2) (Lambda e1 (Assign (interp-lambda-list e2 rexpr)))]
+         [e (Lambda e (Assign rexpr))]))
 
 ;; Ensures that the subarguments given are all lists.
 (define (check-list-arguments args op)

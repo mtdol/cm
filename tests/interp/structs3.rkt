@@ -29,16 +29,16 @@
 (interp (parse-expr (tokenize-string "typedef S := a;")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "Struct S 3;")))))
+  (interp (parse-expr (tokenize-string "Struct S (3;)")))))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "struct S := 3;")))))
+  (interp (parse-expr (tokenize-string "struct S := (3;)")))))
 
 (check-exn exn:fail? (lambda ()
   (interp (parse-expr (tokenize-string "struct S 3")))))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "struct s 3;")))))
+  (interp (parse-expr (tokenize-string "struct s (3;)")))))
 
 (interp (parse-expr (tokenize-string "typedef St2 := int a, int b;")))
 (interp (parse-expr (tokenize-string "typedef St1 := int a,  (struct St2 st);")))

@@ -28,39 +28,26 @@
            [(list h) #:when (not (is-operator? h)) (list h)] 
            ;; unwrap all outer parens from token list, convert to s-expr and
            ;; then rewrap with one layer of parens
-           [tokens (tokens-to-prefix-form-aux (unwrap-expr tokens) '() -1 0)])) 
+           [tokens (tokens-to-prefix-form-aux (unwrap-expr tokens) '() 0 0)])) 
 
 (define (tokens-to-prefix-form-aux tokens acc preced pcount) 
     (match tokens
-        ;; shouldn't get here
+         ;; list looks like "3 (5 + 8)"
+         ;; we must recurse and deal with the subexprs
         ['() #:when (= preced max-precedences) 
-            (cm-error error-id "Exhausted precedences.")]
-        ;; null op case
-        [_ #:when (= preced -1) 
-           ;; looks for things like (4 5 + 6), and splits around the null op.
-           ;; if we are the end of a sub-expr or a non-operator and the next
-           ;; item in the list is a non-operator, then a null op must be present
-            (let find-null-op ([tokens tokens] [acc '()] [pcount 0])
+         ;; we will collect subexprs and prefixify them while walking down the list
+            (let aux ([tokens (reverse acc)] [acc '()] [pcount 0])
                 (match tokens
-                [(cons ")" t) #:when (and (= 1 pcount) (not (null? t))
-                                     (or (not (is-operator? (car t))) 
-                                         (string=? (op-to-position (car t)) "prefix"))) 
-                    (append (tokens-to-prefix-form (reverse (cons ")" acc)))
-                            (tokens-to-prefix-form t))]
-                ;; increment pcount
-                [(cons "(" t) (find-null-op t (cons "(" acc) (add1 pcount))]
-                ;; decrement pcount
-                [(cons ")" t) (find-null-op t (cons ")" acc) (sub1 pcount))]
-                ;; is not a paren or op, must be a value
-                [(cons h t) #:when (and (zero? pcount) (not (is-operator? h))
-                                        (not (null? t)) 
-                                        (or (not (is-operator? (car t))) 
-                                         (string=? (op-to-position (car t)) "prefix"))) 
-                    (append (tokens-to-prefix-form (reverse acc)) (list h)
-                            (tokens-to-prefix-form t))]
-                ;; no null op, next precedence
-                ['() (tokens-to-prefix-form-aux (reverse acc) '() (add1 preced) 0)]
-                [(cons h t) (find-null-op t (cons h acc) pcount)]))]
+                       ['() (reverse acc)]
+                       [(cons ")" t) #:when (= 1 pcount)
+                            (append (tokens-to-prefix-form (reverse (cons ")" acc))) 
+                                    (aux t '() 0))]
+                       [(cons "(" t) #:when (= 0 pcount)
+                            (append (reverse acc) 
+                                    (aux t '("(") 1))]
+                       [(cons "(" t) (aux t (cons "(" acc) (add1 pcount))]
+                       [(cons ")" t) (aux t (cons ")" acc) (sub1 pcount))]
+                       [(cons h t) (aux t (cons h acc) pcount)]))]
         ;; try again since we didn't find an op of current precedence
         ['() (tokens-to-prefix-form-aux (reverse acc) '() (add1 preced) 0)]
         ;; increment pcount

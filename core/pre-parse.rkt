@@ -9,10 +9,9 @@
 
 ;; prepares tokens for parsing
 (define (pre-parse-expr tokens)
-  (replace-assign-commas
   (replace-unary-plus-minus
   (check-balanced-parens 
-        tokens))))
+        tokens)))
 
 ;; replaces unary minus with :uni_minus and unary plus with :uni_plus
 ;; additionally, throws an exception when a infix operator is treated as
@@ -38,35 +37,3 @@
                           [else (cm-error error-id (format "Missing operand(s) for ~a." h1))])]
            [(cons h t) (cons h (aux t #f))]
            ['() '()])))
-
-
-;; lam x,y = x + y -> lam x = lam y = x + y
-;; def x,y = 1 + 5 -> def x = def y = 1 + 5
-(define (replace-assign-commas lst)
-  (match lst
-        ['() '()]
-        [(cons h1 (cons h2 (cons "cons" t))) 
-            #:when (or (string=? h1 "def") (string=? h1 "lambda"))
-            (cons h1 (cons h2 (cons "assign"
-                (replace-assign-commas (cons h1 t)))))]
-        ;; def int x, y case
-        [(cons h1 (cons h2 (cons h3 (cons "cons" t))))
-            #:when (or (string=? h1 "def") (string=? h1 "lambda"))
-            (cons h1 (cons h2 (cons h3 (cons "assign"
-                (replace-assign-commas (cons h1 t))))))]
-        ;; def struct S x, y case
-        [(cons h1 (cons h2 (cons h3 (cons h4 (cons "cons" t)))))
-            #:when (or (string=? h1 "def") (string=? h1 "lambda"))
-            (cons h1 (cons h2 (cons h3 (cons h4 (cons "assign"
-                (replace-assign-commas (cons h1 t)))))))]
-        [(cons h t) (cons h (replace-assign-commas t))]))
-
-;; walks down the list, conses, and returns the list back with the first
-;; instance of target changed to replacement
-(define (replace-first lst target replacement)
-  (match lst
-         ['() (cm-error error-id
-                        "Improperly formed assignment.")]
-         [(cons h t) #:when (string=? h target)
-                (cons replacement t)]
-         [(cons h t) (cons h (replace-first t target replacement))]))
