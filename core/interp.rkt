@@ -40,7 +40,7 @@
                 [_ (cm-error "SYNTAX" "Cond is missing a case.")])]
         [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
         [(Try e1 e2) (interp-try-catch e1 e2 context)]
-        [(Match e1 e2) (interp-match (interp-expr e1 context) e2 context)]
+        [(Match e1 e2) (interp-match (interp-expr e1 context) e2 context context)]
         [(Def e1 (Assign e2)) 
           (match (interp-def-list e1 e2)
                  [(Def e1-2 e2-2) (interp-def e1-2 e2-2 context)])]
@@ -50,7 +50,7 @@
           (match (interp-lambda-list e1 e2)
                  [(Lambda e1-2 e2-2) (interp-lambda e1-2 e2-2 context)])]
         [(Lambda _ _) (cm-error "SYNTAX" "Lambda is missing an assignment.")]
-        [(Typedef e1 e2) (interp-typedef e1 e2)]
+        [(Typedef e1 e2) (interp-typedef e1 e2 context)]
         [(Var v) (interp-var v context)]
         [(Int i) i]
         [(Float f) f]
@@ -210,25 +210,29 @@
 
          ))
 
-(define (interp-match v e context)
+;; match context is the internal context used inside the match, context is just the usual
+;; local context
+;;
+;; value, expr hash, hash -> value
+(define (interp-match v e match-context context)
   (match e 
          [(Case ce1 ce2 ce3)
           (match ce2
                [(Yields ce2-1)
                 (match ce1
                        [(Prim2 'when ce1-1 ce1-2)
-                        (let ([context-2 (match-expr ce1-1 v (hash))])
-                        (if (and context-2 (bool-to-racket (interp-expr ce1-2 context-2)))
-                          (interp-expr ce2-1 context-2)
-                          (interp-match v ce3 context)
+                        (let ([match-context-2 (match-expr ce1-1 v (hash) context)])
+                        (if (and match-context-2 (bool-to-racket (interp-expr ce1-2 match-context-2)))
+                          (interp-expr ce2-1 match-context-2)
+                          (interp-match v ce3 match-context context)
                           ))
                         ]
                        [_ 
-                        (let ([context-2 (match-expr ce1 v (hash))])
+                        (let ([match-context-2 (match-expr ce1 v (hash) context)])
                           ;; hashes evaluate to #t in racket
-                        (if context-2
-                          (interp-expr ce2-1 context-2)
-                          (interp-match v ce3 context)
+                        (if match-context-2
+                          (interp-expr ce2-1 match-context-2)
+                          (interp-match v ce3 match-context context)
                           ))
 
                          ]
@@ -240,31 +244,35 @@
          [_ (cm-error "SYNTAX" "Invalid match syntax.")]))
 
 ;; ast, value, hash -> hash | #f
-(define (match-expr e v context)
+(define (match-expr e v match-context context)
   (match e
-         [(Int i) (if (equal? i v) context #f)]
-         [(Float f) (if (equal? f v) context #f)]
-         [(Bool i1) (match v [(Bool i2) (if (equal? i1 i2) context #f)] [_ #f])]
-         [(Null) (if (null? v) context #f)]
-         [(Prim0 'void) (match v [(Prim0 'void) context] [_ #f])]
-         [(String s) (if (string=? s v) context #f)]
+         [(Int i) (if (equal? i v) match-context #f)]
+         [(Float f) (if (equal? f v) match-context #f)]
+         [(Bool i1) (match v [(Bool i2) (if (equal? i1 i2) match-context #f)] [_ #f])]
+         [(Null) (if (null? v) match-context #f)]
+         [(Prim0 'void) (match v [(Prim0 'void) match-context] [_ #f])]
+         [(String s) (if (string=? s v) match-context #f)]
          ;; wildcard, always match
-         [(Var "_") context]
+         [(Var "_") match-context]
+         [(Prim1 op (Var "_")) (cm-error "SYNTAX" "Cannot type-guard wildcard.")]
          ;; implied dynamic var
-         [(Var id) (match-var id "dynamic" v context)]
+         [(Var id) (match-var id (list "dynamic") v match-context)]
          [(Prim1 op (Var id)) #:when (member op guard-types)
-                        (match-var id (symbol->string op) v context)]
+                        (match-var id (list (symbol->string op)) v match-context)]
+         [(Prefix2 'types types-expr (Var id)) 
+          (match-var id (check-types-list (interp-expr types-expr context))
+                     v match-context)]
          [(Prefix2 'struct (Var label) lst) #:when (expr-is-list? lst)
           (match v
             [(CmStruct label2 lst2) #:when (equal? label label2)
-                    (match-expr lst lst2 context)]
+                    (match-expr lst lst2 match-context context)]
             [_ #f])]
          ;[(Lambda id (Assign e2))]
          [(Prim2 'cons e1 e2)
           (match v
                  [(cons v1 v2)
-                    (let ([c2 (match-expr e1 v1 context)])
-                        (if (not (equal? c2 #f)) (match-expr e2 v2 c2) #f))]
+                    (let ([mc2 (match-expr e1 v1 match-context context)])
+                        (if (not (equal? mc2 #f)) (match-expr e2 v2 mc2 context) #f))]
                  [_ #f])]
 
          [_ (cm-error "SYNTAX" "Invalid syntax for match.")]))
@@ -272,18 +280,18 @@
 ;; Checks that types of var and value match (if they don't returns false).
 ;; If types match then returns modified context with itself included
 ;;
-;; string, string, value, hash -> hash | #f
-(define (match-var id type v context)
-  (if (is-type? type v)
+;; string, string list, value, hash -> hash | #f
+(define (match-var id types v match-context)
+  (if (ormap (lambda (elem) (is-type? elem v)) types)
     ;; check if we have already seen the var
-    (if (hash-has-key? context id)
-      (if (deep-equal? v (get-local-var-data id context))
+    (if (hash-has-key? match-context id)
+      (if (deep-equal? v (get-local-var-data id match-context))
         ;; successful match
-        context
+        match-context
         ;; does not match earlier var, failed match
         #f
         )
-      (set-local-var id v context)
+      (set-local-var id v match-context)
       )
     ;; false if types don't match
     #f
@@ -322,11 +330,9 @@
                    [(Prim1 op (Var v)) #:when (member op guard-types)
                     (assign-type-check (list (symbol->string op)) v3 v) (set-global-var! v v3) v3]
                    [(Prefix2 'types types-expr (Var v))
-                    (match (interp-expr types-expr context)
-                           [types-lst #:when (list? types-lst)
-                                (assign-type-check types-lst v3 v)
-                                (set-global-var! v v3) v3]
-                           [_ (cm-error "CONTRACT" "Type arguments to types must be a list.")])]
+                    (assign-type-check 
+                      (check-types-list (interp-expr types-expr context)) v3 v)
+                    (set-global-var! v v3) v3]
                    [(Prim1 'dynamic (Var v))
                     (set-global-var! v v3) v3]
                    [(Prefix2 'struct (Var label) (Var v))
@@ -350,6 +356,10 @@
                    [(Prim1 op (Var v)) #:when (member op guard-types)
                     (assign-type-check (list (symbol->string op)) v2 v)
                     (interp-expr e3-2 (set-local-var v v2 context))]
+                   [(Prefix2 'types types-expr (Var v))
+                    (assign-type-check 
+                      (check-types-list (interp-expr types-expr context)) v2 v)
+                                (interp-expr e3-2 (set-local-var v v2 context))]
                    [(Prefix2 'struct (Var label) (Var v))
                     (assign-type-check (list (get-struct-type-string label)) v2 v)
                     (interp-expr e3-2 (set-local-var v v2 context))]
@@ -370,13 +380,16 @@
             (match e1
                    ;; sets var in global context hash and returns value to caller
                    [(Prim1 op (Var v)) #:when (member op guard-types)
-                     (Fun v (symbol->string op) context e3)]
+                     (Fun v (list (symbol->string op)) context e3)]
+                   [(Prefix2 'types types-expr (Var v))
+                    (Fun v (check-types-list (interp-expr types-expr context))
+                         context e3)]
                    ;; struct guard
                    [(Prefix2 'struct (Var label) (Var v)) 
-                     (Fun v (get-struct-type-string label) context e3)]
+                     (Fun v (list (get-struct-type-string label)) context e3)]
                    ;; implied dynamic case
                    [(Var v)
-                     (Fun v "dynamic" context e3)]
+                     (Fun v (list "dynamic") context e3)]
                    [_ (cm-error "SYNTAX" "Unknown Item on left hand of lambda")]
                    )]
          [_ (cm-error "SYNTAX" "Lambda is missing an assignment.")]))
@@ -385,7 +398,7 @@
   (match v2
          [(Fun var type fcontext fexpr) 
             ;; check that the application matches the functions type
-            (assign-type-check (list type) v1 var)
+            (assign-type-check type v1 var)
             ;; interp with modified context
             (interp-expr fexpr (set-local-var var v1 fcontext))]
          [_ (cm-error "CONTRACT" "Attempted to apply onto a non function.")]))
@@ -404,7 +417,7 @@
 
           ))
 
-(define (interp-typedef e1 e2)
+(define (interp-typedef e1 e2 context)
   (match e2 [(Assign e2-2)
   (let ([lst2 (ast-cons-to-racket e2-2)])
   (match e1
@@ -417,6 +430,16 @@
                    [(cons (Prim1 grd (Var _)) t) #:when 
                                 (member grd guard-types) 
                         (verify-schema t (cons (car lst) acc))]
+                   [(cons (Prefix2 'types types-expr (Var id)) t)
+                    (check-types-list (interp-expr types-expr context))
+                    ;; we place a modified types node in the resulting schema
+                    ;; (the types list is aleady interp'd and checked)
+                    (verify-schema t 
+                        (cons 
+                          (Prefix2 'types 
+                                   (check-types-list (interp-expr types-expr context))
+                                   (Var id))
+                          acc))]
                    ;; struct inside a struct
                    [(cons (Prefix2 'struct label (Var _)) t) 
                         (verify-schema t (cons (car lst) acc))]

@@ -1,7 +1,7 @@
 #lang racket
 (require cm/core/ast cm/core/types cm/core/error)
 (provide eval-string ast-cons-to-racket apply-if-type
-         apply-if-type-1 assign-type-check valid-against-schema?
+         apply-if-type-1 assign-type-check check-types-list valid-against-schema?
          interp-def-list interp-lambda-list)
 
 ;;
@@ -53,6 +53,19 @@
        (format "Recieved type ~a for var ~a but expected one of ~a." 
                (get-type value) id (string-coerce types)))))
 
+;; checks that the types list is formated correctly and then yields it, else
+;; throws an exception
+;;
+;; ? -> string list | error
+(define (check-types-list types)
+  (match types
+         ['() (cm-error "CONTRACT" "Type arguments not present.")]
+         ;; TODO check that args are lists
+         [types-lst #:when (and (list? types-lst) 
+                                (andmap (lambda (elem) (string? elem)) types-lst)) 
+                    types-lst]
+         [_ (cm-error "CONTRACT" "Type arguments to types must be a list of strings.")]))
+
 
 ;; checks if the given list matches the schema for the type
 (define (valid-against-schema? label schema lst)
@@ -79,6 +92,10 @@
                       (if (is-list? h) (aux t schema-t) #f)]
                      [(cons (Prim1 'fun (Var v)) schema-t)
                       (if (is-fun? h) (aux t schema-t) #f)]
+                     [(cons (Prefix2 'types types-lst (Var v)) schema-t)
+                           (if (ormap (lambda (elem) (is-type? elem h)) types-lst) 
+                             (aux t schema-t)
+                             #f)]
                      [(cons (Prefix2 'struct (Var label) (Var v)) schema-t)
                       (match h
                              [(CmStruct l2 _) #:when (string=? l2 label) (aux t schema-t)]
