@@ -162,7 +162,7 @@ lambda var1, var2,... = Expr | multiple lambda expression | `lam x, y := x + y` 
 Expr1 : Expr2, where Expr2 -> Function | function application | `3 : lam x := x + 1` | 4 | also written as `apply`
 lambda guard var := Expr | guarded lambda expression | `3 : lam float x := x + 1.0` | contract exception
 def var1 := lambda var2 = ... | global mapping to function | `def add1 := lam n := n + 1` | Function | add1 can be applied at any time
-types string_list var | multiple types guard | `def types ("int", "float";) x = 5` | 5 | any value within the list is a valid type for var
+types string_list var | multiple types guard | `def types ("int", "float";) x := 5` | 5 | any value within the list is a valid type for var
 typedef label := list | struct definition | `typedef S := a,b;` | instantiates struct type schema | allows you to create structs of the given type
 struct label list | struct | `match struct S (3,5;) \| struct S (a,b;) -> a + b end` | 8 
 struct label | struct guard | `struct S2 4,5; : lam struct S x := print x` | contract exception | struct S and struct S2 have differing labels
