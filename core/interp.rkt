@@ -29,6 +29,7 @@
         [(Prefix2 'struct e1 e2) (interp-struct e1 e2 context)]
         [(Prefix2 'struct? e1 e2) (interp-struct? e1 e2 context)]
         [(Prefix2 'appl e1 e2) (interp-appl e1 e2 context)]
+        [(Prefix2 'index e1 e2) (interp-index e1 e2 context)]
         ;; general prim cases
         [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1 context) (interp-expr e2 context))]
         [(Prim1 op e) (interp-prim1 op (interp-expr e context))]
@@ -477,6 +478,57 @@
   (match e1
          [(Var label1) (racket-to-bool (is-struct-type? label1 (interp-expr e2 context)))]
          [_ (cm-error "SYNTAX" "Missing label for struct question.")]))
+
+(define (interp-index e1 e2 context)
+  (match (interp-expr e1 context)
+         [vs #:when (list? vs) 
+             (match (interp-expr e2 context)
+                    [is #:when (and (list? is) (= (length is) 2) 
+                                    (integer? (list-ref is 0))
+                                    (integer? (list-ref is 1))) 
+                        (match is
+                               [(list i1 i2) #:when (and (>= i2 0)
+                                                         (>= i1 0)
+                                                         (<= (+ i1 i2) (length vs)))
+                                              (take (drop vs i1) i2)]
+                               [_ (cm-error 
+                                "CONTRACT" (format "Index ~a is out of range for ~a" 
+                                                   (string-coerce is) (string-coerce vs)))]
+
+                          )]
+                    [i #:when (integer? i) 
+                       (if (and (< i (length vs)) (>= i 0))
+                        (list-ref vs i)
+                        (cm-error "CONTRACT" (format "Index ~a is out of range for ~a" 
+                                                (string-coerce i) (string-coerce vs))))]
+                    [i (cm-error "CONTRACT" (format "Invalid index: ~a" (string-coerce i)))]
+                    )
+
+               ]
+         [s #:when (string? s) 
+             (match (interp-expr e2 context)
+                    [is #:when (and (list? is) (= (length is) 2) 
+                                    (integer? (list-ref is 0))
+                                    (integer? (list-ref is 1))) 
+                        (match is
+                               [(list i1 i2) #:when (and (<= i1 i2)
+                                                         (>= i1 0)
+                                                         (<= i2 (string-length s)))
+                                             (substring s i1 i2)]
+                               [_ (cm-error "CONTRACT" (format "index ~a is out of range for ~a" 
+                                                               (string-coerce is) (string-coerce s)))]
+
+                          )]
+                    [i #:when (integer? i) 
+                       (if (and (< i (string-length s)) (>= i 0))
+                        (substring s i (add1 i))
+                        (cm-error "CONTRACT" (format "index ~a is out of range for ~a" 
+                                                     (string-coerce i) (string-coerce s))))]
+                    [i (cm-error "CONTRACT" (format "Invalid index ~a for ~a" 
+                                                    (string-coerce i) (string-coerce s)))]
+                    )]
+         [s (cm-error "CONTRACT" (format "Invalid operand for index: ~a" (string-coerce s)))]
+         ))
 
 (define (interp-print v)
  (begin (displayln (string-append (string-coerce v))) 

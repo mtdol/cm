@@ -1,7 +1,7 @@
 . figure out how to get lex to accept strings with \" in them
 
 . printf (print + format)
-. implement: format, slice, length
+. implement format
 . implement let values
 . have better printing of struct schema when bad vals are used to construct a struct
 
