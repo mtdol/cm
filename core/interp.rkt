@@ -487,10 +487,10 @@
                                     (integer? (list-ref is 0))
                                     (integer? (list-ref is 1))) 
                         (match is
-                               [(list i1 i2) #:when (and (>= i2 0)
+                               [(list i1 i2) #:when (and (<= i1 i2)
                                                          (>= i1 0)
-                                                         (<= (+ i1 i2) (length vs)))
-                                              (take (drop vs i1) i2)]
+                                                         (<= i2 (length vs)))
+                                              (take (drop vs i1) (- i2 i1))]
                                [_ (cm-error 
                                 "CONTRACT" (format "Index ~a is out of range for ~a" 
                                                    (string-coerce is) (string-coerce vs)))]

@@ -18,13 +18,13 @@
 (check-equal? (interp (parse-expr (tokenize-string "index (1,2,3;) (0,0;)")))
 null)
 
-(check-equal? (interp (parse-expr (tokenize-string "index (1,2,3;) (1,0;)")))
+(check-equal? (interp (parse-expr (tokenize-string "index (1,2,3;) (1,1;)")))
 null)
 
 (check-equal? (interp (parse-expr (tokenize-string "string index (1,2,3;) (0,1;)")))
 "(1;)")
 
-(check-equal? (interp (parse-expr (tokenize-string "string index (1,2,3;) (1,1;)")))
+(check-equal? (interp (parse-expr (tokenize-string "string index (1,2,3;) (1,2;)")))
 "(2;)")
 
 (check-equal? (interp (parse-expr (tokenize-string "string index (1,2,3;) (0,2;)")))
@@ -54,6 +54,6 @@ null)
   (interp (parse-expr (tokenize-string "index (1,2,3;) (0,4;)")))))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "index (1,2,3;) (1,3;)")))))
+  (interp (parse-expr (tokenize-string "index (1,2,3;) (1,4;)")))))
 
 )
