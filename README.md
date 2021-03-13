@@ -162,6 +162,7 @@ lambda var1, var2,... = Expr | multiple lambda expression | `lam x, y := x + y` 
 Expr1 : Expr2, where Expr2 -> Function | function application | `3 : lam x := x + 1` | 4 | also written as `apply`
 lambda guard var := Expr | guarded lambda expression | `3 : lam float x := x + 1.0` | contract exception
 def var1 := lambda var2 = ... | global mapping to function | `def add1 := lam n := n + 1` | Function | add1 can be applied at any time
+types string_list var | multiple types guard | `def types ("int", "float";) x = 5` | 5 | any value within the list is a valid type for var
 typedef label := list | struct definition | `typedef S := a,b;` | instantiates struct type schema | allows you to create structs of the given type
 struct label list | struct | `match struct S (3,5;) \| struct S (a,b;) -> a + b end` | 8 
 struct label | struct guard | `struct S2 4,5; : lam struct S x := print x` | contract exception | struct S and struct S2 have differing labels
@@ -389,6 +390,28 @@ for example:
 ABC
 ```
 
+## Types guard
+The keyword `types` can be used to allow more complicated and flexible variable guards.
+```
+types string_list var
+```
+
+Examples:
+```
+> def int x := 5.5.
+1:CONTRACT: Recieved type float for var x but expected one of (int;).
+> def types ("int", "float";) x := 5.5.
+5
+> def types ("int", "float";) x := "5.5".
+1:CONTRACT: Recieved type string for var x but expected one of (int, float;).
+
+> typedef S := types ("int","bool";) a, float b;.
+
+> struct S (true,4.5;).
+(struct S (true, 4.5;))
+> struct S (5.5, 4.5;).
+1:GENERIC: Could not validate struct against type schema: ...
+```
 
 ## Error Handling
 Errors messages have the following form:
@@ -496,9 +519,14 @@ def get_last := lam list lst :=
 
 
 # creates binary tree node schema
-typedef Bn := val, left, right;.
+typedef Bn := 
+    dynamic val,
+    types ("struct Bn","struct Leaf";) left,
+    types ("struct Bn","struct Leaf";) right;.
+    
 # creates leaf schema (notice no args to type constructor)
 typedef Leaf := null.
+
 # simple binary node (parens are necessary around sub struct constructors for syntax reasons)
 def b1 := struct Bn (5, (struct Leaf null), (struct Leaf null);).
 # another with a deeper subtree
@@ -512,7 +540,7 @@ def b2 :=
         (struct Leaf null);).
 
 # yields the height of a binary tree
-def bn_height := lam n := 
+def bn_height := lam types ("struct Bn", "struct Leaf";) n := 
     match n
     | struct Leaf null -> 1 
     | struct Bn (_, left, right;) ->
@@ -520,7 +548,9 @@ def bn_height := lam n :=
     end.
 
 # prints 2
-@ b1 : bn_height
+@ b1 : bn_height.
 # prints 3
-@ b2 : bn_height
+@ b2 : bn_height.
+# prints 1
+@ struct Leaf null : bn_height.
 ```
