@@ -544,15 +544,17 @@ def get_last := lam list lst :=
 @ null : get_last.
 ######################################
 
+# types valid for btree
+def b_types := ("struct Bn", "struct Leaf";).
 
 # creates binary tree node schema
 typedef Bn := 
     dynamic val,
-    types ("struct Bn","struct Leaf";) left,
-    types ("struct Bn","struct Leaf";) right;.
+    types b_types left,
+    types b_types right;.
     
 # creates leaf schema (notice no args to type constructor)
-typedef Leaf := null.
+typedef Leaf := ().
 
 # simple binary node (parens are necessary around sub struct constructors for syntax reasons)
 def b1 := struct Bn (5, (struct Leaf null), (struct Leaf null);).
@@ -567,9 +569,9 @@ def b2 :=
         (struct Leaf null);).
 
 # yields the height of a binary tree
-def bn_height := lam types ("struct Bn", "struct Leaf";) n := 
+defun bn_height (types b_types n) := 
     match n
-    | struct Leaf null -> 1 
+    | struct Leaf () -> 1 
     | struct Bn (_, left, right;) ->
         1 + appl max ((left : bn_height), (right : bn_height);)
     end.
@@ -579,5 +581,5 @@ def bn_height := lam types ("struct Bn", "struct Leaf";) n :=
 # prints 3
 @ b2 : bn_height.
 # prints 1
-@ struct Leaf null : bn_height.
+@ struct Leaf () : bn_height.
 ```
