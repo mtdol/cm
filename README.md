@@ -185,6 +185,11 @@ Expr comma Expr | execute first expr and ignore result, then run second and yiel
 3
 ```
 
+"Private" variables are declared with a leading underscore:
+```
+def _x := 3.
+```
+
 Accessing variables before they have been defined yields an error:
 ```
 > x.
