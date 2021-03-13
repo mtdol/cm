@@ -45,6 +45,11 @@
           (match (interp-def-list e1 e2)
                  [(Def e1-2 e2-2) (interp-def e1-2 e2-2 context)])]
         [(Def _ _) (cm-error "SYNTAX" "Def is missing an assignment.")]
+        [(Defun (Var id) e1 (Assign e2))
+          (interp-expr 
+            (Def (Var id) (Assign (Lambda e1 (Assign e2))))
+            context)]
+        [(Defun _ _ _) (cm-error "SYNTAX" "Improperly formed defun.")]
         [(Let e1 e2 e3) (interp-let e1 e2 e3 context)]
         [(Lambda e1 (Assign e2)) 
           (match (interp-lambda-list e1 e2)

@@ -80,6 +80,7 @@
         (cons "struct"      (OpData 2 "prefix"  8   'Prefix2 'struct))
         (cons "struct?"     (OpData 2 "prefix"  8   'Prefix2 'struct?))
         (cons "types"       (OpData 2 "prefix"  8   'Prefix2 'types))
+        (cons "defun"       (OpData 3 "prefix"  8   'Defun   '()))
         (cons "format"      (OpData 2 "prefix"  8   'Prefix2 'format))
         (cons "slice"       (OpData 2 "prefix"  8   'Prefix2 'slice))
 

@@ -3,13 +3,7 @@
 . printf (print + format)
 . implement: format, slice, length
 . implement let values
-. defun keyword as shorthand for def and lambda
-
-typecheck keyword:
-    - def f = lam n1, n2 =
-        typecheck n1 with ("int", "float";) in
-            typecheck n2 with ("struct S", "struct Leaf";) in ...
-    - throws exception when types don't match
+. have better printing of struct schema when bad vals are used to construct a struct
 
 # x doesn't know that it is called x
 let x = lam z = match z | ( -> ( | z1, zs -> z1 + 1, (zs : x) end in (4,6,8;) : x.))
@@ -26,4 +20,4 @@ let x = lam z = match z | ( -> ( | z1, zs -> z1 + 1, (zs : x) end in (4,6,8;) : 
 
 
 # null argument lambda
-def oneplustwo = lam null = 1 + 2
+def oneplustwo := lam null := 1 + 2

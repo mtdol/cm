@@ -7,7 +7,7 @@
       "tail" "~" "cons" "," ";" "=" "equal" "equals" "!=" "not_equal" ">" "gt" "<"
       "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" "*" "mult"
       "/" "div" "^" "exp" "%" "mod" "&" "and" "||" "or" "xor" "not" "!" "true" "false"
-      "@" "print" ":=" "assign" "let" "values" "in" "def" "final" "lam" "lambda" ":" "apply" "comma"
+      "@" "print" ":=" "assign" "let" "values" "in" "def" "defun" "final" "lam" "lambda" ":" "apply" "comma"
       "|" "case" "->" "yields" "end"
       "if" "then" "else" "cond" "eval" "$" "cat" "type" "types" "error" "try" "catch" "dynamic"
       "int" "int?" "float" "float?" "string" "string?" "bool" "bool?" "list?"
