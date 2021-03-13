@@ -138,10 +138,10 @@ expr $ expr \| cat | string concatenation | "abc" cat 3 | abc3 | auto coerces op
 expr, expr \| cons | cons | `1,4,(5,6)` | (1, 4, (5, 6))
 \` expr \| head | head | `head (1, 2, 3)` | 1 
 ~ expr \| tail | tail | `~(1, 2, 3)` | 2,3
-null \| () | empty list () | `1,2,3,null` | (1, 2, 3, null)
-; | cons null | `1,2,3;` | (1, 2, 3, null)
-[] | square parens | `[1 + 2]` | 3 | same as ()
-{} | curly parens | `{1 + 2}` | 3 | same as ()
+null \| () | empty list () | `1,2,3,null` | (1, 2, 3, ())
+; | cons null | `1,2,3;` | (1, 2, 3, ())
+\[Expr\] | square parens | `[1 + 2]` | 3 | same as (Expr)
+{Expr} | curly parens | `{1 + 2}` | 3 | same as (Expr)
 index string int | string index | `index "ab" 1` | "b" 
 index string (int1,int2;) | substring | `index "abc" (0,2;)` | "ab"
 index list int | list index | `index (1,2,3;) 1` | 2
