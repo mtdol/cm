@@ -10,11 +10,11 @@
     "typedef S := types (\"int\", \"float\";) a, types (\"string\", \"dynamic\";) b;")))
 
 (check-equal? (interp (parse-expr (tokenize-string "string struct S (4.2, 7;)")))
-"(struct S (4.2, 7, null))")
+"(struct S (4.2, 7;))")
 (check-equal? (interp (parse-expr (tokenize-string "string struct S (4, 7;)")))
-"(struct S (4, 7, null))")
+"(struct S (4, 7;))")
 (check-equal? (interp (parse-expr (tokenize-string "string struct S (4, true;)")))
-"(struct S (4, true, null))")
+"(struct S (4, true;))")
 
 (check-exn exn:fail? (lambda ()
   (interp (parse-expr (tokenize-string "string struct S (true, 7;)")))))

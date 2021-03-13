@@ -78,8 +78,8 @@
 ;; turns a list or pair into a string
 (define (list-to-string lst) 
     (match lst
-           ['() "null"]
-           [(cons h '()) (string-append (string-coerce h) ", " (list-to-string '()))]
+           ['() "()"]
+           [(cons h '()) (string-append (string-coerce h) ";")]
            [(cons h t) (string-append (string-coerce h) ", " (list-to-string t))]
            [h (string-coerce h)]))
 
@@ -97,7 +97,7 @@
          ["bool" (match v [(Bool 1) "true"] [(Bool 0) "false"])]
          ["list" (string-append "(" (list-to-string v) ")")]
          ["pair" (string-append "(" (list-to-string v) ")")]
-         ["null" "null"]
+         ["null" "()"]
          ["void" ""]
          ["fun" (match v [(Fun var type context expr)
                           (format "Fun ~a ~a" type var)])]

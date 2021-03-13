@@ -141,7 +141,7 @@
 "true")
 
 (check-equal? (interp (parse-expr (tokenize-string "string (list? int 9.0;)")))
-"(false, null)")
+"(false;)")
 
 (check-equal? (interp (parse-expr (tokenize-string "string (list? int 9.0, int 7.3)")))
 "(false, 7)")

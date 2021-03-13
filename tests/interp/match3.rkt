@@ -44,10 +44,10 @@
 2)
 
 (check-equal? (interp (parse-expr (tokenize-string "match struct S (3;) | s -> string s end")))
-"(struct S (3, null))")
+"(struct S (3;))")
 
 (check-equal? (interp (parse-expr (tokenize-string "match (struct S (3;)),4 | a,b -> string a end")))
-"(struct S (3, null))")
+"(struct S (3;))")
 (check-equal? (interp (parse-expr (tokenize-string "match (struct S (3;)),4 | a,b -> b end")))
 4)
 

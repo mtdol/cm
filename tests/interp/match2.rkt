@@ -74,7 +74,7 @@
 (check-equal? (interp (parse-expr (tokenize-string "match 5.0,3; | a, b -> a end")))
 5.0)
 (check-equal? (interp (parse-expr (tokenize-string "string match 5.0,3; | a, b -> b end")))
-"(3, null)")
+"(3;)")
 
 (check-equal? (interp (parse-expr 
                 (tokenize-string "match 5.0,3; | a, b when a = 5.0 -> a | _ -> 2 end")))
