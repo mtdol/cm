@@ -557,16 +557,16 @@ typedef Bn :=
 typedef Leaf := ().
 
 # simple binary node (parens are necessary around sub struct constructors for syntax reasons)
-def b1 := struct Bn (5, (struct Leaf null), (struct Leaf null);).
+def b1 := struct Bn (5, (struct Leaf ()), (struct Leaf ());).
 # another with a deeper subtree
 def b2 := 
     struct Bn 
         (5,
         (struct Bn 
             (3,
-            (struct Leaf null),
-            (struct Leaf null);)),
-        (struct Leaf null);).
+            (struct Leaf ()),
+            (struct Leaf ());)),
+        (struct Leaf ());).
 
 # yields the height of a binary tree
 defun bn_height (types b_types n) := 
