@@ -145,7 +145,7 @@ null \| () | empty list () | `1,2,3,null` | (1, 2, 3, null)
 index string int | string index | `index "ab" 1` | "b" 
 index string (int1,int2;) | substring | `index "abc" (0,2;)` | "ab"
 index list int | list index | `index (1,2,3;) 1` | 2
-index list (int1,int2;) | list slice | `index (1,2,3;) (1,2;)` | (2, 3;) | starts from index int1 and grabs int2 items ahead in list
+index list (int1,int2;) | list slice | `index (1,2,3;) (1,3;)` | (2, 3;) | an index from i1 to i2 where i1 = i2 will result in null
 print expr | print | `print 1 + 2` | 3 
 @ expr | print | `@ 1 + 2` | 3 | alias of print
 \# | comment | `4 + 1 + 2 # 5 + 6` | 7
