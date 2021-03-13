@@ -212,6 +212,9 @@ Local bindings replace global bindings in local scope:
 7
 ```
 
+
+
+
 Bindings can be guarded, but will only be guarded for their first assignment
 ```
 > def int x := 3.0.
@@ -233,6 +236,26 @@ false
 > list? null.
 true
 ```
+
+### Local Recursive Vars
+To create a local recursive function, use a global binding of the following form:
+```
+defun _id_ args := ...
+# or alternatively
+def _id_ := lambda args := ...
+```
+
+For example:
+```
+let get_last :=
+    defun _get_last_ n := match n | () -> () | h, () -> h | h,t -> t:_get_last_ end  
+in 
+    # prints 3
+    @ (1,2,3;):get_last.
+```
+
+Variables of this form can be thought of as "local private" and should only be used in this manner.
+
 
 ## cond
 `cond` and `match` both make use of the `case` keyword (also written `|`.)
