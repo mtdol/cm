@@ -162,6 +162,7 @@ lambda var1, var2,... = Expr | multiple lambda expression | `lam x, y := x + y` 
 Expr1 : Expr2, where Expr2 -> Function | function application | `3 : lam x := x + 1` | 4 | also written as `apply`
 lambda guard var := Expr | guarded lambda expression | `3 : lam float x := x + 1.0` | contract exception
 def var1 := lambda var2 = ... | global mapping to function | `def add1 := lam n := n + 1` | Function | add1 can be applied at any time
+defun var vars := ... | shorthand global mapping to function | `defun add2 (x,y) := x + y` | Function | the vars operand must be wrapped if more than one var
 types string_list var | multiple types guard | `def types ("int", "float";) x := 5` | 5 | any value within the list is a valid type for var
 typedef label := list | struct definition | `typedef S := a,b;` | instantiates struct type schema | allows you to create structs of the given type
 struct label list | struct | `match struct S (3,5;) \| struct S (a,b;) -> a + b end` | 8 
@@ -364,6 +365,23 @@ def add_both := lam x := lam y := x + y.
 This chaining of lambdas can be simplified with `,`
 ```
 def add_both := lam x, y := x + y.
+```
+
+The `defun` keyword can be used as a shorthand for a def assignment to a lambda.
+```
+defun var vars := expr
+```
+
+The vars operand must be wrapped up in parens if it is any more than a single variable.
+
+Examples:
+```
+defun a1 x := x + 1.
+defun a2 (x, y) := x + y.
+
+defun float_a2 
+    (types ("int", "float";) x, types ("int", "float";) y) :=
+        float x + float y.
 ```
 
 You can check whether something is a function using the `fun?` question and `fun` guard.
