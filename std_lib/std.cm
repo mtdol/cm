@@ -1,53 +1,98 @@
-def print2 := lam v := print v. # allows print to be used like a function
+# allows print to be used like a function
+defun print2 v := print v. 
+# prints and yields void
+defun sprint v := (print v) comma void. 
 
-def number? := lam v :=
+defun number? v :=
     let t := type v in
         t = "int" or t = "float".
 
-def add1 := lam int n := n + 1.
-def add1f := lam float n := n + 1.0.
-def sub1 := lam int n := n - 1.
-def sub1f := lam float n := n - 1.0.
-def zero? := lam int n := n = 0.
-def zerof? := lam float n := n = 0.0.
-def pos? := lam int n := n > 0.
-def posf? := lam float n := n > 0.0.
-def neg? := lam int n := n < 0.
-def negf? := lam float n := n < 0.0.
-def one? := lam int n := n = 1.
-def onef? := lam float n := n = 1.0.
-def even? := lam int n := n % 2 = 0.
-def odd? := lam int n := n % 2 = 1.
+defun add1 int n := n + 1.
+defun add1f float n := n + 1.0.
+defun sub1 int n := n - 1.
+defun sub1f float n := n - 1.0.
+defun zero? int n := n = 0.
+defun zerof? float n := n = 0.0.
+defun pos? int n := n > 0.
+defun posf? float n := n > 0.0.
+defun neg? int n := n < 0.
+defun negf? float n := n < 0.0.
+defun one? int n := n = 1.
+defun onef? float n := n = 1.0.
+defun even? int n := n % 2 = 0.
+defun odd? int n := n % 2 = 1.
 
-def to_int := lam n := int n.
-def to_float := lam n := float n.
-def to_string := lam n := string n.
-def to_bool := lam n := bool n.
+defun to_int n := int n.
+defun to_float n := float n.
+defun to_string n := string n.
+defun to_bool n := bool n.
 
 # maps f onto all members of list lst
-def map := lam fun f, list lst := 
+defun map (fun f, list lst) := 
     | null? lst -> null 
-    else (`lst : f), (appl map f,~lst;).
+    else (`lst : f), (appl map (f,~lst;)).
 
 # returns a list with only the elements that are true according to f
-def filter := lam fun f, list lst := 
+defun filter (fun f, list lst) := 
     | null? lst -> null 
-    | `lst : f -> `lst, (appl filter f,~lst;)
-    else appl filter f,~lst;.
+    | `lst : f -> `lst, (appl filter (f,~lst;))
+    else appl filter (f,~lst;).
 
 # int | float -> int | float
-def max := lam n1, n2 :=
+defun max (n1, n2) :=
     if n1 > n2 then n1 else n2.
 
 # int | float -> int | float
-def min := lam n1, n2 :=
+defun min (n1, n2) :=
     if n1 < n2 then n1 else n2.
 
-# int, int, int -> int list
-def range := lam int n1, int n2, int inc := 
-    | inc = 0 -> error "invalid range"
-    | inc > 0 and n1 > n2 -> error "invalid range"
-    | inc < 0 and n1 < n2 ->  error "invalid range"
-    else 
-      | n1 >= n2 or n1 + inc > n2 -> n1; 
-      else n1, (appl range (n1+inc, n2, inc;)).
+
+defun reverse list xs :=
+    let aux := defun _aux_ (xs, acc) :=
+        match xs
+        | () -> acc
+        | x, t -> appl _aux_ (t, (x, acc);)
+        end
+    in
+        appl aux (xs, ();).
+
+defun range (int n1, int n2) :=
+    let aux := defun _aux_ (n1, n2) :=
+        | n1 = n2 -> ()
+        else n1, (appl _aux_ (n1+1, n2;))
+    in
+        | n1 > n2 -> (appl aux (n2+1,n1+1;)) : reverse
+        else appl aux (n1,n2;).
+
+
+
+#
+# String funcs
+#
+
+# function form of the substring functionality of the index keyword
+defun substring (string s, int i1, int i2) :=
+    index s (i1,i2;).
+
+defun string_ref (string s, int i) :=
+    index s i.
+
+defun concatenate (string s1, string s2) :=
+    s1 $ s2.
+
+defun string_length string s :=
+    length s.
+
+# turns the string into a list of length 1 substrings
+defun string_to_list string s :=
+    match s
+    | "" -> ()
+    | _ -> (index s 0), ((index s (1, length s;)) : string_to_list)
+    end.
+
+# concatenates all of the elems in the list into a single string
+defun list_to_string list ss :=
+    match ss
+    | () -> ""
+    | s, t -> s $ (t : list_to_string)
+    end.

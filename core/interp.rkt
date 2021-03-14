@@ -1,5 +1,6 @@
 #lang racket
-(require cm/core/ast cm/core/error cm/core/types cm/core/context
+(require racket/hash
+         cm/core/ast cm/core/error cm/core/types cm/core/context
          cm/core/parse-stat cm/core/lex cm/core/interp-utils cm/core/modules)
 (provide interp)
 
@@ -228,16 +229,24 @@
                 (match ce1
                        [(Prim2 'when ce1-1 ce1-2)
                         (let ([match-context-2 (match-expr ce1-1 v (hash) context)])
-                        (if (and match-context-2 (bool-to-racket (interp-expr ce1-2 match-context-2)))
-                          (interp-expr ce2-1 match-context-2)
+                          (let ([merged-context (if match-context-2 
+                                                  (hash-union match-context match-context-2
+                                                    #:combine/key (lambda (k v1 v2) v2))
+                                                  #f)])
+                        (if (and merged-context (bool-to-racket (interp-expr ce1-2 merged-context)))
+                              (interp-expr ce2-1 merged-context)
                           (interp-match v ce3 match-context context)
-                          ))
+                          )))
                         ]
                        [_ 
                         (let ([match-context-2 (match-expr ce1 v (hash) context)])
                           ;; hashes evaluate to #t in racket
                         (if match-context-2
-                          (interp-expr ce2-1 match-context-2)
+                          ;; merge the local contexts so that match-context 2 vals replace
+                          ;; match context vals
+                          (let ([merged-context (hash-union match-context match-context-2
+                                                    #:combine/key (lambda (k v1 v2) v2))])
+                              (interp-expr ce2-1 merged-context))
                           (interp-match v ce3 match-context context)
                           ))
 

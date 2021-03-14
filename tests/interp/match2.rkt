@@ -100,4 +100,13 @@
 (check-equal? (interp (parse-expr 
                 (tokenize-string "match 5.0, (3, 6), 4 | a, (b, c), d -> b + c | a, b -> 2 end")))
 9)
+
+
+
+(check-equal? (interp (parse-expr 
+                (tokenize-string "let v := 5 in match 1 | _ -> v end")))
+5)
+(check-equal? (interp (parse-expr 
+                (tokenize-string "let v := 5 in let b := true in match 1 | _ when b -> v end")))
+5)
 )

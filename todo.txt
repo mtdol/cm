@@ -4,9 +4,8 @@
 . implement format
 . implement let values
 . have better printing of struct schema when bad vals are used to construct a struct
-
-# x doesn't know that it is called x
-let x = lam z = match z | ( -> ( | z1, zs -> z1 + 1, (zs : x) end in (4,6,8;) : x.))
+. figure out why repl keeps printing out lists wrong
+. regex
 
 . load
     - loads both racket modules and cm ones
