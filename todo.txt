@@ -8,15 +8,8 @@
 . regex
 
 . load
-    - loads both racket modules and cm ones
     - allow * wildcard
     - private (not shared) variables starting in _ (ie _f, private var f)
-
-. evalp
-    - evaluates racket procedures
-    - takes a proc name (string) and returns the results of the call as a string
-    - prefix racket var names with 'v:'
-
 
 # null argument lambda
 def oneplustwo := lam null := 1 + 2

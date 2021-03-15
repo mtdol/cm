@@ -38,7 +38,7 @@
 (define exit-text "exiting\n")
 
 ;; the cm function we will be calling
-(define mode cm-run-list)
+(define mode cm-run)
 
 (define (print-results lst)
   (match lst
@@ -56,7 +56,7 @@
                          (add-history "#token")
                          (repl))]
          ["#run" (list (displayln "run mode")
-                         (set! mode cm-run-list)
+                         (set! mode cm-run)
                          (add-history "#run")
                          (repl))]
          ["#runxp" (list (displayln "run expression mode")
