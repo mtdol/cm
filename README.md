@@ -177,6 +177,7 @@ struct? label | struct type question | `struct? S2 (struct S2 4,5;)` | true
 while Expr do Expr | while loop | `(def x := 3) comma (while x < 10 do @ def x := x + 1)` | prints 3 to 10 | the while loop returns void after the final run of the body
 appl func list | list to function applier | `appl (lam x, y := x + y) (4,5;)` | 9 | applies each element to the result of the previous function application. Equivalent to `5:4:(lam x,y := x + y)`
 Expr comma Expr | execute first expr and ignore result, then run second and yield its value | `(def x := 4) comma 7` | 7 | x is still bound to 4 in the global scope (a side effect)
+eval string | runs the code within the string | `eval "2 + 3."` | 5 | yields a list if there is more than one statement
 
 ## Basics and Assignment
 `def` is used to create global variables.
@@ -526,6 +527,21 @@ NL:MY_TYPE: my message
 ```
 
 Error IDs are written in all caps with underscore seperators.
+
+## Eval
+The `eval` keyword allows you to run cm code within cm as a string.
+```
+eval str
+```
+
+The output will be returned either as a single value (if only one statement,) or as a list
+if there are multiple statements:
+```
+> eval "4 + 1."
+5
+> eval "5. 7."
+(5, 7;)
+```
 
 ## Looping
 The `while` keyword is used to form a loop.
