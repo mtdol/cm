@@ -174,6 +174,7 @@ struct label | struct guard | `struct S2 4,5; : lam struct S x := print x` | con
 == \| eqq | strong equality | `struct S (struct S2 (3,4;);) == struct S (struct S2 (3,4;);)` | true | == works for all language objects and yields true if all their sub-components equal
 !== \| neqq | strong inequality | `struct S (struct S2 (5,4;);) !== struct S (struct S2 (3,4;);)` | true
 struct? label | struct type question | `struct? S2 (struct S2 4,5;)` | true
+while Expr do Expr | while loop | `(def x := 3) comma (while x < 10 do @ def x := x + 1)` | prints 3 to 10 | the while loop returns void after the final run of the body
 appl func list | list to function applier | `appl (lam x, y := x + y) (4,5;)` | 9 | applies each element to the result of the previous function application. Equivalent to `5:4:(lam x,y := x + y)`
 Expr comma Expr | execute first expr and ignore result, then run second and yield its value | `(def x := 4) comma 7` | 7 | x is still bound to 4 in the global scope (a side effect)
 
@@ -526,6 +527,23 @@ NL:MY_TYPE: my message
 
 Error IDs are written in all caps with underscore seperators.
 
+## Looping
+The `while` keyword is used to form a loop.
+```
+while e1 do e2
+```
+
+The while loop will run the body expression e2 as long as the guard expr e1 evaluates to true.
+After running e2 for the final time, the while loop will yield `void`.
+```
+> (def x := 3) comma while x < 7 do @ def x := x + 1.
+3
+4
+5
+6
+7
+
+```
 
 ## Code Examples
 ```
@@ -536,6 +554,8 @@ def fact := lam int n :=
     
 # prints 24
 @ 4 : fact.
+
+
 ######################################
 
 # yields larger number
@@ -546,8 +566,9 @@ def max := lam int n1, int n2 :=
 @ appl max (4,7;).
 # still prints 7
 @ appl max (7,4;).
-######################################
 
+
+######################################
 
 # Finds last element of list, or errors if list is null
 def get_last := lam list lst := 
@@ -565,6 +586,22 @@ def get_last := lam list lst :=
 
 # throws error
 @ null : get_last.
+
+
+######################################
+
+defun print_range (int r1, int r2) :=
+    | r1 > r2 -> void
+    else
+        (def __ := r1 - 1) comma 
+        while __ != r2 - 1 do @ def __ := __ + 1.
+
+# prints nothing
+appl print_range (4,4;).
+# prints 4 5 6 7
+appl print_range (4,8;).
+
+
 ######################################
 
 # types valid for btree
