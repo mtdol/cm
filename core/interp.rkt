@@ -41,6 +41,8 @@
                 [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
                 [_ (cm-error "SYNTAX" "Cond is missing a case.")])]
         [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
+        [(While e1 (Do e2)) (interp-while e1 e2 context)]
+        [(While _ _) (cm-error "SYNTAX" "While is missing a do.")]
         [(Try e1 e2) (interp-try-catch e1 e2 context)]
         [(Match e1 e2) (interp-match (interp-expr e1 context) e2 context context)]
         [(Def e1 (Assign e2)) 
@@ -199,6 +201,13 @@
                        (interp-expr e3 context) (interp-expr e5 context))]
                  [_ (cm-error "SYNTAX" "Then clause is missing an else.")])]
          [_ (cm-error "SYNTAX" "If clause is missing a then.")]))
+
+(define (interp-while e1 e2 context) 
+  (cond
+    [(bool-to-racket (interp-expr e1 context)) 
+     (interp-expr e2 context)
+     (interp-while e1 e2 context)]
+    [else (Prim0 'void)]))
 
 (define (interp-try-catch e1 e2 context)
   (match e2
