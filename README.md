@@ -53,12 +53,19 @@ cd "path to cm directory"
 The main.rkt file in the core directory contains racket functions to interpret/parse/tokenize  
 cm files/expressions and statements.
 
+`display-output` is used to print the results of a statement interp.
+`display-expr-output` is used to print the results of a expression interp.
+`silent` will return void after running the given proc
+`displayln` (racket proc) can be used to print any output in its unaltered form
+
 ### Examples
 ```
 racket -e '(require cm/core/main) (run "language statement")'
 racket -e '(require cm/core/main) (run-file "file here")'
-racket -e '(require cm/core/main) (run-file-silent "language statement")'
-racket -e '(require cm/core/main) (run-parse "statement here")'
+racket -e '(require cm/core/main) (display-output (run "language statement"))'
+racket -e '(require cm/core/main) (display-expr-output (run-expr "language statement"))'
+racket -e '(require cm/core/main) (silent (run-file "language statement"))'
+racket -e '(require cm/core/main) (displayln (run-parse "statement here"))'
 racket -e '(require cm/core/main) (run-parse-expr "expression here")'
 ...
 ```
@@ -66,14 +73,14 @@ Aditionally, cm.exe can be used to run cm files:
 ```
 ./cm.exe "path to file"
 ```
-The -s switch is normally implied and makes cm run silently, only using printed output.
+The -f switch is normally implied and indicates a file arg.
 ```
-# -s is not really necessary
-./cm.exe -s "path to file"
+# -f is not really necessary
+./cm.exe -f "path to file"
 ```
-The -S switch is used to return all values gathered in a file after it has run.
+The -F switch is used mark an absolute path.
 ```
-./cm.exe -S "path to file"
+./cm.exe -F "absolute path to file"
 ```
 
 There are example files in the `examples` directory, although some may not work at the moment.
