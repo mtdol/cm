@@ -66,9 +66,14 @@ Aditionally, cm.exe can be used to run cm files:
 ```
 ./cm.exe "path to file"
 ```
-To run cm.exe silently (printed output only,) use:
+The -s switch is normally implied and makes cm run silently, only using printed output.
 ```
+# -s is not really necessary
 ./cm.exe -s "path to file"
+```
+The -S switch is used to return all values gathered in a file after it has run.
+```
+./cm.exe -S "path to file"
 ```
 
 There are example files in the `examples` directory, although some may not work at the moment.
@@ -105,6 +110,19 @@ load "f:~/code/cm/std_lib/std.cm".
 # relative to working directory
 load "cm/std_lib/std.cm".
 ```
+
+### !lang cm
+The statement `!lang cm.` can be used (usually at the top of a file)
+to load all of the standard modules that are recommended for the language.
+
+```
+!lang cm.
+
+# a function included in std.cm
+@ 4:add1.
+```
+
+The standard modules are everything contained within the `std_lib` folder.
 
 ## Testing
 ```
