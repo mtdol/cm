@@ -1,11 +1,11 @@
 #lang racket
 (require cm/tests/test-utils rackunit)
 
-(run "def add1 := lam n := n + 1")
+(run-silent "def add1 := lam n := n + 1")
 (check-equal? (run "appl add1 (5;)")
 6)
 
-(run "def sub2 := lam n1, n2 := n1 - n2")
+(run-silent "def sub2 := lam n1, n2 := n1 - n2")
 (check-equal? (run "appl sub2 (5,7;)")
 -2)
 (check-equal? (run "appl sub2 (6,-2;)")
@@ -14,7 +14,7 @@
 (check-equal? (run "appl (lam list x, list y := `x + `y) ((1,3;),(6,5;);)")
 7)
 
-(run "def add_heads := lam list x, list y := `x + `y")
+(run-silent "def add_heads := lam list x, list y := `x + `y")
 (check-equal? (run "appl add_heads ((1,3;),(6,5;);)")
 7)
 (check-equal? (run "appl add_heads ((7,9;),(-2,4;);)")

@@ -1,9 +1,9 @@
 #lang racket
 (require cm/tests/test-utils rackunit)
 
-(run "typedef S := a;")
-(run "typedef Si := int a;")
-(run "typedef S2 := a, b;")
+(run-silent "typedef S := a;")
+(run-silent "typedef Si := int a;")
+(run-silent "typedef S2 := a, b;")
 
 (check-equal? (run "match struct S (3;) | struct S (3;) -> 2 end")
 2)

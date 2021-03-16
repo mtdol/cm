@@ -8,7 +8,7 @@
 2)
 
 
-(run "def x := lam n := match n | 5 -> 3 end")
+(run-silent "def x := lam n := match n | 5 -> 3 end")
 
 (check-equal? (run "5 : x")
 3)
@@ -17,7 +17,7 @@
 (check-exn exn:fail? (lambda ()
   (run "4,2:x")))
 
-(run "def x := lam n := match n | 5 -> 3 | 7 -> 1 end")
+(run-silent "def x := lam n := match n | 5 -> 3 | 7 -> 1 end")
 
 (check-equal? (run "5 : x")
 3)

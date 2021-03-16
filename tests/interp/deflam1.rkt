@@ -38,11 +38,11 @@
 (check-equal? (run "x")
 10)
 
-(run "def x := lam int y := y + 1")
+(run-silent "def x := lam int y := y + 1")
 (check-equal? (run "3:x")
 4)
 
-(run "def x := lam x, y := x + y")
+(run-silent "def x := lam x, y := x + y")
 (check-equal? (run "3:5:x")
 8)
 

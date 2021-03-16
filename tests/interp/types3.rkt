@@ -1,7 +1,7 @@
 #lang racket
 (require cm/tests/test-utils rackunit)
 
-(run "typedef S := types (\"int\", \"float\";) a, types (\"string\", \"dynamic\";) b;")
+(run-silent "typedef S := types (\"int\", \"float\";) a, types (\"string\", \"dynamic\";) b;")
 
 (check-equal? (run "string struct S (4.2, 7;)")
 "(struct S (4.2, 7;))")

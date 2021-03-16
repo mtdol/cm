@@ -43,6 +43,7 @@
    ;; skip comment lines
    [comment (cmlex input-port)]
    [(:or "(" ")" "#") lexeme]
+   ["!lang" "!lang"]
    ["." "dot"]
    ["`" "head"]
    ["~" "tail"]

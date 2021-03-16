@@ -97,8 +97,9 @@
       [exn:fail? (lambda (e) (cons (displayln (match e [(exn:fail m _) m])) (repl-failsafe)))]
                   ) (repl)))
 
-;; import standard lib
-(begin (run-expr "load \"std_lib::std.cm\"") (void))
+;; import standard libs
+(define (run-lang-line!) (begin (run-expr "!lang cm") (void)))
 
+(run-lang-line!)
 (display "Welcome to the cm repl!\nType `#exit` or `#e` to exit. Type `#help` for help.\n\n")
 (cleanse repl-failsafe)

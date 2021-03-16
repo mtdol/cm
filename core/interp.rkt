@@ -32,6 +32,7 @@
         [(Prefix2 'struct? e1 e2) (interp-struct? e1 e2 context)]
         [(Prefix2 'appl e1 e2) (interp-appl e1 e2 context)]
         [(Prefix2 'index e1 e2) (interp-index e1 e2 context)]
+        [(Prim1 'lang e) (interp-lang e context)]
         ;; general prim cases
         [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1 context) (interp-expr e2 context))]
         [(Prim1 op e) (interp-prim1 op (interp-expr e context))]
@@ -130,7 +131,7 @@
         ['eval (run-raw (string-coerce v))] 
         ['load 
          (match v 
-                [s #:when (string? s) (process-import-string s)]
+                [s #:when (string? s) (process-import-string s) (Prim0 'void)]
                 [_ (cm-error "CONTRACT" "Argument to load must be a file.")])
              ]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
@@ -552,3 +553,11 @@
 (define (interp-print v)
  (begin (displayln (string-append (string-coerce v))) 
         v))
+
+(define (interp-lang e c)
+  (match e
+         [(Var "cm") 
+          ;; load all basic modules for cm
+          (process-import-string "std_lib::std.cm")
+          (Prim0 'void)]
+         [_ (cm-error "GENERIC" "Invalid lang line.")]))

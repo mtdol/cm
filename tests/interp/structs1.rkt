@@ -1,8 +1,8 @@
 #lang racket
 (require cm/tests/test-utils rackunit)
 
-(run "typedef St2 := int a, int b;")
-(run "typedef St1 := int a,  (struct St2 st);")
+(run-silent "typedef St2 := int a, int b;")
+(run-silent "typedef St1 := int a,  (struct St2 st);")
 (check-equal? (run "string def s2 := struct St2 (4,5;)")
 "(struct St2 (4, 5;))")
 (check-equal? (run "string s2")
@@ -26,7 +26,7 @@
 (check-equal? (run "string struct? St1 struct St1 (7, (struct St2 (4,5;));)")
 "true")
 
-(run "typedef St := a, int b;")
+(run-silent "typedef St := a, int b;")
 (check-equal? (run "string struct St (4,5;)")
 "(struct St (4, 5;))")
 (check-equal? (run "string struct St (4.3,5;)")

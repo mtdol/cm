@@ -52,7 +52,7 @@
 ;;
 ;; type Op1 = 'neg | 'pos | 'head | 'tail | 'not | 'type | 'dynamic | 'int | 'float | 
 ;;      'string | 'bool | 'int? | 'float? | string? | bool? | list? | 'pair? |
-;;      'null? | 'void? | 'length | 'eval | 'print | 'load | 'error
+;;      'null? | 'void? | 'length | 'eval | 'print | 'load | 'error | 'lang
 ;;
 ;; type Op0 = 'end | 'void
 

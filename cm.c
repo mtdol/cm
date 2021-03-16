@@ -17,6 +17,7 @@ const int os = 2;
 
 int main (int argc, char *argv[]) {
     int status = 0;
+    char str[300];
     char query[300];
 
     if (argc == 1) {
@@ -27,16 +28,22 @@ int main (int argc, char *argv[]) {
         } else {
             strcpy (query, "./install.sh");
         }
-    } else if (argc == 2) {
+    } else if (argc == 2 || (argc == 3 && !(strcmp (argv[1], "-s")))) {
+        if (argc == 2) {
+            strcpy (str, argv[1]);
+        } else {
+            strcpy (str, argv[2]);
+        }
+
         // act like path is unix
-        strcpy (argv[1], (replacechr (argv[1], '\\', '/')));
-        sprintf (query,
-                "racket -e \"(require cm/core/main) (run-file \\\"%s\\\")\"",
-                argv[1]);
-    } else if (argc == 3 && !(strcmp (argv[1], "-s"))) {
-        strcpy (argv[2], (replacechr (argv[2], '\\', '/')));
+        strcpy (str, (replacechr (str, '\\', '/')));
         sprintf (query,
                 "racket -e \"(require cm/core/main) (run-file-silent \\\"%s\\\")\"",
+                str);
+    } else if (argc == 3 && !(strcmp (argv[1], "-S"))) {
+        strcpy (argv[2], (replacechr (argv[2], '\\', '/')));
+        sprintf (query,
+                "racket -e \"(require cm/core/main) (run-file \\\"%s\\\")\"",
                 argv[2]);
     } else {
         printf ("Invalid args.\n");

@@ -79,6 +79,7 @@
         (cons "length"      (OpData 1 "prefix"  8   'Prim1   'length))
         (cons ":uni_plus"   (OpData 1 "prefix"  8   'Prim1   'pos))
         (cons ":uni_minus"  (OpData 1 "prefix"  8   'Prim1   'neg))
+        (cons "!lang"       (OpData 1 "prefix"  8   'Prim1   'lang))
         (cons "struct"      (OpData 2 "prefix"  8   'Prefix2 'struct))
         (cons "struct?"     (OpData 2 "prefix"  8   'Prefix2 'struct?))
         (cons "types"       (OpData 2 "prefix"  8   'Prefix2 'types))

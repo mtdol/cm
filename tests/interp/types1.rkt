@@ -54,8 +54,8 @@
 (check-exn exn:fail? (lambda ()
   (run "def types (\"int\", \"fl\"$\"at\";) x := 5.5")))
 
-(run "def str := \"float\"")
-(run "def lst := (\"int\", \"float\";)")
+(run-silent "def str := \"float\"")
+(run-silent "def lst := (\"int\", \"float\";)")
 
 (check-equal? (run "def types (\"int\", str;) x := 5.5")
 5.5)

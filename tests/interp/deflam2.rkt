@@ -12,7 +12,7 @@
 4)
 
 ;; basic recursive case
-(run "def r := lam n := | n = 0 -> 0 else n + (n - 1 : r)")
+(run-silent "def r := lam n := | n = 0 -> 0 else n + (n - 1 : r)")
 
 (check-equal? (run "4 : r")
 10)
@@ -22,20 +22,20 @@
 0)
 
 ;; concerning closures
-(run "def c := let x := 3 in lam v := v + x")
+(run-silent "def c := let x := 3 in lam v := v + x")
 (check-equal? (run "4 : c")
 7)
 
 ;; concerning multiple args
-(run "def sub_them := lam v1,v2 := v1 - v2")
+(run-silent "def sub_them := lam v1,v2 := v1 - v2")
 (check-equal? (run "5 : 3 : sub_them")
 -2)
 
 ;; conerning both
-(run "def sub_them_c := let v3 := 3 in lam v1,v2 := v1 - v2 - v3")
+(run-silent "def sub_them_c := let v3 := 3 in lam v1,v2 := v1 - v2 - v3")
 (check-equal? (run "5 : 3 : sub_them_c")
 1)
 
-(run "def sub_them_c2 := lam v1 := let v3 := 3 in lam v2 := v1 - v2 - v3")
+(run-silent "def sub_them_c2 := lam v1 := let v3 := 3 in lam v2 := v1 - v2 - v3")
 (check-equal? (run "5 : 3 : sub_them_c2")
 1)

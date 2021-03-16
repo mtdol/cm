@@ -22,7 +22,7 @@
   (run "typedef := a;")))
 
 
-(run "typedef S := a;")
+(run-silent "typedef S := a;")
 
 (check-exn exn:fail? (lambda ()
   (run "Struct S (3;)")))
@@ -36,8 +36,8 @@
 (check-exn exn:fail? (lambda ()
   (run "struct s (3;)")))
 
-(run "typedef St2 := int a, int b;")
-(run "typedef St1 := int a,  (struct St2 st);")
+(run-silent "typedef St2 := int a, int b;")
+(run-silent "typedef St1 := int a,  (struct St2 st);")
 
 (check-exn exn:fail? (lambda ()
   (run "def struct St2 s2 := struct S 4;")))
