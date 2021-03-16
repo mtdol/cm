@@ -2,42 +2,47 @@
 (require cm/core/lex cm/core/ast cm/core/parse-expr 
          cm/core/parse-stat cm/core/interp cm/core/ast-to-string
          cm/core/types)
-(provide run run-raw run-silent run-expr run-file
-         run-file-silent run-file-silent-abs run-tokenize-string run-tokenize-file
-         run-parse run-parse-expr run-parse-file run-prefix-form
-         run-ast-to-string)
+(provide run run-file run-file-abs run-expr run-tokenize-string run-tokenize-file
+         run-tokenize-file-abs
+         run-parse run-parse-expr run-parse-file run-parse-file run-prefix-form
+         run-ast-to-string 
+         display-output display-expr-output silent)
 
-;; takes the output from interp and makes it more presentable
-(define (filter-values lst)
-  (match lst
-         ['() '()]
-         [(cons h t) (cons (string-coerce h) (filter-values t))]
-         [h (string-coerce h)]))
+;; reads over each list element and prints its tostring
+;; value list | value -> void
+(define (display-output input)
+    (match input
+           ['() (void)]
+           [(cons h t) (displayln (string-coerce h)) (display-output t)]
+           ;; if output is void
+           [_ (void)]
+           ))
 
-;; runs and returns void
-(define (run-silent input) (begin (interp (parse-stat (tokenize-string input))) (void)))
-;; returns a list of strings rather than string values.
-(define (run input) (filter-values (interp (parse-stat (tokenize-string input)))))
-;; does not do any to string conversions
-(define (run-raw input) (interp (parse-stat (tokenize-string input))))
-;; interps file, returns list
-(define (run-file file) (filter-values (interp (parse-stat (tokenize-file file)))))
-;; runs and returns void
-(define (run-file-silent file) (begin (interp (parse-stat (tokenize-file file))) (void)))
-;; runs and returns void
-(define (run-file-silent-abs file) (begin (interp (parse-stat (tokenize-file-abs file))) (void)))
-;; interps file, returns list
-(define (run-file-abs file) (filter-values (interp (parse-stat (tokenize-file-abs file)))))
+;; coerces an expr to a string and prints
+(define (display-expr-output input)
+    (displayln (string-coerce input)))
 
-;; returns a string
+;; list -> void
+(define (silent input) input (void))
+
+;; runs a statement
+(define (run input) (interp (parse-stat (tokenize-string input))))
+;; runs a file
+(define (run-file file) (interp (parse-stat (tokenize-file file))))
+;; runs a file given an absolute path
+(define (run-file-abs file) (interp (parse-stat (tokenize-file-abs file))))
+
+;; runs an expr (no dot)
 (define (run-expr input) (interp (parse-expr (tokenize-string input))))
 
 (define (run-tokenize-string input) (tokenize-string input))
 (define (run-tokenize-file file) (tokenize-file file))
+(define (run-tokenize-file-abs file) (tokenize-file-abs file))
 
-(define (run-parse-expr input) (parse-expr (tokenize-string input)))
 (define (run-parse input) (parse-stat (tokenize-string input)))
+(define (run-parse-expr input) (parse-expr (tokenize-string input)))
 (define (run-parse-file file) (parse-stat (tokenize-file file)))
+(define (run-parse-file-abs file) (parse-stat (tokenize-file-abs file)))
 
 (define (run-prefix-form input) (half-parse-expr (tokenize-string input)))
 

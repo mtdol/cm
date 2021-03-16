@@ -1,7 +1,7 @@
 #lang racket
 (require racket/lazy-require racket/runtime-path)
 (require cm/core/error cm/core/ast)
-(lazy-require [cm/core/main (run-file-silent-abs run-file-silent)])
+(lazy-require [cm/core/main (run-file-abs run-file silent)])
 (provide process-import-string)
 
 (define modules-already-imported? #f)
@@ -15,9 +15,9 @@
 
 ;; imports the file into the namespace
 (define (do-import! file)
-    (run-file-silent-abs file) (void))
+    (silent (run-file-abs file)) (void))
 (define (do-import-relative! file)
-    (run-file-silent file) (void))
+    (silent (run-file file)) (void))
 
 (define (load-module-hash!)
            (for ([line (file->lines module-file-path)])

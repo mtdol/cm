@@ -12,6 +12,7 @@
     (make-hash (list
         (cons "print"       (OpData 1 "prefix"  0   'Prim1   'print))
         (cons "eval"        (OpData 1 "prefix"  0   'Prim1   'eval))
+        (cons "evalxp"      (OpData 1 "prefix"  0   'Prim1   'evalxp))
         (cons "error"       (OpData 1 "prefix"  0   'Prim1   'error))
         (cons "match"       (OpData 2 "prefix"  0   'Match   '()))
         (cons "if"          (OpData 2 "prefix"  0   'If      '()))

@@ -2,7 +2,7 @@
 (require racket/hash racket/lazy-require
          cm/core/ast cm/core/error cm/core/types cm/core/context
          cm/core/parse-stat cm/core/lex cm/core/interp-utils cm/core/modules)
-(lazy-require [cm/core/main (run-raw)])
+(lazy-require [cm/core/main (run run-expr)])
 (provide interp)
 
 ;; Matthew Dolinka
@@ -21,9 +21,13 @@
   (match ast
         [(Stat i e st) 
          (match st
-                [(EOP) (prepare-for-output (interp-prep e i))]
-                [_ (flatten (list (prepare-for-output (interp-prep e i)) (interp st)))])]
+                ;; each statement in a chain of statements is consed together
+                ;; into a list
+                [(EOP) (cons (prepare-for-output (interp-prep e i)) '())]
+                [_ (cons (prepare-for-output (interp-prep e i)) (interp st))])]
+        ;; if we get an EOP only, just return void
         [(EOP) (prepare-for-output (interp-expr (Prim0 'void) (hash)))]
+        ;; expr only case, no list, just a value returned
         [_ (prepare-for-output (interp-expr ast (hash)))]))
 
 (define (interp-expr ast context)
@@ -128,7 +132,10 @@
                 [(list id msg) (cm-error-no-linenum id msg)]
                 [msg #:when (string? msg) (cm-error-no-linenum "GENERIC" msg)]
                 [_ (cm-error "CONTRACT" "Invalid argument(s) to error.")])]
-        ['eval (run-raw (string-coerce v))] 
+        ['eval #:when (string? v) (run v)] 
+        ['eval (cm-error "CONTRACT" "eval requires a string argument.")] 
+        ['evalxp #:when (string? v) (run-expr v)] 
+        ['evalxp (cm-error "CONTRACT" "evalxp requires a string argument.")] 
         ['load 
          (match v 
                 [s #:when (string? s) (process-import-string s) (Prim0 'void)]

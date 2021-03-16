@@ -28,7 +28,7 @@ int main (int argc, char *argv[]) {
         } else {
             strcpy (query, "./install.sh");
         }
-    } else if (argc == 2 || (argc == 3 && !(strcmp (argv[1], "-s")))) {
+    } else if (argc == 2 || (argc == 3 && !(strcmp (argv[1], "-f")))) {
         if (argc == 2) {
             strcpy (str, argv[1]);
         } else {
@@ -38,13 +38,16 @@ int main (int argc, char *argv[]) {
         // act like path is unix
         strcpy (str, (replacechr (str, '\\', '/')));
         sprintf (query,
-                "racket -e \"(require cm/core/main) (run-file-silent \\\"%s\\\")\"",
+                "racket -e \"(require cm/core/main) (silent (run-file \\\"%s\\\"))\"",
                 str);
-    } else if (argc == 3 && !(strcmp (argv[1], "-S"))) {
-        strcpy (argv[2], (replacechr (argv[2], '\\', '/')));
+    } else if (argc == 3 && !(strcmp (argv[1], "-F"))) {
+        strcpy (str, argv[2]);
+
+        // act like path is unix
+        strcpy (str, (replacechr (str, '\\', '/')));
         sprintf (query,
-                "racket -e \"(require cm/core/main) (run-file \\\"%s\\\")\"",
-                argv[2]);
+                "racket -e \"(require cm/core/main) (silent (run-file-abs \\\"%s\\\"))\"",
+                str);
     } else {
         printf ("Invalid args.\n");
         return 1;

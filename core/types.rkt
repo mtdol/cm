@@ -101,7 +101,7 @@
          ["void" ""]
          ["fun" (match v [(Fun var type context expr)
                           (format "Fun ~a ~a" type var)])]
-         [_ (cm-error "GENERIC" "String coersion error.")])]))
+         [_ (cm-error "GENERIC" (format "String coersion error for ~a." v))])]))
 (define (int-coerce v) 
   (cond [(is-struct? v) (cm-error "CONTRACT" "Cannot coerce a struct to an int.")]
     [else
