@@ -1,111 +1,106 @@
 #lang racket
-(require cm/core/parse-expr cm/core/interp  cm/core/lex)
+(require cm/tests/test-utils rackunit)
 
-(module+ test
-           (require rackunit))
-
-(module+ test
 ;; check for things that should fail
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "x")))))
+  (run "x")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "def 9x := 3")))))
+  (run "def 9x := 3")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "-x")))))
+  (run "-x")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "int x")))))
+  (run "int x")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "int")))))
+  (run "int")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "-")))))
+  (run "-")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "2 -")))))
+  (run "2 -")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "2 + ")))))
+  (run "2 + ")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "* ")))))
+  (run "* ")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "* 2 ")))))
+  (run "* 2 ")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "!4")))))
+  (run "!4")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "1 + 1.0")))))
+  (run "1 + 1.0")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "1.0 + 1")))))
+  (run "1.0 + 1")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "1 / 7")))))
+  (run "1 / 7")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "3.0 / 0")))))
+  (run "3.0 / 0")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "3.0 / 0.0")))))
+  (run "3.0 / 0.0")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "3.0 and 0.0")))))
+  (run "3.0 and 0.0")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "3 = 5.8")))))
+  (run "3 = 5.8")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "true and 0.0")))))
+  (run "true and 0.0")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "true 0.0")))))
+  (run "true 0.0")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "`5")))))
+  (run "`5")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "~5")))))
+  (run "~5")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "~ 3,2")))))
+  (run "~ 3,2")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "` 3,2")))))
+  (run "` 3,2")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "``(3,2)")))))
+  (run "``(3,2)")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "`~(3,2)")))))
+  (run "`~(3,2)")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "``~(3,2;)")))))
+  (run "``~(3,2;)")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string ";;")))))
+  (run ";;")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "1,")))))
+  (run "1,")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string ",")))))
+  (run ",")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string ";")))))
+  (run ";")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string ",7")))))
+  (run ",7")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "int \"not a number\"")))))
+  (run "int \"not a number\"")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "let x := 3 in y")))))
-)
+  (run "let x := 3 in y")))

@@ -95,16 +95,6 @@
    ))
 
 
-;; calls the lexer with input port until 'EOF is reached 
-;(define (lex ip)
-  ;(port-count-lines! ip)
-  ;(let one-line ()
-    ;(define result
-      ;((lambda () (cmlex ip))))
-    ;(unless (and (symbol? result) (string=? "EOF" (symbol->string result)))
-      ;(printf "~a\n" result)
-      ;(one-line))))
-
 (define (tokenize-input ip) 
   (port-count-lines! ip)
     (flatten (port->list cmlex ip)))

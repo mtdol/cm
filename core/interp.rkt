@@ -2,7 +2,7 @@
 (require racket/hash racket/lazy-require
          cm/core/ast cm/core/error cm/core/types cm/core/context
          cm/core/parse-stat cm/core/lex cm/core/interp-utils cm/core/modules)
-(lazy-require [cm/core/cm (cm-run-raw)])
+(lazy-require [cm/core/main (run-raw)])
 (provide interp)
 
 ;; Matthew Dolinka
@@ -127,7 +127,7 @@
                 [(list id msg) (cm-error-no-linenum id msg)]
                 [msg #:when (string? msg) (cm-error-no-linenum "GENERIC" msg)]
                 [_ (cm-error "CONTRACT" "Invalid argument(s) to error.")])]
-        ['eval (cm-run-raw (string-coerce v))] 
+        ['eval (run-raw (string-coerce v))] 
         ['load 
          (match v 
                 [s #:when (string? s) (process-import-string s)]

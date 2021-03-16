@@ -1,10 +1,5 @@
 #lang racket
-(require cm/core/parse-expr cm/core/interp cm/core/lex)
-
-(module+ test
-           (require rackunit))
-
-(module+ test
+(require cm/core/lex rackunit)
 
 (check-equal? (tokenize-string "3")
 '("3"))
@@ -80,4 +75,3 @@
 
 (check-equal? (tokenize-string "cond|\nt#rue->\n2.el#se3.")
 '("cond" "case" ":newline" "t" ":newline" "2" "dot" "el"))
-)

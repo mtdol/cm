@@ -1,80 +1,75 @@
 #lang racket
-(require cm/core/parse-expr cm/core/interp  cm/core/lex)
+(require cm/tests/test-utils rackunit)
 
-(module+ test
-           (require rackunit))
-
-(module+ test
 ;; check for things that should fail
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "cond")))))
+  (run "cond")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "cond | ")))))
+  (run "cond | ")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "cond | 1")))))
+  (run "cond | 1")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "cond | 1 -> 2")))))
+  (run "cond | 1 -> 2")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "cond | 1 -> 2 else")))))
+  (run "cond | 1 -> 2 else")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "cond | 1 -> 2 else else")))))
+  (run "cond | 1 -> 2 else else")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "cond | 1 2 else 5")))))
+  (run "cond | 1 2 else 5")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "cond | -> 2 else 5")))))
+  (run "cond | -> 2 else 5")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "cond | bool 0 -> 2 end")))))
+  (run "cond | bool 0 -> 2 end")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "cond | 1 else 2 else 5")))))
+  (run "cond | 1 else 2 else 5")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "else 2")))))
+  (run "else 2")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "-> 2")))))
+  (run "-> 2")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "| -> 2")))))
+  (run "| -> 2")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "cond | -> 2")))))
+  (run "cond | -> 2")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "|")))))
+  (run "|")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "| 1")))))
+  (run "| 1")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "| 1 -> 2")))))
+  (run "| 1 -> 2")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "| 1 -> 2 else")))))
+  (run "| 1 -> 2 else")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "| 1 -> 2 else else")))))
+  (run "| 1 -> 2 else else")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "| 1 2 else 5")))))
+  (run "| 1 2 else 5")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "| -> 2 else 5")))))
+  (run "| -> 2 else 5")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "| bool 0 -> 2 end")))))
+  (run "| bool 0 -> 2 end")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "| 1 else 2 else 5")))))
+  (run "| 1 else 2 else 5")))
 
 
-)

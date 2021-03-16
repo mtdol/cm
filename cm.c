@@ -31,12 +31,12 @@ int main (int argc, char *argv[]) {
         // act like path is unix
         strcpy (argv[1], (replacechr (argv[1], '\\', '/')));
         sprintf (query,
-                "racket -e \"(require cm/core/cm) (cm-run-file \\\"%s\\\")\"",
+                "racket -e \"(require cm/core/main) (run-file \\\"%s\\\")\"",
                 argv[1]);
     } else if (argc == 3 && !(strcmp (argv[1], "-s"))) {
         strcpy (argv[2], (replacechr (argv[2], '\\', '/')));
         sprintf (query,
-                "racket -e \"(require cm/core/cm) (cm-run-file-silent \\\"%s\\\")\"",
+                "racket -e \"(require cm/core/main) (run-file-silent \\\"%s\\\")\"",
                 argv[2]);
     } else {
         printf ("Invalid args.\n");

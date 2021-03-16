@@ -1,68 +1,63 @@
 #lang racket
-(require cm/core/parse-expr cm/core/interp cm/core/lex)
+(require cm/tests/test-utils rackunit)
 
-(module+ test
-           (require rackunit))
-
-(module+ test
-(check-equal? (interp (parse-expr (tokenize-string "index \"a\" 0")))
+(check-equal? (run "index \"a\" 0")
 "a")
 
-(check-equal? (interp (parse-expr (tokenize-string "index \"ab\" 0")))
+(check-equal? (run "index \"ab\" 0")
 "a")
 
-(check-equal? (interp (parse-expr (tokenize-string "index \"ab\" 1")))
+(check-equal? (run "index \"ab\" 1")
 "b")
 
-(check-equal? (interp (parse-expr (tokenize-string "index \"abc\" (0,0;)")))
+(check-equal? (run "index \"abc\" (0,0;)")
 "")
 
-(check-equal? (interp (parse-expr (tokenize-string "index \"abc\" (0,1;)")))
+(check-equal? (run "index \"abc\" (0,1;)")
 "a")
 
-(check-equal? (interp (parse-expr (tokenize-string "index \"abc\" (0,2;)")))
+(check-equal? (run "index \"abc\" (0,2;)")
 "ab")
 
-(check-equal? (interp (parse-expr (tokenize-string "index \"abc\" (1,3;)")))
+(check-equal? (run "index \"abc\" (1,3;)")
 "bc")
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "index")))))
+  (run "index")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "index 5")))))
+  (run "index 5")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "index 5 0")))))
+  (run "index 5 0")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "index \"\" 0")))))
+  (run "index \"\" 0")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "index \"\" 1")))))
+  (run "index \"\" 1")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "index \"a\" 1")))))
+  (run "index \"a\" 1")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "index \"a\" (-1)")))))
+  (run "index \"a\" (-1)")))
 
 
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "index \"ab\" (0,1)")))))
+  (run "index \"ab\" (0,1)")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "index \"ab\" (0,-1;)")))))
+  (run "index \"ab\" (0,-1;)")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "index \"ab\" (0,3;)")))))
+  (run "index \"ab\" (0,3;)")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "index \"ab\" (1,3;)")))))
+  (run "index \"ab\" (1,3;)")))
 
 (check-exn exn:fail? (lambda ()
-  (interp (parse-expr (tokenize-string "index \"ab\" (2,1;)")))))
+  (run "index \"ab\" (2,1;)")))
 
 
-)

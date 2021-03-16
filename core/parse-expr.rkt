@@ -1,6 +1,6 @@
 #lang racket
 (require cm/core/error cm/core/types cm/core/ast
-         cm/core/operators cm/core/parse-auxiliaries
+         cm/core/operators cm/core/parse-utils
          cm/core/pre-parse)
 (provide parse-expr half-parse-expr)
 (define error-id "PARSE")

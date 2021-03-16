@@ -1,5 +1,5 @@
 #lang racket
-(require cm/core/cm)
+(require cm/core/main)
 
 (define-for-syntax WINDOWS? (equal? (system-type) 'windows))
 
@@ -38,7 +38,7 @@
 (define exit-text "exiting\n")
 
 ;; the cm function we will be calling
-(define mode cm-run)
+(define mode run)
 
 (define (print-results lst)
   (match lst
@@ -52,31 +52,31 @@
          ["#exit" exit-text]
          ["#e" exit-text]
          ["#token" (list (displayln "tokenizing mode")
-                         (set! mode cm-tokenize)
+                         (set! mode run-tokenize-string)
                          (add-history "#token")
                          (repl))]
          ["#run" (list (displayln "run mode")
-                         (set! mode cm-run)
+                         (set! mode run)
                          (add-history "#run")
                          (repl))]
          ["#runxp" (list (displayln "run expression mode")
-                         (set! mode cm-run-expr)
+                         (set! mode run-expr)
                          (add-history "#runxp")
                          (repl))]
          ["#parse" (list (displayln "parse mode")
-                         (set! mode cm-parse)
+                         (set! mode run-parse)
                          (add-history "#parse")
                          (repl))]
          ["#parsexp" (list (displayln "parse expression mode")
-                         (set! mode cm-parse-expr)
+                         (set! mode run-parse-expr)
                          (add-history "#parsexp")
                          (repl))]
          ["#prefix" (list (displayln "prefix expression mode")
-                         (set! mode cm-prefix-form)
+                         (set! mode run-prefix-form)
                          (add-history "#prefix")
                          (repl))]
          ["#tostring" (list (displayln "ast to string mode")
-                         (set! mode cm-ast-to-string)
+                         (set! mode run-ast-to-string)
                          (add-history "#tostring")
                          (repl))]
          ["#help" (list (display help) (add-history "#help") (repl))]
@@ -98,7 +98,7 @@
                   ) (repl)))
 
 ;; import standard lib
-(begin (cm-run-expr "load \"std_lib::std.cm\"") (void))
+(begin (run-expr "load \"std_lib::std.cm\"") (void))
 
 (display "Welcome to the cm repl!\nType `#exit` or `#e` to exit. Type `#help` for help.\n\n")
 (cleanse repl-failsafe)

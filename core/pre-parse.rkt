@@ -1,6 +1,5 @@
 #lang racket
-;(require "error.rkt" "operators.rkt" "parse-auxiliaries.rkt")
-(require cm/core/error cm/core/operators cm/core/parse-auxiliaries)
+(require cm/core/error cm/core/operators cm/core/parse-utils)
 (provide pre-parse-expr)
 (define error-id "PARSE")
 

@@ -13,7 +13,7 @@
       "int" "int?" "float" "float?" "string" "string?" "bool" "bool?" "list?"
       "pair?" "null?" "fun" "fun?" "format" "match" "index" "length"
       "typedef" "struct" "struct?" "appl" "while" "do" "rec" "this" "to" "of" "void" "void?"
-      "load"))
+      "load" "eof" "read_byte" "write_byte" "peek_bytes"))
 
 
 (define (is-keyword? v)
