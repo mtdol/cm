@@ -50,16 +50,17 @@ cd "path to cm directory"
 ```
 
 ## Running Files
-The cm.rkt file in the core directory contains racket functions to interpret/parse/tokenize  
+The main.rkt file in the core directory contains racket functions to interpret/parse/tokenize  
 cm files/expressions and statements.
 
 ### Examples
 ```
-racket -e '(require cm/core/cm) (cm-run "language statement")'
-racket -e '(require cm/core/cm) (cm-run-file "file here")'
-racket -e '(require cm/core/cm) (cm-run-file-silent "language statement")'
-racket -e '(require cm/core/cm) (cm-parse "statement here")'
-racket -e '(require cm/core/cm) (cm-parse-expr "expression here")'
+racket -e '(require cm/core/main) (run "language statement")'
+racket -e '(require cm/core/main) (run-file "file here")'
+racket -e '(require cm/core/main) (run-file-silent "language statement")'
+racket -e '(require cm/core/main) (run-parse "statement here")'
+racket -e '(require cm/core/main) (run-parse-expr "expression here")'
+...
 ```
 Aditionally, cm.exe can be used to run cm files:
 ```
