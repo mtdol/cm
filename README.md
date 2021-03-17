@@ -396,6 +396,14 @@ def add2 := lam x := x + 2.
 5:add2.
 ```
 
+Lambdas can be constructed without any arguments and then called with any value,
+although null is used by convention.
+```
+def print5 := lam () := (@ 5) comma void.
+# prints 5
+():print5.
+```
+
 Lambdas can be guarded with type notations:
 ```
 def add2 := lam int x := x + 2.
@@ -442,6 +450,8 @@ defun a2 (x, y) := x + y.
 defun float_a2 
     (types ("int", "float";) x, types ("int", "float";) y) :=
         float x + float y.
+        
+defun print5 () := (@ 5) comma void.
 ```
 
 You can check whether something is a function using the `fun?` question and `fun` guard.
