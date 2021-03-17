@@ -4,14 +4,11 @@
 . implement format
 . implement let values
 . have better printing of struct schema when bad vals are used to construct a struct
-. figure out why repl keeps printing out lists wrong
 . regex
 . hash maps
 
 . load
-    - allow * wildcard
+    - allow a list of args
     - private (not shared) variables starting in _ (ie _f, private var f)
     - prefix in
 
-# null argument lambda
-def oneplustwo := lam null := 1 + 2

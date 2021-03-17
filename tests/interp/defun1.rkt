@@ -14,6 +14,10 @@
 (check-equal? (run "4.0:1.5:a")
 5.5)
 
+(run-silent "defun v () := 2 + 1")
+(check-equal? (run "():v")
+3)
+
 (run-silent "defun a (types (\"int\", \"float\";) x, float y) := float x + float y")
 (check-exn exn:fail? (lambda ()
   (run "2:3.2:a")))

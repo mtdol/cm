@@ -51,3 +51,8 @@
 
 (check-equal? (run "3:5:lam x, y := x + y")
 8)
+
+
+(run-silent "def v := lam () := 2 + 1")
+(check-equal? (run "():v")
+3)

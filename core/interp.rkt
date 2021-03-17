@@ -423,12 +423,18 @@
                    ;; implied dynamic case
                    [(Var v)
                      (Fun v (list "dynamic") context e3)]
+                   ;; no arg lambda
+                   [null
+                     (Fun '() (list) context e3)]
                    [_ (cm-error "SYNTAX" "Unknown Item on left hand of lambda")]
                    )]
          [_ (cm-error "SYNTAX" "Lambda is missing an assignment.")]))
 
 (define (interp-apply v1 v2)
   (match v2
+         ;; no arg lambda
+         [(Fun '() '() fcontext fexpr) 
+          (interp-expr fexpr fcontext)] 
          [(Fun var type fcontext fexpr) 
             ;; check that the application matches the functions type
             (assign-type-check type v1 var)
