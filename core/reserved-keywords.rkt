@@ -15,7 +15,7 @@
       "pair?" "null?" "fun" "fun?" "format" "match" "index" "length"
       "typedef" "struct" "struct?" "appl" "while" "do" "rec" "this" "to" "of" "void" "void?"
       "load" "eof" "read_byte" "write_byte" "peek_bytes" "ls" "cd" "getlines"
-      "system"))
+      "writestr" "appendstr" "system" "sysres" "system_type"))
 
 
 (define (is-keyword? v)

@@ -83,6 +83,16 @@ defun range (int n1, int n2) :=
         | n1 > n2 -> (appl aux (n2+1,n1+1;)) : reverse
         else appl aux (n1,n2;).
 
+defun foldl (fun f, dynamic acc, list vs) :=
+    match vs
+    | () -> acc
+    | v, t -> 
+        let acc2 := appl f (v, acc;) in
+            appl foldl (f, acc2, t;)
+    end.
+
+defun foldr (fun f, dynamic acc, list vs) :=
+    appl foldl (f, acc, (vs:reverse);).
 
 
 #

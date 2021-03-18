@@ -94,6 +94,7 @@
         (cons "format"      (OpData 2 "prefix"  8   'Prefix2 'format))
         (cons "index"       (OpData 2 "prefix"  8   'Prefix2 'index))
         (cons "writestr"    (OpData 2 "prefix"  8   'Prefix2 'writestr))
+        (cons "appendstr"   (OpData 2 "prefix"  8   'Prefix2 'appendstr))
 
         )))
 

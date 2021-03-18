@@ -48,7 +48,8 @@
 ;;      'gt | 'lt | 'eq | 'ge | 'le | 'add | 'sub | 'mult |
 ;;      'div | 'mod | 'exp | 'when | 'eqq | 'neqq
 ;;
-;; type Pop2 = 'appl | 'struct | 'struct? | 'types | 'index | 'writestr
+;; type Pop2 = 'appl | 'struct | 'struct? | 'types | 'index | 'writestr |
+;; 	       'appendstr
 ;;
 ;; type Op1 = 'neg | 'pos | 'head | 'tail | 'not | 'type | 'dynamic | 'int | 'float | 
 ;;      'string | 'bool | 'int? | 'float? | string? | bool? | list? | 'pair? |

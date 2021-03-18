@@ -45,6 +45,15 @@
                                   (cm-error "CONTRACT" "Missing argument to writestr.")]
                     [(cons v1 v2) 
                        (display-to-file v1 v2 #:exists 'replace) (Prim0 'void)])]
+        [(Prefix2 'appendstr e1 e2) (match 
+                (cons (string-coerce
+                        (interp-expr e1 context)) 
+                      (string-coerce 
+                        (interp-expr e2 context)))
+                    [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
+                                  (cm-error "CONTRACT" "Missing argument to appendstr.")]
+                    [(cons v1 v2) 
+                       (display-to-file v1 v2 #:exists 'append) (Prim0 'void)])]
         [(Prim1 'lang e) (interp-lang e context)]
         ;; general prim cases
         [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1 context) (interp-expr e2 context))]
