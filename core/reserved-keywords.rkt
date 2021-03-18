@@ -7,13 +7,15 @@
       "tail" "~" "cons" "," ";" "=" "equal" "equals" "!=" "not_equal" ">" "gt" "<"
       "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" "*" "mult"
       "/" "div" "^" "exp" "%" "mod" "&" "and" "||" "or" "xor" "not" "!" "true" "false"
-      "@" "print" ":=" "assign" "let" "values" "in" "def" "defun" "final" "lam" "lambda" ":" "apply" "comma"
+      "@" "print" ":=" "assign" "let" "values" "in" "def" "defun" "final" "lam" "lambda" ":"
+      "apply" ":>" "apply1" "comma"
       "|" "case" "->" "yields" "end"
       "if" "then" "else" "cond" "eval" "evalxp" "$" "cat" "type" "types" "error" "try" "catch" "dynamic"
       "int" "int?" "float" "float?" "string" "string?" "bool" "bool?" "list?"
       "pair?" "null?" "fun" "fun?" "format" "match" "index" "length"
       "typedef" "struct" "struct?" "appl" "while" "do" "rec" "this" "to" "of" "void" "void?"
-      "load" "eof" "read_byte" "write_byte" "peek_bytes"))
+      "load" "eof" "read_byte" "write_byte" "peek_bytes" "ls" "cd" "getlines"
+      "system"))
 
 
 (define (is-keyword? v)

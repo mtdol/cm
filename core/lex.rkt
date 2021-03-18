@@ -82,6 +82,7 @@
    ["lam" "lambda"]
    [":=" "assign"]
    [":" "apply"]
+   [":>" "apply1"]
    ["->" "yields"]
    [(:+ digit) lexeme]
    [(:: (:+ digit) #\. (:+ digit)) lexeme]

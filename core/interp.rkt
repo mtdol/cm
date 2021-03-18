@@ -36,6 +36,15 @@
         [(Prefix2 'struct? e1 e2) (interp-struct? e1 e2 context)]
         [(Prefix2 'appl e1 e2) (interp-appl e1 e2 context)]
         [(Prefix2 'index e1 e2) (interp-index e1 e2 context)]
+        [(Prefix2 'writestr e1 e2) (match 
+                (cons (string-coerce
+                        (interp-expr e1 context)) 
+                      (string-coerce 
+                        (interp-expr e2 context)))
+                    [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
+                                  (cm-error "CONTRACT" "Missing argument to writestr.")]
+                    [(cons v1 v2) 
+                       (display-to-file v1 v2 #:exists 'replace) (Prim0 'void)])]
         [(Prim1 'lang e) (interp-lang e context)]
         ;; general prim cases
         [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1 context) (interp-expr e2 context))]
@@ -126,6 +135,7 @@
 (define (interp-prim1 op v)
   (match op
         ['print (interp-print v)]
+        ['apply1 (interp-apply null v)]
         ['error 
          (match v
                 ;; TODO use cm error struct and use id
@@ -141,6 +151,27 @@
                 [s #:when (string? s) (process-import-string s) (Prim0 'void)]
                 [_ (cm-error "CONTRACT" "Argument to load must be a file.")])
              ]
+        ['ls 
+         (match (string-coerce v)
+                    ["" (map path->string 
+                             (try-with-error "GENERIC" "ls: Could not load directory \".\"." 
+                                             directory-list (list ".")))]
+                    [v1 (map path->string 
+                             (try-with-error "GENERIC" (format "ls: Could not load directory \"~a\"." v1)
+                             directory-list (list v1)))])]
+        ['cd (match (string-coerce v)
+                    ["" (path->string 
+                          (try-with-error "GENERIC" "cd: Could not load directory \".\"."
+                                          current-directory '()))]
+                    [v1 
+                      (try-with-error "GENERIC" (format "cd: Could not load directory \"~a\"." v1)
+                                      current-directory (list v1)) (Prim0 'void)])]
+        ['getlines (match (string-coerce v)
+                    ["" (cm-error "CONTRACT" "Missing argument to getlines.")]
+                    [v1 (try-with-error "GENERIC" (format "getlines: Could not load file \"~a\"." v1)
+                                        file->lines (list v1))])]
+        ['system (racket-to-bool (system (string-coerce v)))]
+        ['sysres (with-output-to-string (lambda () (system (string-coerce v))))]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]

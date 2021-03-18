@@ -2,6 +2,25 @@
 defun print2 v := print v. 
 # prints and yields void
 defun sprint v := (print v) comma void. 
+# pretty print
+defun pprint vs :=
+    match vs 
+    | () -> void 
+    | v, t -> (@ v) comma (t:pprint)
+    | v -> @ v
+    end.
+
+# pretty print ls of current dir
+defun lsc () :=
+    (ls ".") : pprint.
+defun cdc () :=
+    (cd "").
+
+# display contents of file
+defun catf f :=
+    (getlines f):pprint.
+
+
 
 defun number? v :=
     let t := type v in

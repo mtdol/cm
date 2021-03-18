@@ -1,6 +1,6 @@
 #lang racket
 (provide cm-error cm-error-with-line-handler cm-error-linenum current-linenum
-         get-id-from-message cm-error-no-linenum)
+         get-id-from-message cm-error-no-linenum try-with-error)
 
 (define error-types
     (set (list
@@ -36,6 +36,12 @@
 (define (cm-error-with-line-handler linenum proc args) 
   (set! current-linenum linenum)
     (apply proc args))
+
+
+;; throws an error if the given type if an exception is raised
+(define (try-with-error type message proc args) 
+  (with-handlers* ([exn:fail? (lambda (exn) (cm-error type message))])
+    (apply proc args)))
 
 (define (get-id-from-message msg) 
   ;; regexp for lines like "linenum:id: msg"

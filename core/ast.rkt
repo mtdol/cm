@@ -48,11 +48,12 @@
 ;;      'gt | 'lt | 'eq | 'ge | 'le | 'add | 'sub | 'mult |
 ;;      'div | 'mod | 'exp | 'when | 'eqq | 'neqq
 ;;
-;; type Pop2 = 'appl | 'struct | 'struct? | 'types | 'index
+;; type Pop2 = 'appl | 'struct | 'struct? | 'types | 'index | 'writestr
 ;;
 ;; type Op1 = 'neg | 'pos | 'head | 'tail | 'not | 'type | 'dynamic | 'int | 'float | 
 ;;      'string | 'bool | 'int? | 'float? | string? | bool? | list? | 'pair? |
-;;      'null? | 'void? | 'length | 'eval | 'print | 'load | 'error | 'lang
+;;      'null? | 'void? | 'length | 'eval | 'print | 'load | 'error | 'lang | 'apply1 |
+;;      'ls | 'cd | 'system | 'sysres
 ;;
 ;; type Op0 = 'end | 'void
 
