@@ -190,6 +190,7 @@ let guard var := Expr in Expr | guarded local binding of var | `let int x := not
 lambda var := Expr | lambda expression | `lam x := x + 1` | function | `lambda` can  be shortened to `lam`
 lambda var1, var2,... = Expr | multiple lambda expression | `lam x, y := x + y` | function | equivalent to lam x = lam y = ...
 Expr1 : Expr2, where Expr2 -> Function | function application | `3 : lam x := x + 1` | 4 | also written as `apply`
+:> Expr1, where Expr1 -> Function | null arg function application | `:> lam () := 5` | 5 | also written as `apply1`
 lambda guard var := Expr | guarded lambda expression | `3 : lam float x := x + 1.0` | contract exception
 def var1 := lambda var2 = ... | global mapping to function | `def add1 := lam n := n + 1` | Function | add1 can be applied at any time
 defun var vars := ... | shorthand global mapping to function | `defun add2 (x,y) := x + y` | Function | the vars operand must be wrapped if more than one var
@@ -396,12 +397,21 @@ def add2 := lam x := x + 2.
 5:add2.
 ```
 
-Lambdas can be constructed without any arguments and then called with any value,
-although null is used by convention.
+Lambdas can be constructed without any arguments and then called with any value.
 ```
 def print5 := lam () := (@ 5) comma void.
 # prints 5
 ():print5.
+# same
+2:print5.
+```
+
+The keyword `:>` can be used to call a lambda with `()`
+```
+> :>print5.
+5
+> :> lam x := null? x.
+true
 ```
 
 Lambdas can be guarded with type notations:
@@ -595,6 +605,66 @@ After running e2 for the final time, the while loop will yield `void`.
 6
 7
 
+```
+
+## Operating System
+There are a number of features to use or manipulate the system in cm.
+
+`ls` returns the contents of a directory as a list.
+```
+> ls ".".
+(f.txt, dr, a.c;)
+> # we can use the utility function pprint (pretty print) from std.cm to print the list
+> (ls "."):pprint.
+f.txt
+dr
+a.c
+> # we can also use the utility function "lsc" (list current) as a shorthand for this
+> :>lsc.
+f.txt
+dr
+a.c
+```
+
+`cd` is used with a "" arg to display the working directory, and with a longer arg to change it.
+```
+> cd "".
+/home/usr/dir/
+> cd "cm".
+> cd "".
+/home/usr/dir/cm/
+> # we can use the utility function "cdc" to mean cd ""
+> :>cdc.
+/home/usr/dir/cm/
+```
+
+`getlines` yields the lines in a file as a list of strings
+```
+> getlines "f.txt".
+("line 1", "this is line 2", "final line";)
+> # the utility func "catf" will pretty print the file for us
+> "f.txt":catf.
+line1
+this is line 2
+final line
+```
+`writestr` writes the given string to the given file while displaying `\n` as newline.
+`writestr` will replace the file if it already exists.
+```
+> writestr "ab\nc" "f.txt".
+> getlines "f.txt".
+("ab", "c";)
+```
+
+`system` runs a command to `sh` (linux) or `cmd` (windows) and returns true if successful else false.
+```
+> system "vim *".
+true
+```
+`sysres` will run a system command and yield the output as a string
+```
+> sysres "date".
+Thu Mar 18 01:05:30 EDT 2021
 ```
 
 ## Code Examples
