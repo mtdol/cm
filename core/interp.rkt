@@ -138,7 +138,9 @@
         ['mult (apply-if-type '("int" "float") * "mult" v1 v2)]
         ['div (if (zero? v2) (cm-error "CONTRACT" "Divide by zero.")
          (apply-if-type '("float") / "div" v1 v2))]
-        ['mod (apply-if-type '("int") modulo "mod" v1 v2)]
+        ['mod (if (zero? v2) (cm-error "CONTRACT" "Mod by zero undefined.")
+         (apply-if-type '("int") modulo "mod" v1 v2))
+         ]
         ['exp (apply-if-type '("int" "float") expt "exp" v1 v2)]))
  
 (define (interp-prim1 op v)

@@ -26,6 +26,17 @@ defun number? v :=
     let t := type v in
         t = "int" or t = "float".
 
+defun add (n1, n2) :=
+    n1 + n2.
+defun sub (n1, n2) :=
+    n1 - n2.
+defun mult (n1, n2) :=
+    n1 * n2.
+defun div (n1, n2) :=
+    n1 / n2.
+defun exp (n1, n2) :=
+    n1 ^ n2.
+
 defun add1 int n := n + 1.
 defun add1f float n := n + 1.0.
 defun sub1 int n := n - 1.

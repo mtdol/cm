@@ -5,8 +5,8 @@
 (define reserved-keywords 
  (set "(" ")" "[" "]" "{" "}" "#" "\\#" "noop" "null" "head" "`"
       "tail" "~" "cons" "," ";" "=" "equal" "equals" "!=" "not_equal" ">" "gt" "<"
-      "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" "*" "mult"
-      "/" "div" "^" "exp" "%" "mod" "&" "and" "||" "or" "xor" "not" "!" "true" "false"
+      "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" "*" "star"
+      "/" "slash" "^" "caret" "%" "mod" "&" "and" "||" "or" "xor" "not" "!" "true" "false"
       "@" "print" ":=" "assign" "let" "values" "in" "def" "defun" "final" "lam" "lambda" ":"
       "apply" ":>" "apply1" "comma"
       "|" "case" "->" "yields" "end"

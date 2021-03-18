@@ -21,8 +21,15 @@
       (require readline/readline)
       (define (request) (readline "> "))))
 
+
+;; adds a dot to the end of the string if not present
+(define (add-dot str)
+  (if (regexp-match? #rx"^.*(\\.|dot) *$" str)
+    str
+    (string-append str ".")))
+
 ;; the cm function we will be calling
-(define mode (compose display-output run))
+(define mode (compose display-output run add-dot))
 
 
 (define help (string-append "`#exit` exit\n"
@@ -39,6 +46,7 @@
 
 (define exit-text "exiting\n")
 
+
 (define (repl) 
   (match (request)
          ["#exit" exit-text]
@@ -48,7 +56,7 @@
                          (add-history "#token")
                          (repl))]
          ["#run" (list (displayln "run mode")
-                         (set! mode (compose display-output run))
+                         (set! mode (compose display-output run add-dot))
                          (add-history "#run")
                          (repl))]
          ["#runxp" (list (displayln "run expression mode")

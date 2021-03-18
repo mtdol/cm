@@ -35,13 +35,13 @@
 '("5" "plus" "dot" "3.4"))
 
 (check-equal? (tokenize-string "5+*3.4")
-'("5" "plus" "mult" "3.4"))
+'("5" "plus" "star" "3.4"))
 
 (check-equal? (tokenize-string "/5+*3.4.")
-'("div" "5" "plus" "mult" "3.4" "dot"))
+'("slash" "5" "plus" "star" "3.4" "dot"))
 
 (check-equal? (tokenize-string "/%5+*3.4.")
-'("div" "mod" "5" "plus" "mult" "3.4" "dot"))
+'("slash" "mod" "5" "plus" "star" "3.4" "dot"))
 
 (check-equal? (tokenize-string "cond | true -> 2 else 3")
 '("cond" "case" "true" "yields" "2" "else" "3"))

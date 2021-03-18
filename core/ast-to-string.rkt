@@ -67,5 +67,8 @@
     ['pos 'plus]
     ['sub 'minus]
     ['neg 'minus]
+    ['mult 'star]
+    ['div 'slash]
+    ['exp 'caret]
     ['apply ':]
     [op op]))
