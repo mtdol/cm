@@ -152,10 +152,10 @@ Construct | Effect | Example | Yields | Explanation
 ------------ | -----|--------|--------| -----------
 if expr then expr else expr | if expression | `if 1+2 = 4 then -7 else "wrong"` | "wrong"
 expr + expr \| plus | addition | `1 + 3` | 4 | Operands must be of same type
-expr * expr \| mult | multiplication | `2 * 3` | 6 | Operands must be of same type
+expr * expr \| star | multiplication | `2 * 3` | 6 | Operands must be of same type
 expr - expr \| minus| subtraction | `4 - 6` | -2 | Operands must be of same type
-expr / expr \| div | division | `4 / 2` | 2 | Operands must be floats
-expr ^ expr \| exp| exponentiation | `2 ^ 3` | 8 | Operands must be of same type
+expr / expr \| slash | division | `4 / 2` | 2 | Operands must be floats
+expr ^ expr \| caret | exponentiation | `2 ^ 3` | 8 | Operands must be of same type
 expr % expr \| mod | modulus | `4 % 3` | 1 | Operands must be of same type
 = < <= > >= !=  \| (eq\|equal\|equals), lt, le, gt, ge, ne | equality operators | `1 = 2` | false | Operands must be of same type
 & \|\| xor \| and or xor | logical binary operators | `true and false` | false | Operands must be bools
