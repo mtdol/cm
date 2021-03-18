@@ -656,6 +656,14 @@ final line
 ("ab", "c";)
 ```
 
+`appendstr` is just like `writestr` except it will append to the file if it already exists
+```
+> writestr "ab\nc" "f.txt".
+> appendstr "d\nef" "f.txt"
+> getlines "f.txt".
+("ab", "cd", "ef";)
+```
+
 `system` runs a command to `sh` (linux) or `cmd` (windows) and returns true if successful else false.
 ```
 > system "vim *".
@@ -665,6 +673,16 @@ true
 ```
 > sysres "date".
 Thu Mar 18 01:05:30 EDT 2021
+```
+
+`system_type` will return a string corresponding to the current operating system.
+There are 3 possible options:
+"windows", "unix", or "macosx"
+```
+match system_type
+| a when a = "macosx" or a = "unix" -> system ("rm "$"f.txt")
+| "windows" -> system ("del "$"f.txt")
+end.
 ```
 
 ## Code Examples
