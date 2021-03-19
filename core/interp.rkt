@@ -43,8 +43,10 @@
                         (interp-expr e2 context)))
                     [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
                                   (cm-error "CONTRACT" "Missing argument to writestr.")]
-                    [(cons v1 v2) 
-                       (display-to-file v1 v2 #:exists 'replace) (Prim0 'void)])]
+                    [(cons v1 v2) (with-handlers* 
+                            ([exn:fail? (lambda (exn) 
+                                (cm-error "SYSTEM" (format "Could not write to file \"~a\"" v2)))])
+                       (display-to-file v1 v2 #:exists 'replace)) (Prim0 'void)])]
         [(Prefix2 'appendstr e1 e2) (match 
                 (cons (string-coerce
                         (interp-expr e1 context)) 
@@ -52,8 +54,23 @@
                         (interp-expr e2 context)))
                     [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
                                   (cm-error "CONTRACT" "Missing argument to appendstr.")]
-                    [(cons v1 v2) 
-                       (display-to-file v1 v2 #:exists 'append) (Prim0 'void)])]
+                    [(cons v1 v2) (with-handlers* 
+                            ([exn:fail? (lambda (exn) 
+                                (cm-error "SYSTEM" (format "Could not append to file \"~a\"" v2)))])
+                       (display-to-file v1 v2 #:exists 'append)) (Prim0 'void)])]
+        [(Prefix2 'cp e1 e2) (match 
+                (cons (string-coerce
+                        (interp-expr e1 context)) 
+                      (string-coerce 
+                        (interp-expr e2 context)))
+                    [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
+                                  (cm-error "CONTRACT" "Missing argument to cp.")]
+                    [(cons v1 v2) (with-handlers* 
+                            ([exn:fail? (lambda (exn) 
+                                (cm-error "SYSTEM" (format "Could not copy \"~a\" to \"~a\"" v1 v2)))])
+                       (copy-directory/files v1 v2)) (Prim0 'void)])]
+        [(Prefix2 'mv e1 e2) (interp-expr (Prefix2 'cp e1 e2) context)
+                             (interp-expr (Prim1 'rm e1) context)]
         [(Prim1 'lang e) (interp-lang e context)]
         ;; general prim cases
         [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1 context) (interp-expr e2 context))]
@@ -172,17 +189,35 @@
                              directory-list (list v1)))])]
         ['cd (match (string-coerce v)
                     ["" (path->string 
-                          (try-with-error "GENERIC" "cd: Could not load directory \".\"."
+                          (try-with-error "SYSTEM" "cd: Could not load directory \".\"."
                                           current-directory '()))]
                     [v1 
-                      (try-with-error "GENERIC" (format "cd: Could not load directory \"~a\"." v1)
+                      (try-with-error "SYSTEM" (format "cd: Could not load directory \"~a\"." v1)
                                       current-directory (list v1)) (Prim0 'void)])]
+        ['mkdir (match (string-coerce v)
+                    ["" (cm-error "CONTRACT" "Missing argument to mkdir.")]
+                    [v1 
+                      (try-with-error "SYSTEM" (format "cd: Could not make directory \"~a\"." v1)
+                                      make-directory (list v1)) (Prim0 'void)])]
+        ['rm (match (string-coerce v)
+                    ["" (cm-error "CONTRACT" "Missing argument to rm")]
+                    [v1 
+                      (try-with-error "SYSTEM" (format "cd: Could not delete file or directory \"~a\"." v1)
+                                      delete-directory/files (list v1)) (Prim0 'void)])]
         ['getlines (match (string-coerce v)
                     ["" (cm-error "CONTRACT" "Missing argument to getlines.")]
-                    [v1 (try-with-error "GENERIC" (format "getlines: Could not load file \"~a\"." v1)
+                    [v1 (try-with-error "SYSTEM" (format "getlines: Could not load file \"~a\"." v1)
                                         file->lines (list v1))])]
         ['system (racket-to-bool (system (string-coerce v)))]
         ['sysres (with-output-to-string (lambda () (system (string-coerce v))))]
+        ['file_exists? 
+         (match (string-coerce v)
+                    ["" (cm-error "CONTRACT" "Missing argument to file_exists?")]
+                    [v1 (racket-to-bool (file-exists? (string-coerce v1)))])]
+        ['dir_exists? 
+         (match (string-coerce v)
+                    ["" (cm-error "CONTRACT" "Missing argument to dir_exists?")]
+                    [v1 (racket-to-bool (directory-exists? (string-coerce v1)))])]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]

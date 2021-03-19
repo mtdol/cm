@@ -49,12 +49,13 @@
 ;;      'div | 'mod | 'exp | 'when | 'eqq | 'neqq
 ;;
 ;; type Pop2 = 'appl | 'struct | 'struct? | 'types | 'index | 'writestr |
-;; 	       'appendstr
+;; 	       'appendstr | 'cp | 'mv 
 ;;
 ;; type Op1 = 'neg | 'pos | 'head | 'tail | 'not | 'type | 'dynamic | 'int | 'float | 
 ;;      'string | 'bool | 'int? | 'float? | string? | bool? | list? | 'pair? |
 ;;      'null? | 'void? | 'length | 'eval | 'print | 'load | 'error | 'lang | 'apply1 |
-;;      'ls | 'cd | 'system | 'sysres
+;;      'ls | 'cd | 'mkdir | 'rm | 'system | 'sysres |
+;;      'file_exists? | 'dir_exists?
 ;;
 ;; type Op0 = 'end | 'void
 

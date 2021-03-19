@@ -3,7 +3,7 @@
 
 ;; words that cannot be used in variable names
 (define reserved-keywords 
- (set "(" ")" "[" "]" "{" "}" "#" "\\#" "noop" "null" "head" "`"
+ (set "(" ")" "[" "]" "{" "}" "#" "null" "head" "`"
       "tail" "~" "cons" "," ";" "=" "equal" "equals" "!=" "not_equal" ">" "gt" "<"
       "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" "*" "star"
       "/" "slash" "^" "caret" "%" "mod" "&" "and" "||" "or" "xor" "not" "!" "true" "false"
@@ -14,8 +14,10 @@
       "int" "int?" "float" "float?" "string" "string?" "bool" "bool?" "list?"
       "pair?" "null?" "fun" "fun?" "format" "match" "index" "length"
       "typedef" "struct" "struct?" "appl" "while" "do" "rec" "this" "to" "of" "void" "void?"
-      "load" "eof" "read_byte" "write_byte" "peek_bytes" "ls" "cd" "getlines"
-      "writestr" "appendstr" "system" "sysres" "system_type"))
+      "load" 
+      "ls" "cd" "rm" "cp" "mv" "mkdir" 
+      "getlines" "writestr" "appendstr" "system" "sysres" "system_type"
+      "file_exists?" "dir_exists?"))
 
 
 (define (is-keyword? v)

@@ -1,3 +1,7 @@
+#
+# IO
+#
+
 # allows print to be used like a function
 defun print2 v := print v. 
 # prints and yields void
@@ -10,17 +14,10 @@ defun pprint vs :=
     | v -> @ v
     end.
 
-# pretty print ls of current dir
-defun lsc () :=
-    (ls ".") : pprint.
-defun cdc () :=
-    (cd "").
 
-# display contents of file
-defun catf f :=
-    (getlines f):pprint.
-
-
+#
+# Math, lists
+#
 
 defun number? v :=
     let t := type v in
@@ -136,3 +133,26 @@ defun list_to_string list ss :=
     | () -> ""
     | s, t -> s $ (t : list_to_string)
     end.
+
+#
+# System
+#
+
+# cds only if the directory exists
+defun cd2 string s :=
+    if dir_exists? s 
+    then 
+        cd s 
+    else 
+        error ("SYSTEM", ("Dir "$s$" does not exist.");).
+
+# pretty print ls of current dir
+defun lsc () :=
+    (ls ".") : pprint.
+defun cdc () :=
+    (cd "").
+
+# display contents of file
+defun catf f :=
+    (getlines f):pprint.
+

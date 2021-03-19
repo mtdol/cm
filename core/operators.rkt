@@ -84,9 +84,13 @@
         (cons "!lang"       (OpData 1 "prefix"  8   'Prim1   'lang))
         (cons "ls"          (OpData 1 "prefix"  8   'Prim1   'ls))
         (cons "cd"          (OpData 1 "prefix"  8   'Prim1   'cd))
+        (cons "mkdir"       (OpData 1 "prefix"  8   'Prim1   'mkdir))
+        (cons "rm"          (OpData 1 "prefix"  8   'Prim1   'rm))
         (cons "getlines"    (OpData 1 "prefix"  8   'Prim1   'getlines))
         (cons "system"      (OpData 1 "prefix"  8   'Prim1   'system))
         (cons "sysres"      (OpData 1 "prefix"  8   'Prim1   'sysres))
+        (cons "file_exists?"(OpData 1 "prefix"  8   'Prim1   'file_exists?))
+        (cons "dir_exists?" (OpData 1 "prefix"  8   'Prim1   'dir_exists?))
         (cons "struct"      (OpData 2 "prefix"  8   'Prefix2 'struct))
         (cons "struct?"     (OpData 2 "prefix"  8   'Prefix2 'struct?))
         (cons "types"       (OpData 2 "prefix"  8   'Prefix2 'types))
@@ -94,7 +98,8 @@
         (cons "format"      (OpData 2 "prefix"  8   'Prefix2 'format))
         (cons "index"       (OpData 2 "prefix"  8   'Prefix2 'index))
         (cons "writestr"    (OpData 2 "prefix"  8   'Prefix2 'writestr))
-        (cons "appendstr"   (OpData 2 "prefix"  8   'Prefix2 'appendstr))
+        (cons "cp"          (OpData 2 "prefix"  8   'Prefix2 'cp))
+        (cons "mv"          (OpData 2 "prefix"  8   'Prefix2 'mv))
 
         )))
 
