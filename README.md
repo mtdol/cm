@@ -638,6 +638,34 @@ a.c
 /home/usr/dir/cm/
 ```
 
+`rm` is used to delete a file or directory
+```
+> writestr "" "f.txt".
+> rm "f.txt".
+```
+`mkdir` is used to create a directory
+```
+> mkdir "f".
+```
+`cp` is used to copy a file or directory
+```
+> cp "f.txt" "f/g.txt".
+```
+`mv` is used to move a file or directory
+```
+> mv "f.txt" "f2.txt".
+```
+`file_exists?` yields true if the file exists, else false
+```
+> file_exists? "f.txt".
+true
+```
+`dir_exists?` yields true if the directory exists, else false
+```
+> dir_exists? "f".
+true
+```
+
 `getlines` yields the lines in a file as a list of strings
 ```
 > getlines "f.txt".
