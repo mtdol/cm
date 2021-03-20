@@ -206,6 +206,30 @@ appl func list | list to function applier | `appl (lam x, y := x + y) (4,5;)` | 
 Expr comma Expr | execute first expr and ignore result, then run second and yield its value | `(def x := 4) comma 7` | 7 | x is still bound to 4 in the global scope (a side effect)
 eval string | runs the code within the string | `eval "2 + 3."` | 5 | yields a list if there is more than one statement
 
+## Value Types
+The fundamental values are ints, floats, bools, strings, pair (cons), list, null, fun (lambda), struct, void, and eof.
+
+Ints are merely positive and negative integers such as `1` `30` and `-458`.  
+
+Floats are like ints but have a `.` followed by another int, ie `3.0` `4.5` and `-76.386`.
+Floats must feature a `.`.
+
+Bools are the values `true` and `false`.
+
+Strings are written with two double-quotes such as:
+`"str"` or `"longer str"`.
+Strings can contain `"` as long as they are prefixed with `\`.  
+`"string \"within\" a string"`  
+
+Pairs are created with the `,` operator. They have a head and a tail that can be referenced with the \` and ~ operator respectively.  
+
+Lists are pairs that eventually end in the value null `()`.
+
+`void` indicates the lack of meaningful computation and `eof` indicates the end of a stream.  
+
+Lambdas are anonymous functions and are created with the `lambda` keyword and are discussed later.
+
+
 ## Basics and Assignment
 `def` is used to create global variables.
 ```
@@ -666,9 +690,9 @@ true
 true
 ```
 
-`getlines` yields the lines in a file as a list of strings
+`getlinesf` yields the lines in a file as a list of strings
 ```
-> getlines "f.txt".
+> getlinesf "f.txt".
 ("line 1", "this is line 2", "final line";)
 > # the utility func "catf" will pretty print the file for us
 > "f.txt":catf.
@@ -676,19 +700,19 @@ line1
 this is line 2
 final line
 ```
-`writestr` writes the given string to the given file while displaying `\n` as newline.
-`writestr` will replace the file if it already exists.
+`writestrf` writes the given string to the given file while displaying `\n` as newline.
+`writestrf` will replace the file if it already exists.
 ```
-> writestr "ab\nc" "f.txt".
-> getlines "f.txt".
+> writestrf "ab\nc" "f.txt".
+> getlinesf "f.txt".
 ("ab", "c";)
 ```
 
-`appendstr` is just like `writestr` except it will append to the file if it already exists
+`appendstrf` is just like `writestrf` except it will append to the file if it already exists
 ```
-> writestr "ab\nc" "f.txt".
-> appendstr "d\nef" "f.txt"
-> getlines "f.txt".
+> writestrf "ab\nc" "f.txt".
+> appendstrf "d\nef" "f.txt"
+> getlinesf "f.txt".
 ("ab", "cd", "ef";)
 ```
 
