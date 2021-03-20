@@ -15,7 +15,10 @@
 
 (match-opsys
     (begin 
-      (define (request) (display "> ") (string-replace (read-line) "\r" ""))
+      (define (request) (display "> ") 
+        (match (read-line)
+               [s #:when (string? s) (string-replace s "\r" "")]
+               [s s]))
       (define (add-history item) (void)))
     (begin 
       (require readline/readline)
