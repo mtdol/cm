@@ -2,7 +2,7 @@
 (require cm/core/ast cm/core/types cm/core/error)
 (provide eval-string ast-cons-to-racket apply-if-type
          apply-if-type-1 assign-type-check check-types-list valid-against-schema?
-         interp-def-list interp-lambda-list)
+         interp-def-list interp-lambda-list struct-schema->string)
 
 ;;
 ;; Utilities for interpretation
@@ -104,6 +104,28 @@
                       ;; only end up here if something is wrong
                       [_ (cm-error "SYNTAX" (format "Struct instance declaration could not be understood. Struct ~a" label))])]
              )))
+
+;; turns a (valid) struct schema to a string
+(define (struct-schema->string schema)
+  (match schema
+         ['() "()"]
+         [(cons (Var id) '()) 
+          (format "~a;" id)]
+         [(cons (Var id) t) 
+          (string-append (format "~a, " id) (struct-schema->string t))]
+         [(cons (Prim1 op (Var id)) '()) 
+          (format "~a ~a;" (symbol->string op) id)]
+         [(cons (Prim1 op (Var id)) t) 
+          (string-append (format "~a ~a, " (symbol->string op) id) (struct-schema->string t))]
+         [(cons (Prefix2 'struct (Var label) (Var id)) '()) 
+          (format "struct ~a ~a;" label id)]
+         [(cons (Prefix2 'struct (Var label) (Var id)) t) 
+          (string-append (format "struct ~a ~a, " label id) (struct-schema->string t))]
+         [(cons (Prefix2 'types ts (Var id)) '()) 
+          (format "types ~a ~a;" (string-coerce ts) id)]
+         [(cons (Prefix2 'types ts (Var id)) t) 
+          (string-append (format "types ~a ~a, " (string-coerce ts) id) (struct-schema->string t))]
+         ))
 
 ;; converts a pair to a list if it wasn't already
 (define (pair-to-list p)

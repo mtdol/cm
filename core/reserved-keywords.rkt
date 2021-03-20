@@ -16,7 +16,7 @@
       "typedef" "struct" "struct?" "appl" "while" "do" "rec" "this" "to" "of" "void" "void?"
       "load" 
       "ls" "cd" "rm" "cp" "mv" "mkdir" 
-      "getlines" "writestr" "appendstr" "system" "sysres" "system_type"
+      "getlinesf" "writestrf" "appendstrf" "system" "sysres" "system_type"
       "file_exists?" "dir_exists?"
       "eof" "eof?"))
 

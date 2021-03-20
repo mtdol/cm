@@ -87,11 +87,15 @@
    [(:+ digit) lexeme]
    [(:: (:+ digit) #\. (:+ digit)) lexeme]
    ;; TODO: allow escape sequence \" in string
-   [(:: #\" (:* string-char) #\") lexeme]
+   [(:: #\" (:* (:or (:: "\\\"") (:~ #\"))) #\") lexeme]
+   [(:: #\" (:* (:~ #\"))) (match start-pos [(position colnum linenum _)
+                        (cm-error-linenum linenum error-id 
+                                (format "Non-terminated string around column ~a" colnum))])]
+   ;[(:: #\" (:* string-char) #\") lexeme]
    ;; everything else (vars and operators)
-   [(:+ (:& (:+ any-char) (:~ key-token) (:~ whitespace))) lexeme]
+   [(:+ (:& (:+ any-char) (:~ key-token) (:~ whitespace) (:~ #\"))) lexeme]
    ;; custom error behavior
-   [any-char (match start-pos [(position linenum colnum _)
+   [any-char (match start-pos [(position colnum linenum _)
                         (cm-error-linenum linenum error-id 
                                 (format "Lexing failure around column ~a" colnum))])]
    ))

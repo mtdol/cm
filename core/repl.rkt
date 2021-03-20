@@ -54,7 +54,7 @@
          ["#e" (displayln "")]
          [s #:when (eof-object? s) (displayln "")]
          ["#token" (begin (displayln "tokenizing mode")
-                         (set! mode (compose displayln run-tokenize-string))
+                         (set! mode (compose display-output run-tokenize-string))
                          (add-history "#token")
                          (repl))]
          ["#run" (begin (displayln "run mode")
@@ -97,6 +97,6 @@
 ;; import standard libs
 (define (run-lang-line!) (begin (run-expr "!lang cm") (void)))
 
-(run-lang-line!)
+;(run-lang-line!)
 (display "Welcome to the cm repl!\nType `#exit` or `#e` to exit. Type `#help` for help.\n\n")
 (repl-failsafe)

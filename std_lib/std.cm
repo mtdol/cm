@@ -154,5 +154,5 @@ defun cdc () :=
 
 # display contents of file
 defun catf f :=
-    (getlines f):pprint.
+    (getlinesf f):pprint.
 
