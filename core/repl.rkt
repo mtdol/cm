@@ -47,54 +47,46 @@
                             "`#token` tokenize mode\n"
                             "\n"))
 
-(define exit-text "exiting\n")
-
 
 (define (repl) 
   (match (request)
-         ["#exit" exit-text]
-         ["#e" exit-text]
+         ["#exit" (displayln "")]
+         ["#e" (displayln "")]
          [s #:when (eof-object? s) (displayln "")]
-         ["#token" (list (displayln "tokenizing mode")
+         ["#token" (begin (displayln "tokenizing mode")
                          (set! mode (compose displayln run-tokenize-string))
                          (add-history "#token")
                          (repl))]
-         ["#run" (list (displayln "run mode")
+         ["#run" (begin (displayln "run mode")
                          (set! mode (compose display-output run add-dot))
                          (add-history "#run")
                          (repl))]
-         ["#runxp" (list (displayln "run expression mode")
+         ["#runxp" (begin (displayln "run expression mode")
                          (set! mode (compose display-expr-output run-expr))
                          (add-history "#runxp")
                          (repl))]
-         ["#parse" (list (displayln "parse mode")
+         ["#parse" (begin (displayln "parse mode")
                          (set! mode (compose displayln run-parse))
                          (add-history "#parse")
                          (repl))]
-         ["#parsexp" (list (displayln "parse expression mode")
+         ["#parsexp" (begin (displayln "parse expression mode")
                          (set! mode (compose displayln run-parse-expr))
                          (add-history "#parsexp")
                          (repl))]
-         ["#prefix" (list (displayln "prefix expression mode")
+         ["#prefix" (begin (displayln "prefix expression mode")
                          (set! mode (compose displayln run-prefix-form))
                          (add-history "#prefix")
                          (repl))]
-         ["#tostring" (list (displayln "ast to string mode")
+         ["#tostring" (begin (displayln "ast to string mode")
                          (set! mode (compose displayln run-ast-to-string))
                          (add-history "#tostring")
                          (repl))]
-         ["#help" (list (display help) (add-history "#help") (repl))]
-         [s (list (add-history s)
+         ["#help" (begin (display help) (add-history "#help") (repl))]
+         [s (begin (add-history s)
                   ;; run the current mode
                   (mode s)
                   (repl)
                   )]))
-
-;; runs f and exits before values from f can be printed to console
-(define (cleanse f)
-  (match (cons (f) "")
-         [_ (exit)]))
-
 
 (define (repl-failsafe)
   (with-handlers* (
@@ -107,4 +99,4 @@
 
 (run-lang-line!)
 (display "Welcome to the cm repl!\nType `#exit` or `#e` to exit. Type `#help` for help.\n\n")
-(cleanse repl-failsafe)
+(repl-failsafe)
