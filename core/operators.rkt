@@ -78,6 +78,7 @@
         (cons "fun?"        (OpData 1 "prefix"  8   'Prim1   'fun?))
         (cons "null?"       (OpData 1 "prefix"  8   'Prim1   'null?))
         (cons "void?"       (OpData 1 "prefix"  8   'Prim1   'void?))
+        (cons "eof?"        (OpData 1 "prefix"  8   'Prim1   'eof?))
         (cons "length"      (OpData 1 "prefix"  8   'Prim1   'length))
         (cons ":uni_plus"   (OpData 1 "prefix"  8   'Prim1   'pos))
         (cons ":uni_minus"  (OpData 1 "prefix"  8   'Prim1   'neg))

@@ -17,7 +17,8 @@
       "load" 
       "ls" "cd" "rm" "cp" "mv" "mkdir" 
       "getlines" "writestr" "appendstr" "system" "sysres" "system_type"
-      "file_exists?" "dir_exists?"))
+      "file_exists?" "dir_exists?"
+      "eof" "eof?"))
 
 
 (define (is-keyword? v)

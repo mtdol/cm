@@ -263,6 +263,7 @@
         ['pair? (racket-to-bool (is-pair? v))] 
         ['null? (racket-to-bool (is-null? v))] 
         ['void? (racket-to-bool (is-void? v))] 
+        ['eof? (racket-to-bool (is-eof? v))] 
         ['fun? (racket-to-bool (is-fun? v))] 
         ['not (racket-to-bool
             (apply-if-type-1 '("bool") not-op "not" v))]
@@ -272,6 +273,7 @@
 (define (interp-prim0 op)
   (match op
          ['void (Prim0 'void)]
+         ['eof (Prim0 'eof)]
          ))
 
 ;;

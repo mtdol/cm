@@ -55,9 +55,9 @@
 ;;      'string | 'bool | 'int? | 'float? | string? | bool? | list? | 'pair? |
 ;;      'null? | 'void? | 'length | 'eval | 'print | 'load | 'error | 'lang | 'apply1 |
 ;;      'ls | 'cd | 'mkdir | 'rm | 'system | 'sysres |
-;;      'file_exists? | 'dir_exists?
+;;      'file_exists? | 'dir_exists? | 'eof?
 ;;
-;; type Op0 = 'end | 'void
+;; type Op0 = 'end | 'void | 'eof
 
 
 (struct Int (i)             #:prefab)

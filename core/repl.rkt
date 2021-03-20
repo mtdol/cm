@@ -51,6 +51,7 @@
   (match (request)
          ["#exit" exit-text]
          ["#e" exit-text]
+         [s #:when (eof-object? s) (displayln "")]
          ["#token" (list (displayln "tokenizing mode")
                          (set! mode (compose displayln run-tokenize-string))
                          (add-history "#token")
@@ -94,7 +95,8 @@
 
 (define (repl-failsafe)
   (with-handlers* (
-      [exn:fail? (lambda (e) (cons (displayln (match e [(exn:fail m _) m])) (repl-failsafe)))]
+      [exn:break? (lambda (e) (begin (displayln (match e [(exn:break m _ _) m])) (repl-failsafe)))]
+      [exn:fail? (lambda (e) (begin (displayln (match e [(exn:fail m _) m])) (repl-failsafe)))]
                   ) (repl)))
 
 ;; import standard libs

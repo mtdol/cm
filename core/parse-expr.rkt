@@ -121,6 +121,7 @@
         [(string=? "false" token) (Bool 0)]
         [(string=? token "end") (Prim0 'end)]
         [(string=? token "void") (Prim0 'void)]
+        [(string=? token "eof") (Prim0 'eof)]
         [(string=? token "system_type") (String (symbol->string (system-type)))]
         [(is-var-token? token) (Var token)]
         [(is-operator? token)  (cm-error error-id (format "Operand(s) missing for ~a." token))]
