@@ -172,6 +172,8 @@ index string int | string index | `index "ab" 1` | "b"
 index string (int1,int2;) | substring | `index "abc" (0,2;)` | "ab"
 index list int | list index | `index (1,2,3;) 1` | 2
 index list (int1,int2;) | list slice | `index (1,2,3;) (1,3;)` | (2, 3;) | an index from i1 to i2 where i1 = i2 will result in null
+index hash value | hash ref | `index (hash_set (make_hash ()) 3 5) 3` | 5 | shorthand for `hash_ref`
+Expr1 :: Expr2 | index shorthand | 1::"abcd" | b | the same as `index Expr2 Expr1`
 print expr | print | `print 1 + 2` | 3 
 @ expr | print | `@ 1 + 2` | 3 | alias of print
 \# | comment | `4 + 1 + 2 # 5 + 6` | 7
@@ -630,6 +632,131 @@ After running e2 for the final time, the while loop will yield `void`.
 7
 
 ```
+
+## Hashes
+The hashmap data type is used to allow constant time referencing of values with arbitrary keys.
+A hashmap is created using the `make_hash` keyword.
+There are two types of hashmaps: mutable and immutable.
+Mutability is set using the argument to the `make_hash` constructor:
+```
+> make_hash ().
+immutable hash
+> make_hash "immutable".
+immutable hash
+> make_hash "mutable".
+mutable hash
+```
+
+Mappings are formed with the `hash_set` operator.
+For immutable hashes `hash_set` yields another hash with the new mapping added or updated.
+For mutable hashes `void` is returned and the mapping is made in the original hash:
+```
+> (hash_set (make_hash "immutable") 3 4) : hash_to_list.
+(3, 4;)
+> def x := make_hash "mutable".
+> (hash_set x 3 4).
+> x:hash_to_list.
+(3, 4;)
+```
+
+Hash mappings can be referenced with the `hash_ref` keyword.
+```
+> hash_ref (hash_set (make_hash "immutable") 3 4) 3.
+4
+> def x := make_hash "mutable".
+> (hash_set x 3 4).
+> hash_ref 3.
+4
+```
+
+If a mapping cannot be found then a HASHREF error is raised.
+```
+> hash_ref x 5.
+1:HASHREF: Could not find key 5 in hash.
+```
+
+To subvert this error, the `hash_ref_check` keyword can be used.
+```
+> hash_ref_check x 5 (lambda v := "sorry, I could not find " $ v $ " in the hash").
+sorry, I could not find 5 in the hash
+```
+
+To make this change of behavior automatic, the lambda can be passed into the hash constructor.
+```
+def x := make_hash ("mutable", (lambda v := "sorry, I could not find " $ v $ " in the hash");).
+> hash_ref x 5
+sorry, I could not find 5 in the hash
+```
+
+To ask if a value is a hash, use the `hash?` keyword.
+To ask if a value is a mutable hash, use the `mutable_hash?` keyword.
+```
+> hash? 5.
+false
+> hash? x.
+true
+> mutable_hash? x.
+true
+> mutable_hash (make_hash ()).
+false
+```
+
+To get all of the keys (in no particular order) in a hashmap as a list use the `hash_keys` keyword.
+To get all of the values in a hashmap as a list use the `hash_values` keyword.
+To get the entire hashmap in list format where the list is of form ((key1, value1), (key2, value2), ...;) use the `hash_to_list` keyword
+```
+> def x := make_hash "mutable".
+> (hash_set x 3 5) comma (hash_set x true false).
+> hash_keys x.
+(true, 3;)
+> hash_values x.
+(5, false;)
+> hash_to_list x.
+((3, 5), (true, false);)
+```
+
+To make hash construction easier there are two utility functions in `std.cm` called `list_to_hash` and `list_to_mutable_hash`
+```
+> ((3,5), (true, false);):list_to_hash.
+immutable hash
+> ((3,5), (true, false);):list_to_mutable_hash.
+mutable hash
+> let h := ((3,5), (true, false);):list_to_hash in hash_to_list h.
+((3, 5), (true, false);)
+```
+
+## Index
+The `index` keyword is used to reference elements of lists, strings, and hashes.
+`index` with one arg means a simple reference
+```
+> index "abcd" 1.
+b
+> index (1,2,3,4;) 1.
+2
+> index (hash_set (make_hash ()) 1 3) 1.
+3
+```
+
+Index with a list of two elements means a slice (list and string only)
+```
+> index "abcd" (1,3;).
+bc
+> index (1,2,3,4;) (1,3;).
+(2,3;)
+> index (hash_set (make_hash ()) 1 3) (1,3;).
+1:HASHREF: Could not find key (1, 3;) in hash.
+```
+
+Index can also be called using the `::` infix keyword:
+```
+> 1::"abcd".
+b
+> 1::(1,2,3,4;).
+2
+> 1::(hash_set (make_hash ()) 1 3).
+3
+```
+
 
 ## Operating System
 There are a number of features to use or manipulate the system in cm.
