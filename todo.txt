@@ -1,7 +1,7 @@
 . strings are not fully displayable, (ie. "a\nb" displays as a\nb where \n is
     not a newline)
 
-. hash maps
+. io
 . regex
 . implement format
 . implement let values

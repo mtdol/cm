@@ -12,6 +12,7 @@
 ;; | (Prim1 Op1 Expr)
 ;; | (Prim2 Op2 Expr Expr)
 ;; | (Prefix2 Pop2 Expr Expr)
+;; | (Prefix3 Pop3 Expr Expr Expr)
 ;; | (Def Var Assign)
 ;; | (Defun Var Cons Assign)
 ;; | (Let Var Assign In)
@@ -49,13 +50,16 @@
 ;;      'div | 'mod | 'exp | 'when | 'eqq | 'neqq
 ;;
 ;; type Pop2 = 'appl | 'struct | 'struct? | 'types | 'index | 'writestr |
-;; 	       'appendstr | 'cp | 'mv 
+;; 	       'appendstr | 'cp | 'mv | 'hash_ref | 'hash_has_key?
+;;
+;; type Pop3 = 'hash_set | 'hash_ref_check
 ;;
 ;; type Op1 = 'neg | 'pos | 'head | 'tail | 'not | 'type | 'dynamic | 'int | 'float | 
 ;;      'string | 'bool | 'int? | 'float? | string? | bool? | list? | 'pair? |
 ;;      'null? | 'void? | 'length | 'eval | 'print | 'load | 'error | 'lang | 'apply1 |
 ;;      'ls | 'cd | 'mkdir | 'rm | 'system | 'sysres |
-;;      'file_exists? | 'dir_exists? | 'eof?
+;;      'file_exists? | 'dir_exists? | 'eof? | 'make_hash | 'hash? | 'mutable_hash? |
+;;      'hash_keys | 'hash_values | 'hash_to_list
 ;;
 ;; type Op0 = 'end | 'void | 'eof
 
@@ -70,6 +74,7 @@
 (struct Prim1 (p e)         #:prefab)
 (struct Prim2 (p e1 e2)     #:prefab)
 (struct Prefix2 (p e1 e2)   #:prefab)
+(struct Prefix3 (p e1 e2 e3)#:prefab)
 (struct Def (e1 e2)         #:prefab)
 (struct Defun (e1 e2 e3)    #:prefab)
 (struct Let (e1 e2 e3)      #:prefab)

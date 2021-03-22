@@ -12,13 +12,15 @@
       "|" "case" "->" "yields" "end"
       "if" "then" "else" "cond" "eval" "evalxp" "$" "cat" "type" "types" "error" "try" "catch" "dynamic"
       "int" "int?" "float" "float?" "string" "string?" "bool" "bool?" "list?"
-      "pair?" "null?" "fun" "fun?" "format" "match" "index" "length"
+      "pair?" "null?" "fun" "fun?" "format" "match" "index" "::" "length"
       "typedef" "struct" "struct?" "appl" "while" "do" "rec" "this" "to" "of" "void" "void?"
       "load" 
       "ls" "cd" "rm" "cp" "mv" "mkdir" 
       "getlinesf" "writestrf" "appendstrf" "system" "sysres" "system_type"
       "file_exists?" "dir_exists?"
-      "eof" "eof?"))
+      "eof" "eof?"
+      "make_hash" "hash_ref" "hash_ref_check" "hash_set" "hash?" "mutable_hash?"
+      "hash_has_key?" "hash_keys" "hash_values" "hash_to_list"))
 
 
 (define (is-keyword? v)

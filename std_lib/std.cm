@@ -135,6 +135,22 @@ defun list_to_string list ss :=
     end.
 
 #
+# Hashmap
+#
+
+defun list_to_hash list ms :=
+    appl foldl 
+        ((lam m,h := hash_set h (`m) (~m)),
+        (make_hash ()),
+        ms;). 
+
+defun list_to_mutable_hash list ms :=
+    appl foldl 
+        ((lam m,h := (hash_set h (`m) (~m)) comma h),
+        (make_hash "mutable"),
+        ms;). 
+
+#
 # System
 #
 

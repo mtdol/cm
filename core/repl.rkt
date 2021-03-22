@@ -97,6 +97,6 @@
 ;; import standard libs
 (define (run-lang-line!) (begin (run-expr "!lang cm") (void)))
 
-;(run-lang-line!)
+(run-lang-line!)
 (display "Welcome to the cm repl!\nType `#exit` or `#e` to exit. Type `#help` for help.\n\n")
 (repl-failsafe)

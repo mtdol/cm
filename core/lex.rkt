@@ -83,6 +83,7 @@
    [":=" "assign"]
    [":" "apply"]
    [":>" "apply1"]
+   ["::" "index2"]
    ["->" "yields"]
    [(:+ digit) lexeme]
    [(:: (:+ digit) #\. (:+ digit)) lexeme]

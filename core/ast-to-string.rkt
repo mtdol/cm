@@ -23,6 +23,11 @@
                                (list "(" (symbol->string (translate-op-name op))
                                      " " (ast-to-string-aux e1)
                                      " " (ast-to-string-aux e2) ")"))]
+           [(Prefix3 op e1 e2 e3) (flatten
+                               (list "(" (symbol->string (translate-op-name op))
+                                     " " (ast-to-string-aux e1)
+                                     " " (ast-to-string-aux e2)
+                                     " " (ast-to-string-aux e3) ")"))]
            [(Prim1 op e) (flatten
                                (list "(" (symbol->string (translate-op-name op))
                                      " (" (ast-to-string-aux e) "))"))]

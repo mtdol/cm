@@ -3,6 +3,7 @@
 (provide (all-defined-out))
 
 (struct CmStruct (label args))
+(struct CmHash (hash type handler))
 ;; all types used in guards minus structs
 (define guard-types '(int float string bool list pair fun dynamic))
 
@@ -16,6 +17,8 @@
 (define (is-null? v) (null? v))
 (define (is-fun? v) (match v [(Fun _ _ _ _) #t] [_ #f]))
 (define (is-struct? v) (match v [(CmStruct _ _) #t] [_ #f]))
+(define (is-hash? v) (match v [(CmHash _ _ _) #t] [_ #f]))
+(define (is-mutable-hash? v) (match v [(CmHash _ "mutable" _) #t] [_ #f]))
 (define (is-void? v) (match v [(Prim0 'void) #t] [_ #f]))
 (define (is-eof? v) (match v [(Prim0 'eof) #t] [_ #f]))
 
@@ -55,6 +58,8 @@
     [(is-pair? v) "pair"]
     [(is-fun? v) "fun"]
     [(is-struct? v) (match v [(CmStruct label _) (get-struct-type-string label)])]
+    [(is-hash? v) 
+     (match v [(CmHash _ type _) (format "~a hash" type)])]
     [(is-void? v) "void"]
     [(is-eof? v) "eof"]
     [else "unknown"]))
@@ -63,6 +68,8 @@
 (define (deep-equal? v1 v2)
   (match (cons v1 v2)
          [(cons (CmStruct lab lst1) (CmStruct lab lst2)) (deep-equal? lst1 lst2)]
+         [(cons (CmHash h1 type1 _) (CmHash h2 type2 _)) 
+          (and (equal? h1 h2) (equal? type1 type2))]
          [(cons (Bool i) (Bool i)) #t]
          [(cons (cons h1 t1) (cons h2 t2)) (and (deep-equal? h1 h2) (deep-equal? t1 t2))]
          ;; otherwise punt to the more conservative equal? proc
@@ -102,11 +109,14 @@
          ["null" "()"]
          ["void" ""]
          ["eof" "eof"]
+         ["mutable hash" "mutable hash"]
+         ["immutable hash" "immutable hash"]
          ["fun" (match v [(Fun var type context expr)
                           (format "Fun ~a ~a" type var)])]
          [_ (cm-error "GENERIC" (format "String coersion error for ~a." v))])]))
 (define (int-coerce v) 
   (cond [(is-struct? v) (cm-error "CONTRACT" "Cannot coerce a struct to an int.")]
+        [(is-hash? v) (cm-error "CONTRACT" "Cannot coerce a hash to an int.")]
     [else
   (match (get-type v) 
          ["string" (exact-floor (string-to-number v))]
@@ -122,6 +132,7 @@
          [_ (cm-error "GENERIC" "Int coersion error.")])]))
 (define (float-coerce v) 
   (cond [(is-struct? v) (cm-error "CONTRACT" "Cannot coerce a struct to a float.")]
+        [(is-hash? v) (cm-error "CONTRACT" "Cannot coerce a hash to a float.")]
     [else
   (match (get-type v) 
          ["string" (+ (string-to-number v) 0.0)]
@@ -140,6 +151,7 @@
 ;; zero int is the only false value in the language
 (define (bool-coerce v) 
   (cond [(is-struct? v) (cm-error "CONTRACT" "Cannot coerce a struct to a bool.")]
+        [(is-hash? v) (cm-error "CONTRACT" "Cannot coerce a hash to a bool.")]
     [else
   (match (get-type v) 
          ["string" (Bool 1)]

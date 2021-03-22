@@ -36,6 +36,7 @@
         [(Prefix2 'struct? e1 e2) (interp-struct? e1 e2 context)]
         [(Prefix2 'appl e1 e2) (interp-appl e1 e2 context)]
         [(Prefix2 'index e1 e2) (interp-index e1 e2 context)]
+        [(Prim2 'index2 e1 e2) (interp-index e2 e1 context)]
         [(Prefix2 'writestrf e1 e2) (match 
                 (cons (string-coerce
                         (interp-expr e1 context)) 
@@ -71,6 +72,24 @@
                        (copy-directory/files v1 v2)) (Prim0 'void)])]
         [(Prefix2 'mv e1 e2) (interp-expr (Prefix2 'cp e1 e2) context)
                              (interp-expr (Prim1 'rm e1) context)]
+        [(Prefix2 'hash_ref e1 e2) (interp-hash-ref 
+                                     (interp-expr e1 context)
+                                     (interp-expr e2 context))]
+        [(Prefix2 'hash_has_key? e1 e2) (interp-hash-has-key? 
+                                     (interp-expr e1 context)
+                                     (interp-expr e2 context))]
+        [(Prefix3 'hash_set e1 e2 e3) 
+         (interp-hash-set 
+           (interp-expr e1 context)
+           (interp-expr e2 context)
+           (interp-expr e3 context)
+           )]
+        [(Prefix3 'hash_ref_check e1 e2 e3) 
+         (interp-hash-ref-check 
+           (interp-expr e1 context)
+           (interp-expr e2 context)
+           (interp-expr e3 context)
+           )]
         [(Prim1 'lang e) (interp-lang e context)]
         ;; general prim cases
         [(Prim2 op e1 e2) (interp-prim2 op (interp-expr e1 context) (interp-expr e2 context))]
@@ -218,6 +237,23 @@
          (match (string-coerce v)
                     ["" (cm-error "CONTRACT" "Missing argument to dir_exists?")]
                     [v1 (racket-to-bool (directory-exists? (string-coerce v1)))])]
+        ['make_hash 
+         (match v
+           ['() (CmHash (hash) "immutable" '())]
+           ["mutable" (CmHash (make-hash) "mutable" '())]
+           ["immutable" (CmHash (hash) "immutable" '())]
+           [(list "immutable" f) #:when (is-fun? f) (CmHash (hash) "immutable" f)]
+           [(list "mutable" f) #:when (is-fun? f) (CmHash (make-hash) "mutable" f)]
+           [(CmHash _ "immutable" _) v]
+           ;; deep copy of mutable hash
+           [(CmHash h "mutable" handler) (CmHash (hash-copy h) "mutable" handler)]
+           [_ (cm-error "CONTRACT" "Invalid arg(s) to make_hash.")]
+           )]
+        ['hash? (racket-to-bool (is-hash? v))]
+        ['mutable_hash? (racket-to-bool (is-mutable-hash? v))]
+        ['hash_keys (interp-hash-keys v)]
+        ['hash_values (interp-hash-values v)]
+        ['hash_to_list (interp-hash-to-list v)]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]
@@ -639,11 +675,57 @@
                     [i (cm-error "CONTRACT" (format "Invalid index ~a for ~a" 
                                                     (string-coerce i) (string-coerce s)))]
                     )]
+         [h #:when (is-hash? h) (interp-hash-ref h (interp-expr e2 context))]
          [s (cm-error "CONTRACT" (format "Invalid operand for index: ~a" (string-coerce s)))]
          ))
 
+(define (interp-hash-set v1 v2 v3)
+  (match v1
+        [(CmHash h "immutable" handler) (CmHash (hash-set h v2 v3) "immutable" handler)]
+        [(CmHash h "mutable" handler) (hash-set! h v2 v3) (Prim0 'void)]
+        [_ (cm-error "CONTRACT" "First argument to hash_set must be a hash.")]
+        ))
+
+(define (interp-hash-ref v1 v2)
+  (match v1
+         [(CmHash h _ '()) (hash-ref h v2 
+                    (lambda () (cm-error "HASHREF" 
+                        (format "Could not find key ~a in hash." (string-coerce v2)))))]
+         [(CmHash h _ handler) (hash-ref h v2
+                    (lambda () (interp-apply v2 handler)))]
+         [_ (cm-error "CONTRACT" "Missing hash for hash_ref.")]))
+
+(define (interp-hash-has-key? v1 v2)
+  (match v1
+         [(CmHash h _ _) (racket-to-bool (hash-has-key? h v2))]
+         [_ (cm-error "CONTRACT" "Missing hash for hash_has_key?.")]))
+
+(define (interp-hash-keys v1)
+  (match v1
+         [(CmHash h _ _) (hash-keys h)]
+         [_ (cm-error "CONTRACT" "Missing hash for hash_keys.")]))
+
+(define (interp-hash-values v1)
+  (match v1
+         [(CmHash h _ _) (hash-values h)]
+         [_ (cm-error "CONTRACT" "Missing hash for hash_values.")]))
+
+(define (interp-hash-to-list v1)
+  (match v1
+         [(CmHash h _ _) (hash->list h)]
+         [_ (cm-error "CONTRACT" "Missing hash for hash_to_list.")]))
+
+(define (interp-hash-ref-check v1 v2 v3)
+  (match v1
+         [(CmHash h _ _)
+            (if (is-fun? v3)
+                (hash-ref h v2
+                    (lambda () (interp-apply v2 v3)))
+                (cm-error "CONTRACT" "Third arg to hash_ref_check must be a function."))]
+         [_ (cm-error "CONTRACT" "Missing hash for hash_ref_check.")]))
+
 (define (interp-print v)
- (begin (displayln (string-append (string-coerce v))) 
+ (begin (displayln (string-coerce v)) 
         v))
 
 (define (interp-lang e c)
