@@ -361,7 +361,7 @@ Finally the `when` keyword can be used to add extra conditions to a match case
 ```
 
 ## structs
-The type of a structt must first be created using the `typedef` keyword.
+The type of a struct must first be created using the `typedef` keyword.
 ```
 typedef label := list
 ```
@@ -384,7 +384,7 @@ Structs can also contain other structs:
 10
 ```
 
-Also you can ask if something is a certain struct using the `struct?` keyword:
+Also you can ask if something is a struct using the `struct?` keyword:
 ```
 > typedef S2 := a;.
 > struct? S 5.
@@ -412,15 +412,15 @@ lam x := x + 1.
 
 Functions are applied to using the `apply` keyword, often shortened to `:`
 ```
-# yields 3
-2 apply lam x := x + 1.
+> 2 apply lam x := x + 1.
+3
 ```
 
 Lambdas can be assigned to variables to be used throughout a program:
 ```
-def add2 := lam x := x + 2.
-# yields 7
-5:add2.
+> def add2 := lam x := x + 2.
+> 5:add2.
+7
 ```
 
 Lambdas can be constructed without any arguments and then called with any value.
@@ -606,11 +606,18 @@ The `eval` keyword allows you to run cm code within cm as a string.
 eval str
 ```
 
-The output will be returned either as a single value (if only one statement,) or as a list
-if there are multiple statements:
+To evaluate an expression, use the `evalxp` keyword.
 ```
-> eval "4 + 1."
+evalxp str
+```
+
+With `eval`, the result will be a list, where each list element corresponds to a statement.
+With `evalxp`, only a value is returned.
+```
+> evalxp "4 + 1"
 5
+> eval "4 + 1."
+(5;)
 > eval "5. 7."
 (5, 7;)
 ```
