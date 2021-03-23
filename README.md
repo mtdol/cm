@@ -871,6 +871,40 @@ match system_type
 end.
 ```
 
+## IO
+The `@` aka `print` keyword prints its argument to standard out while also printing a newline and
+returning the value that it prints. "\n" is interpreted as newline.   
+The `write_string` keyword is just like `@` except that it does not add a newline and returns void.  
+The `write_string_raw` keyword prints its argument but does not treat "\n" as newline.  
+
+The `read_string` keyword takes in an int as its argument and returns a string of that length.  
+The `peek_string` keyword peeks at standard input (without consuming.) It takes in two ints,
+where the first is the number of chars to read, and the second is the number of bytes at the begining of the input to skip.  
+
+The `read_line` keyword will read from standard input until a newline is reached.  
+  
+As an example of these concepts, here is an in language repl implementation:
+```
+@ "Please enter an expr to compute, or `#exit` or `#e` to exit:".
+
+def cont := true.
+while cont do
+    write_string "> " comma
+    (def resp := read_line) comma
+
+    if resp = "#exit" or resp = "#e" 
+    then 
+        (def cont := false) 
+    else
+        try
+            (@ evalxp resp)
+        catch e with
+            match e | struct Error (_,msg;) -> @ msg end
+.
+
+@ "Good Bye!".
+```
+
 ## Code Examples
 ```
 # Find Factorial n
