@@ -13,7 +13,7 @@
       "if" "then" "else" "cond" "eval" "evalxp" "$" "cat" "type" "types" "error" "try" "catch" "dynamic"
       "int" "int?" "float" "float?" "string" "string?" "bool" "bool?" "list?"
       "pair?" "null?" "fun" "fun?" "format" "match" "index" "::" "length"
-      "typedef" "struct" "struct?" "appl" "while" "do" "rec" "this" "to" "of" "void" "void?"
+      "typedef" "struct" "struct?" "appl" "while" "foreach" "do" "rec" "this" "to" "of" "void" "void?"
       "load" 
       "ls" "cd" "rm" "cp" "mv" "mkdir" 
       "getlinesf" "writestrf" "appendstrf" "system" "sysres" "system_type"

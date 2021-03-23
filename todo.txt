@@ -1,5 +1,5 @@
+. implement string replace, format
 . regex
-. implement format
 . implement let values
 
 . load

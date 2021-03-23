@@ -106,6 +106,12 @@
         [(Case e1 e2 e3) (interp-case e1 e2 e3 context)]
         [(While e1 (Do e2)) (interp-while e1 e2 context)]
         [(While _ _) (cm-error "SYNTAX" "While is missing a do.")]
+        [(Foreach e1 (In e2) (Do e3))
+         (let ([vs (interp-expr e2 context)])
+           (if (is-list? vs)
+               (interp-foreach e1 vs e3 context)
+               (cm-error "CONTRACT" "Argument to foreach guard must be a list.")))]
+        [(Foreach _ _ _) (cm-error "SYNTAX" "Foreach is improperly formed.")]
         [(Try e1 e2) (interp-try-catch e1 e2 context)]
         [(Match e1 e2) (interp-match (interp-expr e1 context) e2 context context)]
         [(Def e1 (Assign e2)) 
@@ -339,6 +345,16 @@
      (interp-expr e2 context)
      (interp-while e1 e2 context)]
     [else (Prim0 'void)]))
+
+(define (interp-foreach e1 vs e2 context)
+  (match vs
+    ['() (Prim0 'void)]
+    [(cons v t)
+      (match (match-expr e1 v context context)
+            [#f (cm-error "MATCH" "Could not match foreach guard expr.")]
+            [c2 (interp-expr e2 c2) (interp-foreach e1 t e2 context)]
+            )]
+    ))
 
 (define (interp-try-catch e1 e2 context)
   (match e2

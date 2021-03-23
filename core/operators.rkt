@@ -29,6 +29,7 @@
         (cons "yields"          (OpData 1 "prefix"  0   'Yields  '()))
         (cons "case"            (OpData 3 "prefix"  0   'Case    '()))
         (cons "while"           (OpData 2 "prefix"  0   'While   '()))
+        (cons "foreach"         (OpData 3 "prefix"  0   'Foreach '()))
         (cons "do"              (OpData 1 "prefix"  0   'Do      '()))
         (cons "when"            (OpData 2 "infix"   0   'Prim2   'when))
         (cons "appl"            (OpData 2 "prefix"  0   'Prefix2 'appl))
