@@ -640,6 +640,25 @@ After running e2 for the final time, the while loop will yield `void`.
 
 ```
 
+Additionally there is a `foreach` loop for referencing members of a list, processing them, and yielding `void` when the list is empty.
+The syntax is as follows:
+```
+foreach guard in expr1 do expr2
+```
+where `guard` is a match expression as expected for the `match` keyword.
+```
+> foreach x in 1,2,3; do @ x+1.
+2
+3
+4
+
+> typedef S := a,b;.
+> foreach struct S (a,b;), n in (struct S (1,2;), 3), (struct S ("a","b";), "c"); do @ n, b, a.
+(3, 2, 1)
+(c, b, a)
+
+```
+
 ## Hashes
 The hashmap data type is used to allow constant time referencing of values with arbitrary keys.
 A hashmap is created using the `make_hash` keyword.
