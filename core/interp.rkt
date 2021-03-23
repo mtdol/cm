@@ -78,6 +78,9 @@
         [(Prefix2 'hash_has_key? e1 e2) (interp-hash-has-key? 
                                      (interp-expr e1 context)
                                      (interp-expr e2 context))]
+        [(Prefix2 'peek_string e1 e2) (interp-peek-string 
+                                     (interp-expr e1 context)
+                                     (interp-expr e2 context))]
         [(Prefix3 'hash_set e1 e2 e3) 
          (interp-hash-set 
            (interp-expr e1 context)
@@ -254,6 +257,9 @@
         ['hash_keys (interp-hash-keys v)]
         ['hash_values (interp-hash-values v)]
         ['hash_to_list (interp-hash-to-list v)]
+        ['read_string (interp-read-string v)]
+        ['write_string (interp-write-string v)]
+        ['write_string_raw (interp-write-string-raw v)]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]
@@ -310,6 +316,7 @@
   (match op
          ['void (Prim0 'void)]
          ['eof (Prim0 'eof)]
+         ['read_line (interp-read-line)]
          ))
 
 ;;
@@ -725,8 +732,27 @@
          [_ (cm-error "CONTRACT" "Missing hash for hash_ref_check.")]))
 
 (define (interp-print v)
- (begin (displayln (string-coerce v)) 
+ (begin (displayln (value->displayable-string v)) 
         v))
+
+;; reads until i chars or eof
+(define (interp-read-string v1)
+  (if (is-int? v1)
+    (read-string v1)
+    (cm-error "CONTRACT" "Invalid arg(s) to read_string")))
+
+(define (interp-peek-string v1 v2)
+  (if (and (is-int? v1) (is-int? v2))
+    (peek-string v1 v2)
+    (cm-error "CONTRACT" "Invalid arg(s) to peek_string")))
+
+(define (interp-read-line) (read-line))
+
+(define (interp-write-string v1)
+  (display (value->displayable-string v1)) (Prim0 'void))
+
+(define (interp-write-string-raw v1)
+  (display (string-coerce v1)) (Prim0 'void))
 
 (define (interp-lang e c)
   (match e

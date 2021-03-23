@@ -123,6 +123,7 @@
         [(string=? token "void") (Prim0 'void)]
         [(string=? token "eof") (Prim0 'eof)]
         [(string=? token "system_type") (String (symbol->string (system-type)))]
+        [(string=? token "read_line") (Prim0 'read_line)]
         [(is-var-token? token) (Var token)]
         [(is-operator? token)  (cm-error error-id (format "Operand(s) missing for ~a." token))]
         [else (cm-error error-id (format "Invalid variable name: ~a." token))]))

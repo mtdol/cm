@@ -75,6 +75,10 @@
          ;; otherwise punt to the more conservative equal? proc
          [_ (equal? v1 v2)]))
 
+(define (value->displayable-string v)
+  ;; ensures that all \n in the string are actually newlines
+  (string-replace (string-coerce v) (string-append "\\" "n") "\n"))
+
 (define (string-to-number v) 
     (let ([v2 (string->number v)]) 
         (match v2

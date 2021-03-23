@@ -1,7 +1,3 @@
-. strings are not fully displayable, (ie. "a\nb" displays as a\nb where \n is
-    not a newline)
-
-. io
 . regex
 . implement format
 . implement let values
