@@ -41,6 +41,12 @@
                                 (ast-to-string e2) " in " (ast-to-string e3) ")")]
            [(Lambda v e) (flatten (list "(" "lambda "
                         (ast-to-string-aux v) " " (ast-to-string-aux e) ")"))]
+           [(While e1 e2) (flatten (list "(" "while "
+                        (ast-to-string-aux e1) " " (ast-to-string-aux e2) ")"))]
+           [(Foreach e1 e2 e3) (flatten (list "(" "foreach "
+                        (ast-to-string-aux e1) " "
+                        (ast-to-string-aux e2) " " 
+                        (ast-to-string-aux e3) ")"))]
            [(Assign e) (flatten (list "= "
                         (ast-to-string-aux e)))]
            [(If e1 e2) (flatten

@@ -24,14 +24,33 @@
   [key-token (:or "`" "~" "," ";" "=" ">" "<" "+" "-"
                    "*" "/" "^" "%" "&" "|" "!" "@"
             "(" ")" "[" "]" "{" "}" ":" "$" "#" ".")]
-  ;[keyword (:or (set->list reserved-keywords))]
 
   [string-char (:~ #\")]
 
-  ;[comment (:: "#" (:* (:~ #\newline)) #\newline)]
-  [comment (:: "#" (:* (:~ #\newline)))]
+  [comment (:: "#" (:~ ":") (:* (:~ #\newline)))]
+  [macro (:: "#:" (:* (:~ #\newline)))]
   )
 
+(define cm-lang-line (list "load" "\"std_lib::std.cm\"" "dot"))
+(define (process-macro name body linenum)
+  (match name
+         ["lang" 
+          (if (string=? body "cm")
+            cm-lang-line
+            (cm-error-linenum linenum "LEX" "Invalid lang name in macro."))]
+         [_ (cm-error-linenum linenum "LEX" "Invalid macro name.")]))
+
+;; macros have two forms:
+;; #:name body
+;; #:name
+;; where body is everything after name with all leading and trailing whitespace removed
+(define (read-macro str linenum)
+  (match (regexp-match #rx"^\\#\\:([^ ]*) (.*)$" str)
+         [(list r1 r2 r3) (process-macro r2 (string-trim r3) linenum)]
+         [_ (match (regexp-match #rx"^\\#\\:([^ ]*) *$" str)
+            [(list r1 r2) (process-macro r2 "" linenum)]
+            [_ (cm-error-linenum linenum "LEX" "Invalid macro syntax.")])
+            ]))
 
 (define cmlex
   (lexer
@@ -42,8 +61,10 @@
    [#\newline ":newline"]
    ;; skip comment lines
    [comment (cmlex input-port)]
+   [macro 
+    (match start-pos [(position _ linenum _)
+            (read-macro lexeme linenum)])]
    [(:or "(" ")" "#") lexeme]
-   ["!lang" "!lang"]
    ["." "dot"]
    ["`" "head"]
    ["~" "tail"]
@@ -92,7 +113,6 @@
    [(:: #\" (:* (:~ #\"))) (match start-pos [(position colnum linenum _)
                         (cm-error-linenum linenum error-id 
                                 (format "Non-terminated string around column ~a" colnum))])]
-   ;[(:: #\" (:* string-char) #\") lexeme]
    ;; everything else (vars and operators)
    [(:+ (:& (:+ any-char) (:~ key-token) (:~ whitespace) (:~ #\"))) lexeme]
    ;; custom error behavior

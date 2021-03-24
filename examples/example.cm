@@ -1,5 +1,5 @@
-!lang cm.
-# the line above loads all standard modules
+#:lang cm
+# the line above is a macro and loads all standard modules
 
 # standard modules include funcs such as
 @ 4:add1.

@@ -25,11 +25,14 @@
       (define (request) (readline "> "))))
 
 
-;; adds a dot to the end of the string if not present
+;; adds a dot to the end of the string if not present, and the line is not a
+;; line macro
 (define (add-dot str)
   (if (regexp-match? #rx"^.*(\\.|dot) *$" str)
     str
-    (string-append str ".")))
+    (if (not (regexp-match? #rx"^\\#\\:.*" str))
+        (string-append str ".")
+        str)))
 
 ;; the cm function we will be calling
 (define mode (compose display-output run add-dot))
@@ -95,7 +98,7 @@
                   ) (repl)))
 
 ;; import standard libs
-(define (run-lang-line!) (begin (run-expr "!lang cm") (void)))
+(define (run-lang-line!) (begin (run "#:lang cm") (void)))
 
 (run-lang-line!)
 (display "Welcome to the cm repl!\nType `#exit` or `#e` to exit. Type `#help` for help.\n\n")

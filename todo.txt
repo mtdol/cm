@@ -1,6 +1,7 @@
 . implement string replace, format
 . regex
 . implement let values
+. macros (!lang as macro)
 
 . load
     - allow a list of args

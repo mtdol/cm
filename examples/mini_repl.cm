@@ -1,4 +1,4 @@
-!lang cm.
+#:lang cm
 
 @ "Please enter an expr to compute, or `#exit` or `#e` to exit:".
 
