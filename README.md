@@ -141,11 +141,14 @@ raco test test/*
 Substitute expr for any expression.
 
 All statements must end in the "dot" operator:
+Additionally `//` can be used as a more visible version of dot.
 ```
 # Invalid
 let x := lam n := n + 1 in 1 : x
 # Valid
 let x := lam n := n + 1 in 1 : x.
+# Valid
+let x := lam n := n + 1 in 1 : x//
 ```
 
 Construct | Effect | Example | Yields | Explanation
@@ -929,7 +932,7 @@ while cont do
 # Find Factorial n
 def fact := lam int n :=
     | n < 2 -> 1
-    else n * (n - 1 : fact).
+    else n * ((n - 1) : fact).
     
 # prints 24
 @ 4 : fact.
@@ -958,10 +961,10 @@ def get_last := lam list lst :=
     end.
    
 # prints 7
-@ 3,5,7; : get_last.
+@ (3,5,7;) : get_last.
 
 # prints 3
-@ 3; : get_last.
+@ (3;) : get_last.
 
 # throws error
 @ null : get_last.
