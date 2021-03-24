@@ -134,6 +134,35 @@ defun list_to_string list ss :=
     | s, t -> s $ (t : list_to_string)
     end.
 
+# replaces all instances of target substring with rep
+defun string_replace (string str, string targ, string rep) :=
+    if length str < length targ
+    then str
+    else
+        if 
+            (0, length targ;)::str = targ
+        then 
+            let str2 := (length targ, length str;)::str in
+               rep $ (appl string_replace (str2, targ, rep;)) 
+        else
+            # get first char
+            let c := 0::str in
+            # get rest of string
+            let str2 := (1, length str;)::str in
+            c $ (appl string_replace (str2, targ, rep;))//
+               
+# takes a string of form "~1 ~2 ~3 ~1" and turns it into "v1 v2 v3 v1"
+defun format (string str, list vs) :=
+    let aux := defun _aux_ (str, vs, i) := 
+        match vs
+        | () -> str
+        | v, t -> 
+            let str2 := appl string_replace (str, "~"$i, v;) in
+                appl _aux_ (str2, t, i:add1;)
+        end
+    in
+        appl aux (str, vs, 1;)//
+
 #
 # Hashmap
 #

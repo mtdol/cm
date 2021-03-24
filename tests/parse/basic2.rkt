@@ -60,14 +60,14 @@
 (check-equal? (parse "3 xor 5 +- 1")
 '#s(Prim2 xor #s(Int 3) #s(Prim2 add #s(Int 5) #s(Prim1 neg #s(Int 1)))))
 
-(check-equal? (parse "3 or 5 : 7")
+(check-equal? (parse "(3 or 5) : 7")
 '#s(Prim2 apply #s(Prim2 or #s(Int 3) #s(Int 5)) #s(Int 7)))
 
 (check-equal? (parse "3 or 5 , 7")
 '#s(Prim2 cons #s(Prim2 or #s(Int 3) #s(Int 5)) #s(Int 7)))
 
-(check-equal? (parse "3 : 5 , 7")
+(check-equal? (parse "3 : (5 , 7)")
 '#s(Prim2 apply #s(Int 3) #s(Prim2 cons #s(Int 5) #s(Int 7))))
 
-(check-equal? (parse "3 : 5 + print 7")
+(check-equal? (parse "3 : (5 + print 7)")
 '#s(Prim2 apply #s(Int 3) #s(Prim2 add #s(Int 5) #s(Prim1 print #s(Int 7)))))

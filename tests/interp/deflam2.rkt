@@ -12,7 +12,7 @@
 4)
 
 ;; basic recursive case
-(run-silent "def r := lam n := | n = 0 -> 0 else n + (n - 1 : r)")
+(run-silent "def r := lam n := | n = 0 -> 0 else n + ((n - 1) : r)")
 
 (check-equal? (run "4 : r")
 10)

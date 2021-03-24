@@ -5,7 +5,7 @@
 (check-equal? (run "4 : find_a")
 3)
 
-(run-silent "def fact := lam n := | n < 2 -> 1 else n * (n - 1 : fact)")
+(run-silent "def fact := lam n := | n < 2 -> 1 else n * ((n - 1) : fact)")
 (check-equal? (run "4 : fact")
 24)
 (check-equal? (run "1 : fact")
@@ -14,9 +14,9 @@
 1)
 
 (run-silent "def get_last := lam list lst := | null? lst -> null | null? ~lst -> `lst else ~lst : get_last")
-(check-equal? (run "4,5; : get_last")
+(check-equal? (run "(4,5;) : get_last")
 5)
-(check-equal? (run "5; : get_last")
+(check-equal? (run "(5;) : get_last")
 5)
 (check-equal? (run "null : get_last")
 null)

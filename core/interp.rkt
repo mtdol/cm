@@ -36,7 +36,7 @@
         [(Prefix2 'struct? e1 e2) (interp-struct? e1 e2 context)]
         [(Prefix2 'appl e1 e2) (interp-appl e1 e2 context)]
         [(Prefix2 'index e1 e2) (interp-index e1 e2 context)]
-        [(Prim2 'index2 e1 e2) (interp-index e2 e1 context)]
+        [(Prim2 'appindex e1 e2) (interp-index e2 e1 context)]
         [(Prefix2 'writestrf e1 e2) (match 
                 (cons (string-coerce
                         (interp-expr e1 context)) 
@@ -190,7 +190,7 @@
 (define (interp-prim1 op v)
   (match op
         ['print (interp-print v)]
-        ['apply1 (interp-apply null v)]
+        ['appnull (interp-apply null v)]
         ['error 
          (match v
                 ;; TODO use cm error struct and use id
