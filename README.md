@@ -118,18 +118,18 @@ load "f:~/code/cm/std_lib/std.cm".
 load "cm/std_lib/std.cm".
 ```
 
-### !lang cm
-The statement `!lang cm.` can be used (usually at the top of a file)
+### #:lang cm
+The macro `#:lang cm` can be used (usually at the top of a file)
 to load all of the standard modules that are recommended for the language.
 
 ```
-!lang cm.
+#:lang cm
 
 # a function included in std.cm
 @ 4:add1.
 ```
 
-The standard modules are everything contained within the `std_lib` folder.
+The macro is replaced by the lexer with a series of `load` statements referencing the `std_lib` folder.
 
 ## Testing
 ```
