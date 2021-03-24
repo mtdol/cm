@@ -192,7 +192,7 @@ let guard var := Expr in Expr | guarded local binding of var | `let int x := not
 lambda var := Expr | lambda expression | `lam x := x + 1` | function | `lambda` can  be shortened to `lam`
 lambda var1, var2,... = Expr | multiple lambda expression | `lam x, y := x + y` | function | equivalent to lam x = lam y = ...
 Expr1 : Expr2, where Expr2 -> Function | function application | `3 : lam x := x + 1` | 4 | also written as `apply`
-:> Expr1, where Expr1 -> Function | null arg function application | `:> lam () := 5` | 5 | also written as `apply1`
+:> Expr1, where Expr1 -> Function | null arg function application | `:> lam () := 5` | 5 | also written as `appnull`
 lambda guard var := Expr | guarded lambda expression | `3 : lam float x := x + 1.0` | contract exception
 def var1 := lambda var2 = ... | global mapping to function | `def add1 := lam n := n + 1` | Function | add1 can be applied at any time
 defun var vars := ... | shorthand global mapping to function | `defun add2 (x,y) := x + y` | Function | the vars operand must be wrapped if more than one var
