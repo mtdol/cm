@@ -786,6 +786,105 @@ b
 3
 ```
 
+## Macros
+Macros have two forms: pre-lexing macro definitions, and pre-parsing macro applications.  
+Macro defs have two forms: line defs and multi line defs.  
+Line macro defs are declared using the `#:` prefix at the beginning of the line.  
+Multi line macro defs are declared with `#:<` and terminated with `>:#`.  
+
+Macro defs have two parts: the name and the body. The name is declared just after the `#:` or `#:<`
+and features no spaces.  
+
+The macro body is declared just after the name in a single line macro def, and is placed on the lines after the body
+in a multi-line macro def.
+```
+# single line macro, imports standard lib
+#:lang cm
+
+# same as above, notice that "lang" is the name and "cm" is the body 
+#:<lang
+cm
+>:#
+```
+
+### Inline Macros
+To declare the schema and body for an inline macro use the following form:
+```
+#:def:label{args} body
+
+# multi-line
+#:<def:label{args}
+body1
+body2
+...
+>:#
+```
+
+The args for the macro def can be zero or more, and seperated by `|`.  
+The names for the vars in the args must match the regex `[a-zA-Z0-9_]+`.  
+
+Inline macros are applied with the following form:
+```
+# no args
+{label}
+# one arg
+{label arg}
+# two args...
+{label arg1|arg2}
+```
+
+
+Additional definitions for the same label can be added with the `#:def+` macro declaration.  
+When the macro is applied, the definitions are searched in the order they were added until a matching macro schema is found
+for the given arguments.
+```
+#:def:add{a|b} (a) + (b)
+#:def+:add{a} (a)
+
+> {add 3|4}
+7
+> {add 3}
+3
+
+#:<def+:add{a|b|c}
+a +
+    b +
+        c
+>:#
+
+> {add 2|3|4}
+9
+```
+
+Macro applications can also be nested:
+```
+> {add {add 4 | 5} | {add 1}}
+10
+```
+
+The `|` operator is required to seperate macro args within a macro application.  
+To escape `|` simply use `\|` instead.
+```
+> {vari + | \| false -> 1 else 2 | 3}
+5
+```
+
+### Reursive Macros
+The `REST` macro arg can be used to refer to the remaining argments to the macro application.  
+`REST` must be the final argument to the macro def.
+```
+# variadic infix operator
+#:def:vari{op|v|REST} (v) op {vari op|REST}
+#:def+:vari{op|v} (v)
+
+> {vari -|1}
+1
+> {vari -|1|2|3}
+-4
+> {vari -|1|{vari *|3|4}|3}
+-14
+```
+
 
 ## Operating System
 There are a number of features to use or manipulate the system in cm.
