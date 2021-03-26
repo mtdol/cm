@@ -11,7 +11,7 @@
 print 7.                    # same
 def x := 5.                  # def creates a toplevel binding
 x - 3.                      # evaluates to 2 but does not normally print
-@ [1 + 2] - 5 + {4 * 3}.    # square brackets and curly brackets
+@ [1 + 2] - 5 + [4 * 3].    # square brackets
                             # are the same as parens
 .                           # does nothing
 #def y := 7.

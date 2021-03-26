@@ -1,6 +1,6 @@
 #lang racket
 (require cm/core/ast cm/core/types cm/core/error)
-(provide eval-string ast-cons-to-racket apply-if-type
+(provide fix-string ast-cons-to-racket apply-if-type
          apply-if-type-1 assign-type-check check-types-list valid-against-schema?
          interp-def-list interp-lambda-list struct-schema->string)
 
@@ -8,7 +8,8 @@
 ;; Utilities for interpretation
 ;;
 
-(define (eval-string s) (eval (read (open-input-string s))))
+(define (fix-string str) 
+  (string-replace str "\\\"" "\""))
 
 ;; turns an ast cons node(s) into a racket pair, list
 (define (ast-cons-to-racket node)

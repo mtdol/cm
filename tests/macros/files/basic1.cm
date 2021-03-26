@@ -1,0 +1,16 @@
+#:def:one{} 1
+#:def:two{} {one} + {one}
+
+#:def:add1{a} (a) + 1
+#:def:+1{a} (a) + 1
+#:def+:+1{} 1
+
+# attempts to deref a variable, and if fails sets it
+#:def:set!{a|b} try a comma void catch e with (def a := b) comma void
+
+#:def:++{a} (def a := a + 1)
+
+#:def:plus{a|b} (a) + (b)
+#:def:minus{a|b} (a) - (b)
+
+#:def:app_op{a|op|b} (a) op (b)

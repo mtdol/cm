@@ -1,15 +1,17 @@
 #lang racket
 (provide cm-error cm-error-with-line-handler cm-error-linenum current-linenum
+         set-current-linenum!
          get-id-from-message cm-error-no-linenum try-with-error)
 
 (define error-types
     (set (list
         "GENERIC" "LEX" "PARSE" "INTERP" "IMPORT" "CONTRACT" "SYNTAX"
-        "UNDEFINED" "SYSTEM" "HASHREF"
+        "UNDEFINED" "SYSTEM" "HASHREF" "MACRO"
         )))
 
 ;; line-number belonging to the current statement
 (define current-linenum 0)
+(define (set-current-linenum! linenum) (set! current-linenum linenum))
 
 ;; general error function
 (define (cm-error id message)

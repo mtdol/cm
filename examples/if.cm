@@ -1,2 +1,2 @@
-@ if [(1 - 2) = -1] then {"true"} else {"false"}. # true
-@ if [(1 - 2) = 1] then {"true"} else {"false"}. # false
+@ if 1 - 2 = -1 then "true" else "false". # true
+@ if 1 - 2 = 1 then "true" else "false". # false

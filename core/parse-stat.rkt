@@ -1,12 +1,12 @@
 #lang racket
-(require cm/core/ast cm/core/error cm/core/parse-expr)
+(require cm/core/ast cm/core/error cm/core/parse-expr cm/core/pre-parse)
 (provide parse-stat)
 (define error-id "PARSE")
 
 ;; takes a master token list and parses its sub-expressions
 
 (define (parse-stat tokens)
-  (let aux ([tokens tokens] [acc '()] [linenum 1] [curr-linenum 1])
+  (let aux ([tokens (pre-parse tokens)] [acc '()] [linenum 1] [curr-linenum 1])
     (match tokens 
            [(cons "dot" t) 
             ;; use error handler to display line numbers during errors

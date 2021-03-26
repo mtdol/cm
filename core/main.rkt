@@ -1,7 +1,7 @@
 #lang racket
 (require cm/core/lex cm/core/ast cm/core/parse-expr 
          cm/core/parse-stat cm/core/interp cm/core/ast-to-string
-         cm/core/types)
+         cm/core/types cm/core/context)
 (provide run run-file run-file-abs run-expr run-tokenize-string run-tokenize-file
          run-tokenize-file-abs
          run-parse run-parse-expr run-parse-file run-parse-file run-prefix-form
@@ -27,6 +27,7 @@
 
 ;; runs a statement
 (define (run input) (interp (parse-stat (tokenize-string input))))
+;(define (run input) (interp (parse-stat (tokenize-string input))) (print-macro-context))
 ;; runs a file
 (define (run-file file) (interp (parse-stat (tokenize-file file))))
 ;; runs a file given an absolute path

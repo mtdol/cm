@@ -183,6 +183,13 @@ defun list_to_mutable_hash list ms :=
 # System
 #
 
+match system_type
+| "windows" -> (eval "#:def:win{} true") comma void
+| "macosx" -> (eval "#:def:mac{} true") comma void
+| "unix" -> (eval "#:def:unix{} true") comma void
+| _ -> void
+end.
+
 # cds only if the directory exists
 defun cd2 string s :=
     if dir_exists? s 
@@ -201,3 +208,21 @@ defun cdc () :=
 defun catf f :=
     (getlinesf f):pprint.
 
+
+#
+# Macros
+#
+
+# macro that yields nothing
+#:def:empty{}
+# macro that returns what it is given
+#:def:arg{a} a
+# wraps args
+#:def:wrap{REST} (REST)
+
+#:def:vari{op|v|REST} (v) op {vari op|REST}
+#:def+:vari{op|v} (v)
+
+# string generator
+#:def:${REST} {vari $|REST}
+#:def+:${} ""

@@ -142,10 +142,10 @@
 (check-equal? (run "string (((hash_values h3) == (2, 7;)) or ((hash_values h3) == (7, 2;)))")
 "true")
 
-(check-equal? (run "string [{(hash_to_list h1) == ((4, 2), (\"x\", 7);)} or {(hash_to_list h1) == ((\"x\", 7), (4, 2);)}]")
+(check-equal? (run "string [[(hash_to_list h1) == ((4, 2), (\"x\", 7);)] or [(hash_to_list h1) == ((\"x\", 7), (4, 2);)]]")
 "true")
 
-(check-equal? (run "string [{(hash_to_list h3) == ((4, 2), (\"x\", 7);)} or {(hash_to_list h3) == ((\"x\", 7), (4, 2);)}]")
+(check-equal? (run "string [[(hash_to_list h3) == ((4, 2), (\"x\", 7);)] or [(hash_to_list h3) == ((\"x\", 7), (4, 2);)]]")
 "true")
 
 (check-exn exn:fail? (lambda ()

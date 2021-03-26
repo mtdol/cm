@@ -13,10 +13,10 @@
 (check-equal? (run "try error \"my error\" catch e with match e | struct Error (id,msg;) -> msg end")
 "NL:GENERIC: my error")
 
-(check-equal? (run "try error \"MY_ID\",\"my error\"; catch e with match e | struct Error (id,msg;) -> id end")
+(check-equal? (run "try error (\"MY_ID\",\"my error\";) catch e with match e | struct Error (id,msg;) -> id end")
 "MY_ID")
 
-(check-equal? (run "try error \"MY_ID\",\"my error\"; catch e with match e | struct Error (id,msg;) -> msg end")
+(check-equal? (run "try error (\"MY_ID\",\"my error\";) catch e with match e | struct Error (id,msg;) -> msg end")
 "NL:MY_ID: my error")
 
 (check-exn exn:fail? (lambda ()

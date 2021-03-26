@@ -1,4 +1,5 @@
 #lang racket
+(require cm/core/pre-lex)
 (provide tokenize-file tokenize-file-abs tokenize-string)
 (define error-id "LEX")
 
@@ -19,6 +20,8 @@
 
   [alphanumeral (:or letter digit)]
 
+  [macro-label (:: letter (:* (:or alphanumeral "_")))]
+
   ;; operators that can be placed after digits or variables
   ;; ie. in "3+2", + would count
   [key-token (:or "`" "~" "," ";" "=" ">" "<" "+" "-"
@@ -31,26 +34,6 @@
   [macro (:: "#:" (:* (:~ #\newline)))]
   )
 
-(define cm-lang-line (list "load" "\"std_lib::std.cm\"" "dot"))
-(define (process-macro name body linenum)
-  (match name
-         ["lang" 
-          (if (string=? body "cm")
-            cm-lang-line
-            (cm-error-linenum linenum "LEX" "Invalid lang name in macro."))]
-         [_ (cm-error-linenum linenum "LEX" "Invalid macro name.")]))
-
-;; macros have two forms:
-;; #:name body
-;; #:name
-;; where body is everything after name with all leading and trailing whitespace removed
-(define (read-macro str linenum)
-  (match (regexp-match #rx"^\\#\\:([^ ]*) (.*)$" str)
-         [(list r1 r2 r3) (process-macro r2 (string-trim r3) linenum)]
-         [_ (match (regexp-match #rx"^\\#\\:([^ ]*) *$" str)
-            [(list r1 r2) (process-macro r2 "" linenum)]
-            [_ (cm-error-linenum linenum "LEX" "Invalid macro syntax.")])
-            ]))
 
 (define cmlex
   (lexer
@@ -61,10 +44,13 @@
    [#\newline ":newline"]
    ;; skip comment lines
    [comment (cmlex input-port)]
-   [macro 
-    (match start-pos [(position _ linenum _)
-            (read-macro lexeme linenum)])]
-   [(:or "(" ")" "#") lexeme]
+   ;; "{label" -> ("{" "label"), regardless of what label is
+   [(:: "{" (:* #\space) (:+ (:~ #\space #\{ #\})) (:* #\space) "}") 
+    (list "{" (string-trim (substring lexeme 1 (- (string-length lexeme) 1))) "}")]
+   ;; "{label " -> ("{" "label")
+   [(:: "{" (:* #\space) (:+ (:~ #\space #\{ #\})) #\space) 
+    (list "{" (string-trim (substring lexeme 1 (sub1 (string-length lexeme)))))]
+   [(:or "(" ")" "{" "}" "#") lexeme]
    ["." "dot"]
    ["//" "dot"]
    ["`" "head"]
@@ -73,11 +59,8 @@
    [";" (list "cons" "null")]
    ["()" "null"]
    ["[]" "null"]
-   ["{}" "null"]
    ["[" "("]
    ["]" ")"]
-   ["{" "("]
-   ["}" ")"]
    ["=" "equal"]
    ["!=" "not_equal"]
    ["neq" "not_equal"]
@@ -97,6 +80,8 @@
    ["%" "mod"]
    ["&" "and"]
    ["||" "or"]
+   ;; escaped bar used in macros
+   ["\\|" "\\|"]
    ["|" "case"]
    ["!" "not"]
    ["$" "cat"]
@@ -109,7 +94,6 @@
    ["->" "yields"]
    [(:+ digit) lexeme]
    [(:: (:+ digit) #\. (:+ digit)) lexeme]
-   ;; TODO: allow escape sequence \" in string
    [(:: #\" (:* (:or (:: "\\\"") (:~ #\"))) #\") lexeme]
    [(:: #\" (:* (:~ #\"))) (match start-pos [(position colnum linenum _)
                         (cm-error-linenum linenum error-id 
@@ -129,8 +113,7 @@
 
 
 ;; path relative to current location
-(define (tokenize-file name) (tokenize-input (open-input-file name)))
+(define (tokenize-file name) (tokenize-string (file->string name)))
 ;; absolute file
-(define (tokenize-file-abs name) (tokenize-input (open-input-file (expand-user-path (build-path name)))))
-(define (tokenize-string str) (tokenize-input (open-input-string str)))
-
+(define (tokenize-file-abs name) (tokenize-string (file->string (expand-user-path (build-path name)))))
+(define (tokenize-string str) (tokenize-input (open-input-string (pre-lex str))))

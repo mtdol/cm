@@ -133,7 +133,7 @@
         [(Float f) f]
         [(Bool i) (Bool i)]
         [(Null) null]
-        [(String s) s]
+        [(String s) (fix-string s)]
         [e (cm-error "SYNTAX" (format "Unknown expression: ~a." e))]))
 
 (define (and-op arg1 arg2) (and (bool-to-racket arg1) (bool-to-racket arg2)))
@@ -186,7 +186,8 @@
          (apply-if-type '("int") modulo "mod" v1 v2))
          ]
         ['exp (apply-if-type '("int" "float") expt "exp" v1 v2)]))
- 
+
+
 (define (interp-prim1 op v)
   (match op
         ['print (interp-print v)]
