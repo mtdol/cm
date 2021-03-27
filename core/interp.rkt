@@ -36,7 +36,7 @@
         [(Prefix2 'struct? e1 e2) (interp-struct? e1 e2 context)]
         [(Prefix2 'appl e1 e2) (interp-appl e1 e2 context)]
         [(Prefix2 'index e1 e2) (interp-index e1 e2 context)]
-        [(Prim2 'appindex e1 e2) (interp-index e2 e1 context)]
+        [(Prim2 'appindex e1 e2) (interp-index e1 e2 context)]
         [(Prefix2 'writestrf e1 e2) (match 
                 (cons (string-coerce
                         (interp-expr e1 context)) 
@@ -191,7 +191,7 @@
 (define (interp-prim1 op v)
   (match op
         ['print (interp-print v)]
-        ['appnull (interp-apply null v)]
+        ['appnull (interp-apply v null)]
         ['error 
          (match v
                 ;; TODO use cm error struct and use id
@@ -569,15 +569,15 @@
          [_ (cm-error "SYNTAX" "Lambda is missing an assignment.")]))
 
 (define (interp-apply v1 v2)
-  (match v2
+  (match v1
          ;; no arg lambda
          [(Fun '() '() fcontext fexpr) 
           (interp-expr fexpr fcontext)] 
          [(Fun var type fcontext fexpr) 
             ;; check that the application matches the functions type
-            (assign-type-check type v1 var)
+            (assign-type-check type v2 var)
             ;; interp with modified context
-            (interp-expr fexpr (set-local-var var v1 fcontext))]
+            (interp-expr fexpr (set-local-var var v2 fcontext))]
          [_ (cm-error "CONTRACT" "Attempted to apply onto a non function.")]))
 
 
@@ -587,7 +587,7 @@
       (let aux ([lst l1] [res (interp-expr e1 context)])
         (match lst
                ['() res]
-               [(cons h t) (aux t (interp-apply h res))]
+               [(cons h t) (aux t (interp-apply res h))]
 
                ))]
     [_ (cm-error "CONTRACT" "Arguments to appl must be a list.")]
@@ -715,7 +715,7 @@
                     (lambda () (cm-error "HASHREF" 
                         (format "Could not find key ~a in hash." (string-coerce v2)))))]
          [(CmHash h _ handler) (hash-ref h v2
-                    (lambda () (interp-apply v2 handler)))]
+                    (lambda () (interp-apply handler v2)))]
          [_ (cm-error "CONTRACT" "Missing hash for hash_ref.")]))
 
 (define (interp-hash-has-key? v1 v2)
@@ -743,7 +743,7 @@
          [(CmHash h _ _)
             (if (is-fun? v3)
                 (hash-ref h v2
-                    (lambda () (interp-apply v2 v3)))
+                    (lambda () (interp-apply v3 v2)))
                 (cm-error "CONTRACT" "Third arg to hash_ref_check must be a function."))]
          [_ (cm-error "CONTRACT" "Missing hash for hash_ref_check.")]))
 

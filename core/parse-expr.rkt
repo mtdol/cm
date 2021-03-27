@@ -19,6 +19,12 @@
 (define (half-parse-expr tokens)
   (tokens-to-prefix-form (pre-parse-expr tokens)))
 
+;; all precedences that will be parsed in anti-pemdas order
+;; anti-pemdas means parsing from left to right,
+;; pemdas is right to left
+;(define anti-pemdas (set 1))
+(define anti-pemdas (set 0 1 7))
+
 ;; (1 + 2 * 3) -> + 1 * 2 3
 ;; returned expresions are parenthesis free
 (define (tokens-to-prefix-form tokens) 
@@ -28,15 +34,17 @@
            [(list h) #:when (not (is-operator? h)) (list h)] 
            ;; unwrap all outer parens from token list, convert to s-expr and
            ;; then rewrap with one layer of parens
-           [tokens (tokens-to-prefix-form-aux (unwrap-expr tokens) '() 0 0)])) 
+           [tokens (tokens-to-prefix-form-aux (unwrap-expr tokens) '() 0 0 
+                                              ;; is precedence zero anti-pemdas?
+                                              (set-member? anti-pemdas 0))])) 
 
-(define (tokens-to-prefix-form-aux tokens acc preced pcount) 
+(define (tokens-to-prefix-form-aux tokens acc preced pcount anti-pemdas?) 
     (match tokens
          ;; list looks like "3 (5 + 8)"
          ;; we must recurse and deal with the subexprs
         ['() #:when (= preced max-precedences) 
          ;; we will collect subexprs and prefixify them while walking down the list
-            (let aux ([tokens (reverse acc)] [acc '()] [pcount 0])
+            (let aux ([tokens (if anti-pemdas? (reverse acc) acc)] [acc '()] [pcount 0])
                 (match tokens
                        ['() (reverse acc)]
                        [(cons ")" t) #:when (= 1 pcount)
@@ -49,26 +57,38 @@
                        [(cons ")" t) (aux t (cons ")" acc) (sub1 pcount))]
                        [(cons h t) (aux t (cons h acc) pcount)]))]
         ;; try again since we didn't find an op of current precedence
-        ['() (tokens-to-prefix-form-aux (reverse acc) '() (add1 preced) 0)]
+        ['() #:when (set-member? anti-pemdas (add1 preced))
+         (tokens-to-prefix-form-aux (if anti-pemdas? (reverse acc) acc) '() (add1 preced) 0 #t)]
+        ;; next precedence is pemdas order
+        ['() 
+         (tokens-to-prefix-form-aux (if anti-pemdas? acc (reverse acc)) '() (add1 preced) 0 #f)]
         ;; increment pcount
-        [(cons "(" t) (tokens-to-prefix-form-aux t (cons "(" acc) preced (add1 pcount))]
+        [(cons "(" t) (tokens-to-prefix-form-aux t (cons "(" acc) preced 
+                                (if anti-pemdas? (add1 pcount) (sub1 pcount)) anti-pemdas?)]
         ;; decrement pcount
-        [(cons ")" t) (tokens-to-prefix-form-aux t (cons ")" acc) preced (sub1 pcount))]
-        ;; infix op found matching precedence
-        ;; reverse acc because it is wrong order
-        [(cons h t) #:when (and (zero? pcount) (is-operator? h) (= (op-to-precedence h) preced)
-                                (string=? (op-to-position h) "prefix"))
-                    (append (tokens-to-prefix-form (reverse acc))
-                            (list h) (tokens-to-prefix-form t))]
+        [(cons ")" t) (tokens-to-prefix-form-aux t (cons ")" acc) preced 
+                        (if anti-pemdas? (sub1 pcount) (add1 pcount)) anti-pemdas?)]
         ;; prefix op found matching precedence
         [(cons h t) #:when (and (zero? pcount) (is-operator? h) (= (op-to-precedence h) preced)
+                                (string=? (op-to-position h) "prefix"))
+
+            (if anti-pemdas? 
+             (append (tokens-to-prefix-form (reverse acc))
+                            (list h) (tokens-to-prefix-form t))
+             ;(append (tokens-to-prefix-form acc) (list h) (tokens-to-prefix-form (reverse t)))
+             (cm-error "PARSE" "Cannot pemdas parse prefix op.")
+             )]
+        ;; infix op found matching precedence
+        [(cons h t) #:when (and (zero? pcount) (is-operator? h) (= (op-to-precedence h) preced)
                                 (string=? (op-to-position h) "infix"))
-            (append (list h) (tokens-to-prefix-form (reverse acc))
-                          (tokens-to-prefix-form t))]
+            (if anti-pemdas? 
+             (append (list h) (tokens-to-prefix-form (reverse acc))
+                          (tokens-to-prefix-form t))
+             (append (list h) (tokens-to-prefix-form (reverse t)) (tokens-to-prefix-form acc)))]
         ;; fundamental value
         [(list h) #:when (and (null? acc) (not (is-operator? h))) (list h)] 
         ;; general case
-        [(cons h t) (tokens-to-prefix-form-aux t (cons h acc) preced pcount)]))
+        [(cons h t) (tokens-to-prefix-form-aux t (cons h acc) preced pcount anti-pemdas?)]))
 
 ;; used in parse-to-ast to check for expressions with too many operands.
 (define expr-tail '())

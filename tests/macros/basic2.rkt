@@ -31,5 +31,5 @@
 
 (run-silent "defun sub3 (a, b, c) := a - b - c")
 
-;(check-equal? (run-stat "{: sub3|3|4|5}.")
-;'(-6))
+(check-equal? (run-stat "{: sub3|3|4|5}.")
+'(-6))

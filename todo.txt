@@ -1,48 +1,7 @@
 . documentation and tests for standard library
 . regex
 
-. defun sub3 (a,b,c) := a - b - c
-    yields reversed application order
-
 . load
     - allow a list of args
     - private (not shared) variables starting in _ (ie _f, private var f)
     - prefix in
-
-
-
-# variadic infix op
-# REST is a special variable that refers to extra args to the macro
-#:def:vari{op|v|rest} (v) op {vari op|REST}
-#:def+:vari{op|v} (v)
-
-{vari +
-    |3
-    |4 * 5
-    |{vari * |4|6|7}
-    |7
-}
-
-#:def:%{v|REST} (v) comma {% REST}
-#:def+:%{v} (v) comma void
-#:def:do{REST} do {% REST}.
-
-foreach x in :>f {do
-      def y := y + x
-    | def z := y + 1
-    | match v
-     \| () -> @x
-     \| _ -> void
-     end
-}
-
-# runs every expr and finally yields void
-{% @x|@y|def x := `y}.
-
-# wraps and builds a list
-#:def:list{REST} ({list_aux REST})
-#:def:list_aux{v|REST} (v), {list_aux REST}
-#:def:list_aux{v} (v);
-#:def:list_aux{} ()
-
-#:def::{f|REST} appl f {list REST}

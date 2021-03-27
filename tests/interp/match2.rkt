@@ -10,23 +10,23 @@
 
 (run-silent "def x := lam n := match n | 5 -> 3 end")
 
-(check-equal? (run "5 : x")
+(check-equal? (run "x:5")
 3)
 (check-exn exn:fail? (lambda ()
-  (run "4:x")))
+  (run "x:4")))
 (check-exn exn:fail? (lambda ()
-  (run "4,2:x")))
+  (run "x:(4,2)")))
 
 (run-silent "def x := lam n := match n | 5 -> 3 | 7 -> 1 end")
 
-(check-equal? (run "5 : x")
+(check-equal? (run "x:5")
 3)
-(check-equal? (run "7 : x")
+(check-equal? (run "x:7")
 1)
 (check-exn exn:fail? (lambda ()
-  (run "3:x")))
+  (run "x:3")))
 (check-exn exn:fail? (lambda ()
-  (run "\"6h\":x")))
+  (run "x:\"6h\"")))
 
 (check-equal? (run "(match 5 | 5 -> 2 end) + 1")
 3)

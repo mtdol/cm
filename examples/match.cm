@@ -2,7 +2,7 @@ def last_item := lam lst :=
     match lst
     | () -> error "list is empty"
     | h, () -> h
-    | h, t -> t : last_item
+    | h, t -> last_item:t
     end.
 
-@ 1,2,3,"return me"; : last_item.
+@ last_item:(1,2,3,"return me";).

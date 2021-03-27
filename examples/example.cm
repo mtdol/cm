@@ -2,7 +2,7 @@
 # the line above is a macro and loads all standard modules
 
 # standard modules include funcs such as
-@ 4:add1.
+@ add1:4.
 
 # comment, comments look like this
 # dot is the statement terminator

@@ -1,0 +1,3 @@
+#:def:%{a|b} (a) comma (b) comma void
+
+{% @add1:1|@3}.

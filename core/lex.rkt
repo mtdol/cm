@@ -48,7 +48,7 @@
    [(:: "{" (:* #\space) (:+ (:~ #\space #\{ #\})) (:* #\space) "}") 
     (list "{" (string-trim (substring lexeme 1 (- (string-length lexeme) 1))) "}")]
    ;; "{label " -> ("{" "label")
-   [(:: "{" (:* #\space) (:+ (:~ #\space #\{ #\})) #\space) 
+   [(:: "{" (:* #\space) (:+ (:~ #\space #\{ #\})) (:or #\newline #\space)) 
     (list "{" (string-trim (substring lexeme 1 (sub1 (string-length lexeme)))))]
    [(:or "(" ")" "{" "}" "#") lexeme]
    ["." "dot"]
