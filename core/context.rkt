@@ -3,20 +3,33 @@
 (provide (all-defined-out))
 
 (struct ContextEntry (value))
+(struct GlobalContextEntry (value private?))
+(struct GlobalContextKey (name module-id) #:transparent)
 (struct TypeEntry (value))
 ;; what a lambda expr yields
 (struct Fun (var type context expr))
 
+(define current-module-id 0)
+(define (set-current-module-id! val) (set! current-module-id val))
+
+;;
+;; Global context
+;;
+
 (define global-context (make-hash))
 (define global-types (make-hash))
 
-(define (set-global-var! var value) 
-  (hash-set! global-context var (ContextEntry value)))
+(define (set-global-var! var value private?) 
+  (hash-set! global-context (GlobalContextKey var current-module-id) (GlobalContextEntry value private?)))
 
-(define (get-global-var-data var)
-        (match (hash-ref global-context var (lambda () #f))
+(define (get-global-var-data var module-id)
+        (match (hash-ref global-context (GlobalContextKey var module-id) (lambda () #f))
                [#f #f]
-               [res (match res [(ContextEntry data) data])]))
+               [res (match res [(GlobalContextEntry data _) data])]))
+
+;; checks if the naming style of the variable indicates a private var
+;; ie. _var
+(define (var-name-private? name) (string=? "_" (substring name 0 1)))
 
 (define (set-type! type schema)
   (hash-set! global-types type (TypeEntry schema)))

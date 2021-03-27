@@ -1,7 +1,7 @@
 #lang racket
 (require cm/core/error cm/core/types cm/core/ast
          cm/core/operators cm/core/parse-utils
-         cm/core/pre-parse)
+         cm/core/pre-parse cm/core/context)
 (provide parse-expr half-parse-expr)
 (define error-id "PARSE")
 
@@ -144,6 +144,6 @@
         [(string=? token "eof") (Prim0 'eof)]
         [(string=? token "system_type") (String (symbol->string (system-type)))]
         [(string=? token "read_line") (Prim0 'read_line)]
-        [(is-var-token? token) (Var token)]
+        [(is-var-token? token) (Var token current-module-id)]
         [(is-operator? token)  (cm-error error-id (format "Operand(s) missing for ~a." token))]
         [else (cm-error error-id (format "Invalid variable name: ~a." token))]))

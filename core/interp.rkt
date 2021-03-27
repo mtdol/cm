@@ -117,9 +117,9 @@
           (match (interp-def-list e1 e2)
                  [(Def e1-2 e2-2) (interp-def e1-2 e2-2 context)])]
         [(Def _ _) (cm-error "SYNTAX" "Def is missing an assignment.")]
-        [(Defun (Var id) e1 (Assign e2))
+        [(Defun (Var id id2) e1 (Assign e2))
           (interp-expr 
-            (Def (Var id) (Assign (Lambda e1 (Assign e2))))
+            (Def (Var id id2) (Assign (Lambda e1 (Assign e2))))
             context)]
         [(Defun _ _ _) (cm-error "SYNTAX" "Improperly formed defun.")]
         [(Let e1 e2 e3) (interp-let e1 e2 e3 context)]
@@ -128,7 +128,7 @@
                  [(Lambda e1-2 e2-2) (interp-lambda e1-2 e2-2 context)])]
         [(Lambda _ _) (cm-error "SYNTAX" "Lambda is missing an assignment.")]
         [(Typedef e1 e2) (interp-typedef e1 e2 context)]
-        [(Var v) (interp-var v context)]
+        [(Var v module-id) (interp-var v module-id context)]
         [(Int i) i]
         [(Float f) f]
         [(Bool i) (Bool i)]
@@ -358,7 +358,7 @@
 
 (define (interp-try-catch e1 e2 context)
   (match e2
-         [(Catch (Var id) (With e3)) 
+         [(Catch (Var id _) (With e3)) 
             (with-handlers* ([exn:fail? (lambda err 
                 (match err [(list (exn:fail err-msg _))
                     (let ([err-struct 
@@ -424,16 +424,16 @@
          [(Prim0 'void) (match v [(Prim0 'void) match-context] [_ #f])]
          [(String s) (if (string=? s v) match-context #f)]
          ;; wildcard, always match
-         [(Var "_") match-context]
-         [(Prim1 op (Var "_")) (cm-error "SYNTAX" "Cannot type-guard wildcard.")]
+         [(Var "_" _) match-context]
+         [(Prim1 op (Var "_" _)) (cm-error "SYNTAX" "Cannot type-guard wildcard.")]
          ;; implied dynamic var
-         [(Var id) (match-var id (list "dynamic") v match-context)]
-         [(Prim1 op (Var id)) #:when (member op guard-types)
+         [(Var id _) (match-var id (list "dynamic") v match-context)]
+         [(Prim1 op (Var id _)) #:when (member op guard-types)
                         (match-var id (list (symbol->string op)) v match-context)]
-         [(Prefix2 'types types-expr (Var id)) 
+         [(Prefix2 'types types-expr (Var id _)) 
           (match-var id (check-types-list (interp-expr types-expr context))
                      v match-context)]
-         [(Prefix2 'struct (Var label) lst) #:when (expr-is-list? lst)
+         [(Prefix2 'struct (Var label _) lst) #:when (expr-is-list? lst)
           (match v
             [(CmStruct label2 lst2) #:when (equal? label label2)
                     (match-expr lst lst2 match-context context)]
@@ -482,12 +482,12 @@
                  )]
          [_ (cm-error "SYNTAX" "Case is missing yields.")]))
 
-(define (interp-var var context)
+(define (interp-var var module-id context)
   ;; check local context first
   (let ([res (get-local-var-data var context)])
   (if (not (false? res)) res 
   ;; then check global
-  (match (get-global-var-data var)
+  (match (get-global-var-data var module-id)
          [#f (cm-error "UNDEFINED" (format "Var ~a has not yet been defined." var))]
          [res res]))))
 
@@ -498,20 +498,26 @@
           (let ([v3 (interp-expr e3 context)])
             (match e1
                    ;; sets var in global context hash and returns value to caller
-                   [(Prim1 op (Var v)) #:when (member op guard-types)
-                    (assign-type-check (list (symbol->string op)) v3 v) (set-global-var! v v3) v3]
-                   [(Prefix2 'types types-expr (Var v))
+                  [(Prim1 op (Var v _)) #:when (member op guard-types)
+                    (assign-type-check (list (symbol->string op)) v3 v) 
+                    (set-global-var! v v3 (var-name-private? v))
+                    v3]
+                   [(Prefix2 'types types-expr (Var v _))
                     (assign-type-check 
                       (check-types-list (interp-expr types-expr context)) v3 v)
-                    (set-global-var! v v3) v3]
-                   [(Prim1 'dynamic (Var v))
-                    (set-global-var! v v3) v3]
-                   [(Prefix2 'struct (Var label) (Var v))
+                    (set-global-var! v v3 (var-name-private? v))
+                    v3]
+                   [(Prim1 'dynamic (Var v _))
+                    (set-global-var! v v3 (var-name-private? v))
+                    v3]
+                   [(Prefix2 'struct (Var label _) (Var v _))
                     (assign-type-check (list (get-struct-type-string label)) v3 v)
-                    (set-global-var! v v3) v3]
+                    (set-global-var! v v3 (var-name-private? v)) 
+                    v3]
                    ;; implied dynamic case
-                   [(Var v)
-                    (set-global-var! v v3) v3]
+                   [(Var v _)
+                    (set-global-var! v v3 (var-name-private? v)) 
+                    v3]
                    [_ (cm-error "SYNTAX" "Unknown Item on left hand of def.")]
 
 
@@ -524,20 +530,20 @@
           (let ([v2 (interp-expr e2-2 context)])
             (match e1
                    ;; sets var in global context hash and returns value to caller
-                   [(Prim1 op (Var v)) #:when (member op guard-types)
+                   [(Prim1 op (Var v _)) #:when (member op guard-types)
                     (assign-type-check (list (symbol->string op)) v2 v)
                     (interp-expr e3-2 (set-local-var v v2 context))]
-                   [(Prefix2 'types types-expr (Var v))
+                   [(Prefix2 'types types-expr (Var v _))
                     (assign-type-check 
                       (check-types-list (interp-expr types-expr context)) v2 v)
                                 (interp-expr e3-2 (set-local-var v v2 context))]
-                   [(Prefix2 'struct (Var label) (Var v))
+                   [(Prefix2 'struct (Var label _) (Var v _))
                     (assign-type-check (list (get-struct-type-string label)) v2 v)
                     (interp-expr e3-2 (set-local-var v v2 context))]
-                   [(Prim1 'dynamic (Var v))
+                   [(Prim1 'dynamic (Var v _))
                     (interp-expr e3-2 (set-local-var v v2 context))]
                    ;; implied dynamic case
-                   [(Var v)
+                   [(Var v _)
                     (interp-expr e3-2 (set-local-var v v2 context))]
                    [_ (cm-error "SYNTAX" "Unknown Item on left hand of let.")]
 
@@ -550,16 +556,16 @@
          [(Assign e3) 
             (match e1
                    ;; sets var in global context hash and returns value to caller
-                   [(Prim1 op (Var v)) #:when (member op guard-types)
+                   [(Prim1 op (Var v _)) #:when (member op guard-types)
                      (Fun v (list (symbol->string op)) context e3)]
-                   [(Prefix2 'types types-expr (Var v))
+                   [(Prefix2 'types types-expr (Var v _))
                     (Fun v (check-types-list (interp-expr types-expr context))
                          context e3)]
                    ;; struct guard
-                   [(Prefix2 'struct (Var label) (Var v)) 
+                   [(Prefix2 'struct (Var label _) (Var v _)) 
                      (Fun v (list (get-struct-type-string label)) context e3)]
                    ;; implied dynamic case
-                   [(Var v)
+                   [(Var v _)
                      (Fun v (list "dynamic") context e3)]
                    ;; no arg lambda
                    [null
@@ -598,16 +604,16 @@
   (match e2 [(Assign e2-2)
   (let ([lst2 (ast-cons-to-racket e2-2)])
   (match e1
-         [(Var v) #:when (list? lst2)
+         [(Var v _) #:when (list? lst2)
           (let verify-schema ([lst lst2] [acc '()])
             (match lst
                    ;; set schema if no errors were found
                    ['() (set-type! v (reverse acc)) (Prim0 'void)]
-                   [(cons (Var _) t) (verify-schema t (cons (car lst) acc))]
-                   [(cons (Prim1 grd (Var _)) t) #:when 
+                   [(cons (Var _ _) t) (verify-schema t (cons (car lst) acc))]
+                   [(cons (Prim1 grd (Var _ _)) t) #:when 
                                 (member grd guard-types) 
                         (verify-schema t (cons (car lst) acc))]
-                   [(cons (Prefix2 'types types-expr (Var id)) t)
+                   [(cons (Prefix2 'types types-expr (Var id _)) t)
                     (check-types-list (interp-expr types-expr context))
                     ;; we place a modified types node in the resulting schema
                     ;; (the types list is aleady interp'd and checked)
@@ -615,21 +621,21 @@
                         (cons 
                           (Prefix2 'types 
                                    (check-types-list (interp-expr types-expr context))
-                                   (Var id))
+                                   (Var id '()))
                           acc))]
                    ;; struct inside a struct
-                   [(cons (Prefix2 'struct label (Var _)) t) 
+                   [(cons (Prefix2 'struct label (Var _ _)) t) 
                         (verify-schema t (cons (car lst) acc))]
                    [(cons h t) (cm-error "SYNTAX" 
                         (format "Unknown element ~a inside typedef schema." h))]))]
-         [(Var v) (cm-error "SYNTAX" "Invalid schema for typedef. Schema must be a list.")]
+         [(Var v _) (cm-error "SYNTAX" "Invalid schema for typedef. Schema must be a list.")]
          [_ (cm-error "SYNTAX" "Missing Label for typedef.")]))
     ]
     [_ (cm-error "SYNTAX" "Improperly formed typedef.")]))
 
 (define (interp-struct e1 e2 context)
   (match e1
-         [(Var v)
+         [(Var v _)
           (match (interp-expr e2 context)
                  ;; struct args must be a list (null for no args, still technically a list)
                  [res #:when (list? res) 
@@ -647,7 +653,7 @@
 
 (define (interp-struct? e1 e2 context)
   (match e1
-         [(Var label1) (racket-to-bool (is-struct-type? label1 (interp-expr e2 context)))]
+         [(Var label1 _) (racket-to-bool (is-struct-type? label1 (interp-expr e2 context)))]
          [_ (cm-error "SYNTAX" "Missing label for struct question.")]))
 
 (define (interp-index e1 e2 context)
