@@ -78,12 +78,13 @@ The -f switch is normally implied and indicates a file arg.
 # -f is not really necessary
 ./cm.exe -f "path to file"
 ```
-The -F switch is used mark an absolute path.
+
+To learn further about how to use cm.exe, use the `--help` or `-h` switch to display help text.
 ```
-./cm.exe -F "absolute path to file"
+./cm.exe --help
 ```
 
-There are example files in the `examples` directory, although some may not work at the moment.
+There are example files in the `examples` directory, although some may not always work as the language changes.
 
 ## Modules
 There is a file under config/ called `modules.txt`.
@@ -102,20 +103,40 @@ As of right now there is no package manager, so modules must be added manually t
 The module installation during setup replaces or adds the `modules.txt` file and fills it
 with the `std_lib` module (required for the repl.)
 
-To import files in the language use one of the three forms:
+To import files for use in your program use the `import` macro with this form:
 ```
-load "module::path_to_file_in_module".
-load "f:absolute_path_to_file".
-load "relative_path_to_file".
+# with no prefix
+#:import "file1", "file2", "file3"
+
+# with a prefix of "f_"
+#:import:f_ "file1", "file2", "file3"
+```
+
+The strings used on the right side of the `import` macro take one of these three forms:
+```
+"module::path_to_file_in_module".
+
+"path_to_file".
+
+# same as without the `m:`, but explicit
+"m:module::path_to_file_in_module".
+
+# same as without `f:`, but explicit
+"f:path_to_file".
 ```
 For example, `std_lib/std.cm` can be loaded with:
 ```
 # as a module
-load "std_lib::std.cm".
+#:import "std_lib::std.cm"
+
 # as an absolute path
-load "f:~/code/cm/std_lib/std.cm".
+#:import "~/code/cm/std_lib/std.cm"
+
 # relative to working directory
-load "cm/std_lib/std.cm".
+#:import "cm/std_lib/std.cm"
+
+# with an "std_" prefix
+#:import:std_ "std_lib::std"
 ```
 
 ### #:lang cm
@@ -126,10 +147,9 @@ to load all of the standard modules that are recommended for the language.
 #:lang cm
 
 # a function included in std.cm
-@ 4:add1.
+@ add1:4.
 ```
-
-The macro is replaced by the lexer with a series of `load` statements referencing the `std_lib` folder.
+The macro imports various files from the `std_lib` folder.
 
 ## Testing
 ```
@@ -144,72 +164,12 @@ All statements must end in the "dot" operator:
 Additionally `//` can be used as a more visible version of dot.
 ```
 # Invalid
-let x := lam n := n + 1 in 1 : x
+let x := lam n := n + 1 in x:1
 # Valid
-let x := lam n := n + 1 in 1 : x.
+let x := lam n := n + 1 in x:1.
 # Valid
-let x := lam n := n + 1 in 1 : x//
+let x := lam n := n + 1 in x:1//
 ```
-
-Construct | Effect | Example | Yields | Explanation
------------- | -----|--------|--------| -----------
-if expr then expr else expr | if expression | `if 1+2 = 4 then -7 else "wrong"` | "wrong"
-expr + expr \| plus | addition | `1 + 3` | 4 | Operands must be of same type
-expr * expr \| star | multiplication | `2 * 3` | 6 | Operands must be of same type
-expr - expr \| minus| subtraction | `4 - 6` | -2 | Operands must be of same type
-expr / expr \| slash | division | `4 / 2` | 2 | Operands must be floats
-expr ^ expr \| caret | exponentiation | `2 ^ 3` | 8 | Operands must be of same type
-expr % expr \| mod | modulus | `4 % 3` | 1 | Operands must be of same type
-= < <= > >= !=  \| (eq\|equal\|equals), lt, le, gt, ge, ne | equality operators | `1 = 2` | false | Operands must be of same type
-& \|\| xor \| and or xor | logical binary operators | `true and false` | false | Operands must be bools
-! expr \| not | not | `! true` | false | Operands must be of bools
-expr $ expr \| cat | string concatenation | "abc" cat 3 | abc3 | auto coerces operands to strings
-expr, expr \| cons | cons | `1,4,(5,6)` | (1, 4, (5, 6))
-\` expr \| head | head | `head (1, 2, 3)` | 1 
-~ expr \| tail | tail | `~(1, 2, 3)` | 2,3
-null \| () | empty list () | `1,2,3,null` | (1, 2, 3, ())
-; | cons null | `1,2,3;` | (1, 2, 3, ())
-\[Expr\] | square parens | `[1 + 2]` | 3 | same as (Expr)
-{Expr} | curly parens | `{1 + 2}` | 3 | same as (Expr)
-index string int | string index | `index "ab" 1` | "b" 
-index string (int1,int2;) | substring | `index "abc" (0,2;)` | "ab"
-index list int | list index | `index (1,2,3;) 1` | 2
-index list (int1,int2;) | list slice | `index (1,2,3;) (1,3;)` | (2, 3;) | an index from i1 to i2 where i1 = i2 will result in null
-index hash value | hash ref | `index (hash_set (make_hash ()) 3 5) 3` | 5 | shorthand for `hash_ref`
-Expr1 :: Expr2 | index shorthand | 1::"abcd" | b | the same as `index Expr2 Expr1`
-print expr | print | `print 1 + 2` | 3 
-@ expr | print | `@ 1 + 2` | 3 | alias of print
-\# | comment | `4 + 1 + 2 # 5 + 6` | 7
-int expr | int coercion | `int 7.9` | 7
-int? expr | is int? | `int? 6` | 1
-```cond case, case = "\|" Expr1 "->" Expr2 case \| "\|" Expr1 "->" Expr2 Else Expr3``` | cond expression | `cond \| false -> 3 \| 3 -> 5 else 7` | 5 | the "cond" marker is actually optional.
-```match Expr Case, Case -> Expr1 Yields Expr2 Case \| Expr1 Yields Expr2 end``` | match expression | `match 3,5.1 \| int a, int b -> a - b \| int a, float b -> a + int b end` | 8 | variables and guards can be used in a match expr
-```match expr1 when expr2 -> expr3 ``` | match conditional | `match 3,5.1 \| a, b when int? b -> a - b \| a, b -> a + int b end` | 8 | `when` adds an extra condition to the match
-_ | wildcard in match | `match 5 \| float a -> "is float" \| _ -> "not a float" end` | "not a float"
-:= \| assign | assign operator used in certain contexts 
-def var := Expr | global binding of var | `def x := 1 + 3` | 4 | def will return the value of var, in addition to binding it
-def guard var := Expr | guarded binding of var | `def int x := 3.5` | contract exception | var is only guarded once and can be rewritten as float later
-def dynamic var := Expr | dynamic binding of var | `def dynamic x := 3.5` | binds x to 3.5 | dynamic accepts all bindings and is implied when not present
-let var := Expr in Expr | local binding of var | `let x := 3 in x + 1` | 4 
-let guard var := Expr in Expr | guarded local binding of var | `let int x := not true in x + 1` | contract exception
-lambda var := Expr | lambda expression | `lam x := x + 1` | function | `lambda` can  be shortened to `lam`
-lambda var1, var2,... = Expr | multiple lambda expression | `lam x, y := x + y` | function | equivalent to lam x = lam y = ...
-Expr1 : Expr2, where Expr2 -> Function | function application | `3 : lam x := x + 1` | 4 | also written as `apply`
-:> Expr1, where Expr1 -> Function | null arg function application | `:> lam () := 5` | 5 | also written as `appnull`
-lambda guard var := Expr | guarded lambda expression | `3 : lam float x := x + 1.0` | contract exception
-def var1 := lambda var2 = ... | global mapping to function | `def add1 := lam n := n + 1` | Function | add1 can be applied at any time
-defun var vars := ... | shorthand global mapping to function | `defun add2 (x,y) := x + y` | Function | the vars operand must be wrapped if more than one var
-types string_list var | multiple types guard | `def types ("int", "float";) x := 5` | 5 | any value within the list is a valid type for var
-typedef label := list | struct definition | `typedef S := a,b;` | instantiates struct type schema | allows you to create structs of the given type
-struct label list | struct | `match struct S (3,5;) \| struct S (a,b;) -> a + b end` | 8 
-struct label | struct guard | `struct S2 4,5; : lam struct S x := print x` | contract exception | struct S and struct S2 have differing labels
-== \| eqq | strong equality | `struct S (struct S2 (3,4;);) == struct S (struct S2 (3,4;);)` | true | == works for all language objects and yields true if all their sub-components equal
-!== \| neqq | strong inequality | `struct S (struct S2 (5,4;);) !== struct S (struct S2 (3,4;);)` | true
-struct? label | struct type question | `struct? S2 (struct S2 4,5;)` | true
-while Expr do Expr | while loop | `(def x := 3) comma (while x < 10 do @ def x := x + 1)` | prints 3 to 10 | the while loop returns void after the final run of the body
-appl func list | list to function applier | `appl (lam x, y := x + y) (4,5;)` | 9 | applies each element to the result of the previous function application. Equivalent to `5:4:(lam x,y := x + y)`
-Expr comma Expr | execute first expr and ignore result, then run second and yield its value | `(def x := 4) comma 7` | 7 | x is still bound to 4 in the global scope (a side effect)
-eval string | runs the code within the string | `eval "2 + 3."` | 5 | yields a list if there is more than one statement
 
 ## Value Types
 The fundamental values are ints, floats, bools, strings, pair (cons), list, null, fun (lambda), struct, void, and eof.
@@ -306,10 +266,10 @@ def _id_ := lambda args := ...
 For example:
 ```
 let get_last :=
-    defun _get_last_ n := match n | () -> () | h, () -> h | h,t -> t:_get_last_ end  
+    defun _get_last_ n := match n | () -> () | h, () -> h | h,t -> _get_last_:t end  
 in 
     # prints 3
-    @ (1,2,3;):get_last.
+    @ get_last:(1,2,3;).
 ```
 
 Variables of this form can be thought of as "local private" and should only be used in this manner.
@@ -332,7 +292,7 @@ def odd? := lam int n :=
 else true.
 
 # prints "true"
-@ 3:odd?.
+@ odd?:3.
 ```
 ## match
 
@@ -357,9 +317,9 @@ Variables can also be used with or without guards:
 
 Finally the `when` keyword can be used to add extra conditions to a match case
 ```
-> match 5 | int a when a:pos? -> -a | int a when not (a:pos?) -> 2*a end.
+> match 5 | int a when pos?:a -> -a | int a when not (pos?:a) -> 2*a end.
 -5
-> match -5 | int a when a:pos? -> -a | int a when not (a:pos?) -> 2*a end.
+> match -5 | int a when pos?:a -> -a | int a when not (pos?:a) -> 2*a end.
 -10
 ```
 
@@ -415,14 +375,14 @@ lam x := x + 1.
 
 Functions are applied to using the `apply` keyword, often shortened to `:`
 ```
-> 2 apply lam x := x + 1.
+> (lam x := x + 1) apply 2.
 3
 ```
 
 Lambdas can be assigned to variables to be used throughout a program:
 ```
 > def add2 := lam x := x + 2.
-> 5:add2.
+> add2:5.
 7
 ```
 
@@ -430,9 +390,9 @@ Lambdas can be constructed without any arguments and then called with any value.
 ```
 def print5 := lam () := (@ 5) comma void.
 # prints 5
-():print5.
+print5:().
 # same
-2:print5.
+print5:2.
 ```
 
 The keyword `:>` can be used to call a lambda with `()`
@@ -447,7 +407,7 @@ Lambdas can be guarded with type notations:
 ```
 def add2 := lam int x := x + 2.
 # contract exception
-5.0:add2.
+add2:5.0.
 ```
 
 Lambdas remember the local context of when they were created:
@@ -456,7 +416,7 @@ def add_to_3 :=
     let v := 3 in lam x := x + v.
     
 # yields 8
-5:add_to_3.
+add_to_3:5.
 ```
 
 Lambdas can be chained together:
@@ -464,9 +424,9 @@ Lambdas can be chained together:
 def add_both := lam x := lam y := x + y.
 
 # yields a function
-4:add_both.
+add_both:4.
 # yields 6
-2:4:add_both.
+add_both:4:2.
 ```
 
 This chaining of lambdas can be simplified with `,`
@@ -497,14 +457,14 @@ You can check whether something is a function using the `fun?` question and `fun
 ```
 > fun? lam x := x.
 true
-> def fun_app := lam fun f, v := v:f.
-> 3 : fun_app.
+> def fun_app := lam fun f, v := f:v.
+> fun_app : 3.
 1:CONTRACT: Recieved type int for var f but expected fun.
-> 3 : (lam x := x - 1) : fun_app.
+> fun_app : (lam x := x - 1) : 3.
 2
 ```
 
-The `appl` (apply list) keyword can be used to make function applications with multiple items more natural.
+The `appl` (apply list) keyword can be used to use each element of a list as an argument to a function.
 ```
 appl func list
 ```
@@ -680,11 +640,11 @@ Mappings are formed with the `hash_set` operator.
 For immutable hashes `hash_set` yields another hash with the new mapping added or updated.
 For mutable hashes `void` is returned and the mapping is made in the original hash:
 ```
-> (hash_set (make_hash "immutable") 3 4) : hash_to_list.
+> hash_to_list : (hash_set (make_hash "immutable") 3 4).
 (3, 4;)
 > def x := make_hash "mutable".
 > (hash_set x 3 4).
-> x:hash_to_list.
+> hash_to_list : x.
 (3, 4;)
 ```
 
@@ -746,11 +706,11 @@ To get the entire hashmap in list format where the list is of form ((key1, value
 
 To make hash construction easier there are two utility functions in `std.cm` called `list_to_hash` and `list_to_mutable_hash`
 ```
-> ((3,5), (true, false);):list_to_hash.
+> list_to_hash : ((3,5), (true, false);).
 immutable hash
-> ((3,5), (true, false);):list_to_mutable_hash.
+> list_to_mutable_hash : ((3,5), (true, false);).
 mutable hash
-> let h := ((3,5), (true, false);):list_to_hash in hash_to_list h.
+> let h := list_to_hash : ((3,5), (true, false);) in hash_to_list h.
 ((3, 5), (true, false);)
 ```
 
@@ -778,11 +738,11 @@ bc
 
 Index can also be called using the `::` infix keyword:
 ```
-> 1::"abcd".
+> "abcd"::1.
 b
-> 1::(1,2,3,4;).
+> (1,2,3,4;)::1.
 2
-> 1::(hash_set (make_hash ()) 1 3).
+> (hash_set (make_hash ()) 1 3)::1.
 3
 ```
 
@@ -950,7 +910,7 @@ true
 > getlinesf "f.txt".
 ("line 1", "this is line 2", "final line";)
 > # the utility func "catf" will pretty print the file for us
-> "f.txt":catf.
+> catf:"f.txt".
 line1
 this is line 2
 final line
@@ -1021,7 +981,7 @@ while cont do
             (@ evalxp resp)
         catch e with
             match e | struct Error (_,msg;) -> @ msg end
-.
+//
 
 @ "Good Bye!".
 ```
@@ -1031,10 +991,10 @@ while cont do
 # Find Factorial n
 def fact := lam int n :=
     | n < 2 -> 1
-    else n * ((n - 1) : fact).
+    else n * (fact:(n - 1)).
     
 # prints 24
-@ 4 : fact.
+@ fact:4.
 
 
 ######################################
@@ -1056,17 +1016,17 @@ def get_last := lam list lst :=
     match lst 
     | () -> error "List was empty." 
     | h; -> h 
-    | h, t -> t : get_last
+    | h, t -> get_last:t
     end.
    
 # prints 7
-@ (3,5,7;) : get_last.
+@ get_last:(3,5,7;).
 
 # prints 3
-@ (3;) : get_last.
+@ get_last:(3;).
 
 # throws error
-@ null : get_last.
+@ get_last:null.
 
 
 ######################################
@@ -1114,13 +1074,13 @@ defun bn_height (types b_types n) :=
     match n
     | struct Leaf () -> 1 
     | struct Bn (_, left, right;) ->
-        1 + appl max ((left : bn_height), (right : bn_height);)
+        1 + appl max ((bn_height:left), (bn_height:right);)
     end.
 
 # prints 2
-@ b1 : bn_height.
+@ bn_height:b1.
 # prints 3
-@ b2 : bn_height.
+@ bn_height:b2.
 # prints 1
-@ struct Leaf () : bn_height.
+@ bn_height:(struct Leaf ()).
 ```
