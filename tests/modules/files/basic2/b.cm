@@ -1,0 +1,4 @@
+#:import "files/basic2/c.cm"
+
+defun b_c () :=
+    (:>dec) comma c.

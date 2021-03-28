@@ -1,0 +1,8 @@
+# guarded definition, to avoid redefining c when the file is reloaded
+if not defined? "c" then def c := 3 else void.
+
+defun inc () :=
+    def c := c + 1.
+
+defun dec () :=
+    def c := c - 1.

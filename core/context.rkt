@@ -3,47 +3,70 @@
 (provide (all-defined-out))
 
 (struct ContextEntry (value))
-(struct GlobalContextEntry (value private?))
-(struct GlobalContextKey (name module-id) #:transparent)
+(struct VarEntry (value private?))
+(struct VarKey (name module-id) #:transparent)
 (struct TypeEntry (value private?))
 (struct TypeKey (name module-id) #:transparent)
+(struct MacroRule (vars body))
+(struct MacroEntry (defs private?))
+(struct MacroKey (name module-id) #:transparent)
+(struct Reference (target))
 ;; what a lambda expr yields
 (struct Fun (var type context expr))
 
 (define current-module-id 0)
 (define (set-current-module-id! val) (set! current-module-id val))
 
+
 ;;
 ;; Global context
 ;;
 
 (define global-context (make-hash))
-(define global-types (make-hash))
 
 (define (set-global-var! var value private?) 
-  (hash-set! global-context (GlobalContextKey var current-module-id) (GlobalContextEntry value private?)))
+  (hash-set! global-context (VarKey var current-module-id) (VarEntry value private?)))
+
+;; context members can reference other context members, so we will follow
+;; down the references
+(define (follow-var-data-references ref)
+  (match ref
+         [(VarKey _ _) 
+          (follow-var-data-references (hash-ref global-context ref))]
+         [(VarEntry data _) data]
+         [(Reference ref) (follow-var-data-references ref)]
+         [_ #f]
+         ))
 
 (define (get-global-var-data var)
-        (match (hash-ref global-context (GlobalContextKey var current-module-id) (lambda () #f))
+        (match (hash-ref global-context (VarKey var current-module-id) (lambda () #f))
                [#f #f]
-               [res (match res [(GlobalContextEntry data _) data])]))
+               [(VarEntry data _) data]
+               [(Reference ref) (follow-var-data-references ref)]))
 
-;; checks if the naming style of the variable indicates a private var
-;; ie. _var
-(define (var-name-private? name) (string=? "_" (substring name 0 1)))
 
 (define (set-type! type schema private?)
-  (hash-set! global-types
+  (hash-set! global-context
              (TypeKey type current-module-id)
              (TypeEntry schema private?)))
 
+(define (follow-type-data-references ref)
+  (match ref
+         [(TypeKey _ _) 
+          (follow-type-data-references (hash-ref global-context ref))]
+         [(TypeEntry data _) data]
+         [(Reference ref) (follow-type-data-references ref)]
+         [_ #f]
+         ))
+
 (define (get-type-data type)
-        (match (hash-ref global-types (TypeKey type current-module-id) (lambda () #f))
+        (match (hash-ref global-context (TypeKey type current-module-id) (lambda () #f))
                [#f #f]
-               [res (match res [(TypeEntry data _) data])]))
+               [(TypeEntry data _) data]
+               [(Reference ref) (follow-type-data-references ref)]))
 
 (define (type-exists? type)
-  (hash-has-key? global-types (TypeKey type current-module-id)))
+  (hash-has-key? global-context (TypeKey type current-module-id)))
 
 
 ;; local getters, setters
@@ -62,50 +85,36 @@
 ;; Macro context
 ;;
 
-;; print the macro-context (for debugging)
-(define (print-macro-context)
-  (let aux ([ms (hash->list macro-context)])
-    (match ms
-        ['() (void)]
-        [(cons (cons label (MacroEntry defs _)) t) 
-         (display (format "label: ~a\n" label))
-         (print-macro-entries defs)
-         (displayln "")
-         (aux t)]
-    )))
-
-(define (print-macro-entries es)
-  (match es
-         ['() (void)]
-         [(cons (MacroRule vars body) t)
-          (display (format "vars:\n~a\nbody:\n~a\n" vars body))
-          (print-macro-entries t)]))
-
-(struct MacroRule (vars body))
-(struct MacroEntry (defs private?))
-(struct MacroKey (name module-id) #:transparent)
-(define macro-context (make-hash))
-
 ;; clean redefine the macro
 (define (set-macro! label vars value private?) 
-  (hash-set! macro-context (MacroKey label current-module-id) 
+  (hash-set! global-context (MacroKey label current-module-id) 
              (MacroEntry (list (MacroRule (check-macro-vars vars) value)) private?)))
 
 ;; append onto the macros definitions
 (define (append-to-macro! label vars value)
-  (if (hash-has-key? macro-context (MacroKey label current-module-id))
-    (match (hash-ref macro-context (MacroKey label current-module-id))
+  (if (hash-has-key? global-context (MacroKey label current-module-id))
+    (match (hash-ref global-context (MacroKey label current-module-id))
      [(MacroEntry defs private?)
-      (hash-set! macro-context (MacroKey label current-module-id) 
+      (hash-set! global-context (MacroKey label current-module-id) 
                  (MacroEntry (append defs
                          (list (MacroRule (check-macro-vars vars) value))) private?))])
       (set-macro! label vars value (var-name-private? label))
                  ))
 
+(define (follow-macro-data-references ref)
+  (match ref
+         [(MacroKey _ _) 
+          (follow-macro-data-references (hash-ref global-context ref))]
+         [(MacroEntry data _) data]
+         [(Reference ref) (follow-macro-data-references ref)]
+         [_ #f]
+         ))
+
 (define (get-macro-defs label)
-        (match (hash-ref macro-context (MacroKey label current-module-id) (lambda () #f))
+        (match (hash-ref global-context (MacroKey label current-module-id) (lambda () #f))
                [#f #f]
-               [(MacroEntry defs _) defs]))
+               [(MacroEntry defs _) defs]
+               [(Reference ref) (follow-macro-data-references ref)]))
 
 ;; checks that macro vars are well formed
 ;;
@@ -174,3 +183,105 @@
          ['() '()]
          [(cons h '()) h]
          [(cons h t) (append h (list "case") (transform-rest t))]))
+
+;;
+;; Utils
+;;
+
+;; checks if the naming style of the variable indicates a private var
+;; ie. _var
+(define (var-name-private? name) (string=? "_" (substring name 0 1)))
+
+;; populates the current module space with references to every item
+;; included in the items list. If the items list is null, then
+;; returns references to everything in the module space.
+;; Every item is added with the given prefix
+;;
+;; string, list, string, bool -> void
+(define (set-refs-from-module-space! module-id items prefix public-only?)
+  (map 
+    (lambda (elem) 
+      (match elem
+        [(cons (VarKey id _) _) 
+         (hash-set! global-context 
+                    (VarKey (string-append prefix id) current-module-id)
+                    (Reference (car elem)))]
+        [(cons (TypeKey id _) _) 
+         (hash-set! global-context 
+                    (TypeKey (string-append prefix id) current-module-id)
+                    (Reference (car elem)))]
+        [(cons (MacroKey id _) _) 
+         (hash-set! global-context 
+                    (MacroKey (string-append prefix id) current-module-id)
+                    (Reference (car elem)))]
+        ))
+    (append
+      (get-var-context-pairs module-id items public-only?)
+      (get-type-context-pairs module-id items public-only?)
+      (get-macro-context-pairs module-id items public-only?)
+      )))
+
+;; gets all var-context mappings of the given module-id
+;; if module-id is #f then returns all var-context mappings.
+;; If public-only? is true then only public elems will be gathered.
+;; The items parameter is limits the returned items to only the names
+;; in the list. If items is null then all items will be returned.
+;;
+;; string | bool, list, bool -> (VarKey . VarEntry) list
+(define (get-var-context-pairs module-id items public-only?) 
+  (filter 
+    (lambda (elem) 
+      (match elem 
+        [(cons (VarKey name id) (VarEntry _ private?)) 
+         (and 
+           (if module-id (equal? id module-id) #t)
+           (if public-only? (not private?) #t)
+           (if (not (null? items)) (member name items) #t))] 
+        [_ #f]))
+    (hash->list global-context)))
+
+;; string | bool, list, bool -> (TypeKey . TypeEntry) list
+(define (get-type-context-pairs module-id items public-only?) 
+  (filter 
+    (lambda (elem) 
+      (match elem 
+        [(cons (TypeKey name id) (TypeEntry _ private?)) 
+         (and 
+           (if module-id (equal? id module-id) #t)
+           (if public-only? (not private?) #t)
+           (if (not (null? items)) (member name items) #t))] 
+        [_ #f]))
+    (hash->list global-context)))
+
+;; string | bool, list, bool -> (MacroKey . MacroEntry) list
+(define (get-macro-context-pairs module-id items public-only?) 
+  (filter 
+    (lambda (elem) 
+      (match elem 
+        [(cons (MacroKey name id) (MacroEntry _ private?)) 
+         (and 
+           (if module-id (equal? id module-id) #t)
+           (if public-only? (not private?) #t)
+           (if (not (null? items)) (member name items) #t))] 
+        [_ #f]))
+    (hash->list global-context)))
+
+
+;; print the macro-context (for debugging)
+(define (print-macro-context)
+  (let aux ([ms (get-macro-context-pairs #f #f)])
+    (match ms
+        ['() (void)]
+        [(cons (cons label (MacroEntry defs _)) t) 
+         (display (format "label: ~a\n" label))
+         (print-macro-entries defs)
+         (displayln "")
+         (aux t)]
+    )))
+
+(define (print-macro-entries es)
+  (match es
+         ['() (void)]
+         [(cons (MacroRule vars body) t)
+          (display (format "vars:\n~a\nbody:\n~a\n" vars body))
+          (print-macro-entries t)]))

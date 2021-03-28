@@ -202,11 +202,11 @@
         ['eval (cm-error "CONTRACT" "eval requires a string argument.")] 
         ['evalxp #:when (string? v) (run-expr v)] 
         ['evalxp (cm-error "CONTRACT" "evalxp requires a string argument.")] 
-        ['load 
-         (match v 
-                [s #:when (string? s) (process-import-string s) (Prim0 'void)]
-                [_ (cm-error "CONTRACT" "Argument to load must be a file.")])
-             ]
+        ;['load 
+         ;(match v 
+                ;[s #:when (string? s) (process-import-string s) (Prim0 'void)]
+                ;[_ (cm-error "CONTRACT" "Argument to load must be a file.")])
+             ;]
         ['ls 
          (match (string-coerce v)
                     ["" (map path->string 
@@ -260,6 +260,8 @@
            )]
         ['hash? (racket-to-bool (is-hash? v))]
         ['mutable_hash? (racket-to-bool (is-mutable-hash? v))]
+        ;; get-global-var-data will return false if v not yet defined
+        ['defined? (racket-to-bool (get-global-var-data v))]
         ['hash_keys (interp-hash-keys v)]
         ['hash_values (interp-hash-values v)]
         ['hash_to_list (interp-hash-to-list v)]

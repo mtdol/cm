@@ -2,3 +2,26 @@
 . regex
 
 . module system
+    - check for cycles
+    - lazy_import
+        -- #:lazy_import:prefix "file.cm" -> "get_data", "set-data"
+        -- maps references to already imported files in the current module-space
+    - global variable, so info can be shared across files
+
+. Macro system additions
+    - {ifdef a|b|c}
+        -- if a is def then b else c
+    - {tok= a|b|c|d}
+        -- if tokens in a = tokens in b then c else d
+    - {reverse a|b|...}
+        -- turns a|b|c to c|b|a
+    - conditional pre-lex macros
+        -- #:ifdef a
+            code here
+           #:endif
+
+. enhance cm.exe
+    - allow --pkg to be used withou cd'ing to the cm directory
+    - -pkg
+        -- -add -remove -show
+        -- change install scripts into package managers

@@ -1,6 +1,6 @@
 #lang racket
 (require cm/core/pre-lex)
-(provide tokenize-file tokenize-file-abs tokenize-string)
+(provide tokenize-file tokenize-string tokenize-string-raw)
 (define error-id "LEX")
 
 (require cm/core/error cm/core/reserved-keywords
@@ -112,8 +112,7 @@
     (flatten (port->list cmlex ip)))
 
 
-;; path relative to current location
-(define (tokenize-file name) (tokenize-string (file->string name)))
-;; absolute file
-(define (tokenize-file-abs name) (tokenize-string (file->string (expand-user-path (build-path name)))))
+(define (tokenize-file name) (tokenize-string 
+                (file->string (path->string (path->complete-path name)))))
 (define (tokenize-string str) (tokenize-input (open-input-string (pre-lex str))))
+(define (tokenize-string-raw str) (tokenize-input (open-input-string str)))

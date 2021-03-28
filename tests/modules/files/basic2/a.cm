@@ -1,0 +1,9 @@
+#:import "files/basic2/c.cm"
+
+defun a_c () :=
+    (:>inc) comma c.
+
+# will cause a.cm to lose the reference to c in c.cm, but will
+# not actually change the value of c in c.cm
+defun destroy_ref () :=
+    (def c := 22) comma void.

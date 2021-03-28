@@ -1,6 +1,6 @@
 #lang racket
-(require racket/lazy-require cm/core/error cm/core/context)
-(lazy-require (cm/core/lex [tokenize-string]))
+(require racket/lazy-require cm/core/error cm/core/context cm/core/modules)
+(lazy-require (cm/core/lex [tokenize-string tokenize-string-raw]))
 (provide pre-lex)
 
 (define (pre-lex str) (parse-defs (map string-trim (string-split str #rx"\n")) 1))
@@ -40,12 +40,15 @@
                         (parse-multi-line-defs t (add1 linenum) name 
                                                (string-append body s "\n")))]))
 
-(define cm-lang-line "load \"std_lib::std.cm\" .")
+;; all the files to import for standard cm lang
+(define cm-lang-imports '("std_lib::std.cm"))
 (define (process-macro name body linenum)
   (match name
          ["lang" 
           (if (string=? body "cm")
-            cm-lang-line
+            (begin 
+              (map (lambda (elem) (process-import elem "")) cm-lang-imports)
+              "")
             (cm-error-linenum linenum "LEX" "Invalid lang name in macro."))]
          [name #:when (regexp-match? #rx"^def\\:.*" name)
                (match (regexp-match #rx"^def\\:([^{}]+){([a-zA-Z0-9_\\|]*)\\}$" name)
@@ -67,11 +70,37 @@
                       [_ (cm-error-linenum linenum "LEX" "Invalid macro def name.")]
 
                  )]
+         [name #:when (regexp-match? #rx"^import$" name)
+               (map 
+                 (lambda (elem) 
+                   (process-import elem "")) 
+                 (file-list-string->list body))
+               ""]
+         [name #:when (regexp-match? #rx"^import:.+" name)
+               (match (regexp-match #rx"^import:(.+)$" name)
+                  [(list _ r1)
+                   (map 
+                 (lambda (elem) 
+                   (process-import elem r1)) 
+                 (file-list-string->list body))]) 
+               ""]
+
          [_ (cm-error-linenum linenum "LEX" "Invalid macro name.")]))
 
 ;; removes "case" from a list, so it can be stored in the macro context
 (define (remove-bars ts)
   (filter (lambda (elem) (not (string=? elem "case"))) ts))
+
+;; takes in a string representing a list of filenames and returns them
+;;
+;; string -> string list
+(define (file-list-string->list str) 
+  (map (lambda (elem) 
+         (match (regexp-match #rx"^\\\"(.+)\\\"$" elem) 
+           [(list _ r1) r1] 
+           [_ (cm-error "LEX" "File list arguments must be strings wrapped in quotes.")]))
+       ;; remove the "," from the string
+    (filter (lambda (elem) (not (string=? elem "cons"))) (tokenize-string-raw str))))
 
 ;; macros have two forms:
 ;; #:name body
