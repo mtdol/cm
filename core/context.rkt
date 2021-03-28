@@ -5,7 +5,8 @@
 (struct ContextEntry (value))
 (struct GlobalContextEntry (value private?))
 (struct GlobalContextKey (name module-id) #:transparent)
-(struct TypeEntry (value))
+(struct TypeEntry (value private?))
+(struct TypeKey (name module-id) #:transparent)
 ;; what a lambda expr yields
 (struct Fun (var type context expr))
 
@@ -22,8 +23,8 @@
 (define (set-global-var! var value private?) 
   (hash-set! global-context (GlobalContextKey var current-module-id) (GlobalContextEntry value private?)))
 
-(define (get-global-var-data var module-id)
-        (match (hash-ref global-context (GlobalContextKey var module-id) (lambda () #f))
+(define (get-global-var-data var)
+        (match (hash-ref global-context (GlobalContextKey var current-module-id) (lambda () #f))
                [#f #f]
                [res (match res [(GlobalContextEntry data _) data])]))
 
@@ -31,17 +32,18 @@
 ;; ie. _var
 (define (var-name-private? name) (string=? "_" (substring name 0 1)))
 
-(define (set-type! type schema)
-  (hash-set! global-types type (TypeEntry schema)))
+(define (set-type! type schema private?)
+  (hash-set! global-types
+             (TypeKey type current-module-id)
+             (TypeEntry schema private?)))
 
 (define (get-type-data type)
-        (match (hash-ref global-types type (lambda () #f))
+        (match (hash-ref global-types (TypeKey type current-module-id) (lambda () #f))
                [#f #f]
-               [res (match res [(TypeEntry data) data])]))
+               [res (match res [(TypeEntry data _) data])]))
 
 (define (type-exists? type)
-  (hash-has-key? global-types type))
-
+  (hash-has-key? global-types (TypeKey type current-module-id)))
 
 
 ;; local getters, setters
@@ -65,9 +67,9 @@
   (let aux ([ms (hash->list macro-context)])
     (match ms
         ['() (void)]
-        [(cons (cons label entries) t) 
+        [(cons (cons label (MacroEntry defs _)) t) 
          (display (format "label: ~a\n" label))
-         (print-macro-entries entries)
+         (print-macro-entries defs)
          (displayln "")
          (aux t)]
     )))
@@ -75,30 +77,35 @@
 (define (print-macro-entries es)
   (match es
          ['() (void)]
-         [(cons (MacroEntry vars body) t)
+         [(cons (MacroRule vars body) t)
           (display (format "vars:\n~a\nbody:\n~a\n" vars body))
           (print-macro-entries t)]))
 
-(struct MacroEntry (vars body))
+(struct MacroRule (vars body))
+(struct MacroEntry (defs private?))
+(struct MacroKey (name module-id) #:transparent)
 (define macro-context (make-hash))
 
 ;; clean redefine the macro
-(define (set-macro! label vars value) 
-  (hash-set! macro-context label (list (MacroEntry (check-macro-vars vars) value))))
+(define (set-macro! label vars value private?) 
+  (hash-set! macro-context (MacroKey label current-module-id) 
+             (MacroEntry (list (MacroRule (check-macro-vars vars) value)) private?)))
 
 ;; append onto the macros definitions
 (define (append-to-macro! label vars value)
-  (if (hash-has-key? macro-context label)
-      (hash-set! macro-context label 
-                 (append (hash-ref macro-context label) 
-                         (list (MacroEntry (check-macro-vars vars) value))))
-      (set-macro! label vars value)
+  (if (hash-has-key? macro-context (MacroKey label current-module-id))
+    (match (hash-ref macro-context (MacroKey label current-module-id))
+     [(MacroEntry defs private?)
+      (hash-set! macro-context (MacroKey label current-module-id) 
+                 (MacroEntry (append defs
+                         (list (MacroRule (check-macro-vars vars) value))) private?))])
+      (set-macro! label vars value (var-name-private? label))
                  ))
 
 (define (get-macro-defs label)
-        (match (hash-ref macro-context label (lambda () #f))
+        (match (hash-ref macro-context (MacroKey label current-module-id) (lambda () #f))
                [#f #f]
-               [res res]))
+               [(MacroEntry defs _) defs]))
 
 ;; checks that macro vars are well formed
 ;;
@@ -117,7 +124,7 @@
     (match entry
            [#f (cm-error "MACRO" (format "Macro not defined: ~a" label))]
            ['() (cm-error "MACRO" (format "No matching rule for macro with label: ~a" label))]
-           [(cons (MacroEntry vars body) t) 
+           [(cons (MacroRule vars body) t) 
             #:when (args-match-macro-entry? args vars)
                 (apply-macro-args vars args body)]
            [(cons _ t) (aux t)]
@@ -167,14 +174,3 @@
          ['() '()]
          [(cons h '()) h]
          [(cons h t) (append h (list "case") (transform-rest t))]))
-
-;; turns "\\|" to "case"
-;;
-;; string list -> string list
-;(define (unescape-bars ts)
-  ;(match ts
-         ;['() '()]
-         ;[(cons "\\|" t) (cons "case" (unescape-bars t))]
-         ;[(cons h t) (cons h (unescape-bars t))]))
-
-

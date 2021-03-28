@@ -10,7 +10,7 @@
            [(Bool i) (list (if (equal? i 1) "true" "false"))]
            [(Float f) (list (number->string f))]
            [(String s) (list "\"" s "\"")]
-           [(Var v _) (list v)]
+           [(Var v) (list v)]
            [(Null) "null"]
            [(Prim2 op e1 e2) #:when (symbol=? op 'cons)
                               (flatten (list "(" (ast-to-string-aux e1)

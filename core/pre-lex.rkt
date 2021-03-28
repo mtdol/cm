@@ -52,7 +52,10 @@
                       [(list _ r2 r3)
                        ;; for error linenums
                        (set-current-linenum! linenum)
-                       (set-macro! r2 (remove-bars (tokenize-string r3)) (tokenize-string body)) ""]
+                       (set-macro! r2 
+                                   (remove-bars (tokenize-string r3))
+                                   (tokenize-string body)
+                                   (var-name-private? r2)) ""]
                       [_ (cm-error-linenum linenum "LEX" "Invalid macro def name.")]
 
                  )]

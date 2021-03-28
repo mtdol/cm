@@ -77,27 +77,27 @@
              [(cons h t) 
               (match schema-lst
                      ['() #f]
-                     [(cons (Var v _) schema-t) (aux t schema-t)]
-                     [(cons (Prim1 'dynamic (Var v _)) schema-t) (aux t schema-t)]
-                     [(cons (Prim1 'int (Var v _)) schema-t)
+                     [(cons (Var v) schema-t) (aux t schema-t)]
+                     [(cons (Prim1 'dynamic (Var v)) schema-t) (aux t schema-t)]
+                     [(cons (Prim1 'int (Var v)) schema-t)
                       (if (is-int? h) (aux t schema-t) #f)]
-                     [(cons (Prim1 'float (Var v _)) schema-t)
+                     [(cons (Prim1 'float (Var v)) schema-t)
                       (if (is-float? h) (aux t schema-t) #f)]
-                     [(cons (Prim1 'bool (Var v _)) schema-t)
+                     [(cons (Prim1 'bool (Var v)) schema-t)
                       (if (is-bool? h) (aux t schema-t) #f)]
-                     [(cons (Prim1 'string? (Var v _)) schema-t)
+                     [(cons (Prim1 'string? (Var v)) schema-t)
                       (if (is-string? h) (aux t schema-t) #f)]
-                     [(cons (Prim1 'pair (Var v _)) schema-t)
+                     [(cons (Prim1 'pair (Var v)) schema-t)
                       (if (is-pair? h) (aux t schema-t) #f)]
-                     [(cons (Prim1 'list (Var v _)) schema-t)
+                     [(cons (Prim1 'list (Var v)) schema-t)
                       (if (is-list? h) (aux t schema-t) #f)]
-                     [(cons (Prim1 'fun (Var v _)) schema-t)
+                     [(cons (Prim1 'fun (Var v)) schema-t)
                       (if (is-fun? h) (aux t schema-t) #f)]
-                     [(cons (Prefix2 'types types-lst (Var v _)) schema-t)
+                     [(cons (Prefix2 'types types-lst (Var v)) schema-t)
                            (if (ormap (lambda (elem) (is-type? elem h)) types-lst) 
                              (aux t schema-t)
                              #f)]
-                     [(cons (Prefix2 'struct (Var label _) (Var v _)) schema-t)
+                     [(cons (Prefix2 'struct (Var label) (Var v)) schema-t)
                       (match h
                              [(CmStruct l2 _) #:when (string=? l2 label) (aux t schema-t)]
                              [_ #f])]
@@ -110,21 +110,21 @@
 (define (struct-schema->string schema)
   (match schema
          ['() "()"]
-         [(cons (Var id _) '()) 
+         [(cons (Var id) '()) 
           (format "~a;" id)]
-         [(cons (Var id _) t) 
+         [(cons (Var id) t) 
           (string-append (format "~a, " id) (struct-schema->string t))]
-         [(cons (Prim1 op (Var id _)) '()) 
+         [(cons (Prim1 op (Var id)) '()) 
           (format "~a ~a;" (symbol->string op) id)]
-         [(cons (Prim1 op (Var id _)) t) 
+         [(cons (Prim1 op (Var id)) t) 
           (string-append (format "~a ~a, " (symbol->string op) id) (struct-schema->string t))]
-         [(cons (Prefix2 'struct (Var label _) (Var id _)) '()) 
+         [(cons (Prefix2 'struct (Var label) (Var id)) '()) 
           (format "struct ~a ~a;" label id)]
-         [(cons (Prefix2 'struct (Var label _) (Var id _)) t) 
+         [(cons (Prefix2 'struct (Var label) (Var id)) t) 
           (string-append (format "struct ~a ~a, " label id) (struct-schema->string t))]
-         [(cons (Prefix2 'types ts (Var id _)) '()) 
+         [(cons (Prefix2 'types ts (Var id)) '()) 
           (format "types ~a ~a;" (string-coerce ts) id)]
-         [(cons (Prefix2 'types ts (Var id _)) t) 
+         [(cons (Prefix2 'types ts (Var id)) t) 
           (string-append (format "types ~a ~a, " (string-coerce ts) id) (struct-schema->string t))]
          ))
 
