@@ -1,14 +1,11 @@
 #lang racket
 (require cm/core/lex cm/core/ast cm/core/parse-expr 
          cm/core/parse-stat cm/core/interp cm/core/ast-to-string
-         cm/core/types cm/core/context)
+         cm/core/types cm/core/context cm/core/modules)
 (provide run run-file run-expr run-tokenize-string run-tokenize-file
          run-parse run-parse-expr run-parse-file run-parse-file run-prefix-form
          run-ast-to-string 
          display-output display-expr-output silent)
-
-(define (file-name->module-id name)
-        (path->string (path->complete-path name)))
 
 ;; reads over each list element and prints its tostring
 ;; value list | value -> void

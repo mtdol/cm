@@ -6,6 +6,5 @@
 (define (run-silent str) (interp (parse-expr (tokenize-string str))) (void))
 (define (run-stat str) (interp (parse-stat (tokenize-string str))))
 (define (run-stat-silent str) (interp (parse-stat (tokenize-string str))) (void))
-;(define (run-file-silent str) (interp (parse-stat (tokenize-file str))) (void))
 (define (run-file-silent str) (silent (run-file str)))
 (define (parse str) (parse-expr (tokenize-string str)))

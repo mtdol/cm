@@ -1,0 +1,5 @@
+#:import "files/lazy1/c.cm"
+
+#:def:txt{} "a macro"
+typedef S := ().
+def v := 7.

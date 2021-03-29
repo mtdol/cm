@@ -1,0 +1,3 @@
+#:import "files/basic3/d.cm"
+
+def c := 3.

@@ -14,7 +14,8 @@
 ;; what a lambda expr yields
 (struct Fun (var type context expr))
 
-(define current-module-id 0)
+(define current-module-id "0")
+(define (get-current-module-id) current-module-id)
 (define (set-current-module-id! val) (set! current-module-id val))
 
 
@@ -220,6 +221,64 @@
       (get-type-context-pairs module-id items public-only?)
       (get-macro-context-pairs module-id items public-only?)
       )))
+
+;; maps a reference to the given name in module-id and returns #t, if it exists,
+;; else returns #f
+;;
+;; string = ("macro" "type" "var"), string, string, string, bool -> bool
+(define (map-reference type name module-id prefix public-only?)
+    (match type
+           ["macro" 
+            (if (and 
+                  (hash-has-key? global-context (MacroKey name module-id))
+                  (match 
+                    (hash-ref global-context (MacroKey name module-id))
+                        [(MacroEntry _ private?) 
+                         (if public-only? 
+                           (not private?)
+                           #t)]
+                        [_ #f]))
+              (begin 
+                (hash-set! global-context 
+                           (MacroKey (string-append prefix name) current-module-id)
+                           (Reference (MacroKey name module-id)))
+                #t)
+              #f)]
+           ["type" 
+            (if (and 
+                  (hash-has-key? global-context (TypeKey name module-id))
+                  (match 
+                    (hash-ref global-context (TypeKey name module-id))
+                        [(TypeEntry _ private?) 
+                         (if public-only? 
+                           (not private?)
+                           #t)]
+                        [_ #f]))
+              (begin 
+                (hash-set! global-context 
+                           (TypeKey (string-append prefix name) current-module-id)
+                           (Reference (TypeKey name module-id)))
+                #t)
+              #f)]
+           ["var" 
+            (if (and 
+                  (hash-has-key? global-context (VarKey name module-id))
+                  (match 
+                    (hash-ref global-context (VarKey name module-id))
+                        [(VarEntry _ private?) 
+                         (if public-only? 
+                           (not private?)
+                           #t)]
+                        [_ #f]))
+              (begin 
+                (hash-set! global-context 
+                           (VarKey (string-append prefix name) current-module-id)
+                           (Reference (VarKey name module-id)))
+                #t)
+              #f)]
+           [_ #f]
+           )
+  )
 
 ;; gets all var-context mappings of the given module-id
 ;; if module-id is #f then returns all var-context mappings.

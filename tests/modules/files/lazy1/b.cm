@@ -1,0 +1,2 @@
+#:lazy_import:a_ "files/lazy1/a.cm" -> var v, type S, macro txt
+#:lazy_import:c_ "files/lazy1/c.cm" -> var v, type S, macro txt

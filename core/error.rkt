@@ -1,4 +1,6 @@
 #lang racket
+(require racket/lazy-require)
+(lazy-require (cm/core/context [get-current-module-id]))
 (provide cm-error cm-error-with-line-handler cm-error-linenum current-linenum
          set-current-linenum!
          get-id-from-message cm-error-no-linenum try-with-error)
@@ -23,7 +25,10 @@
                  "NL:"
                  id
                  ": "
-                 message)))
+                 message
+                 "\nmodule: "
+                 (get-current-module-id)
+                 )))
 
 ;; sends error with line number included
 (define (cm-error-linenum linenum id message) 
@@ -32,7 +37,10 @@
                  ":"
                  id
                  ": "
-                 message)))
+                 message
+                 "\nmodule: "
+                 (get-current-module-id)
+                 )))
 
 ;; sets current linenum and execs the proc
 (define (cm-error-with-line-handler linenum proc args) 

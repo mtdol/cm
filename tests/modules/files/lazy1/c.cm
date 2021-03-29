@@ -1,0 +1,3 @@
+#:def:txt{} "c macro"
+typedef S := ().
+def v := 4.
