@@ -57,10 +57,7 @@
                         file-path)]
                   ;; else assume file
                   [_ str]
-             )]
-       )
-
-  )
+             )]))
 
 ;; processes import command
 (define (process-import str prefix)
@@ -74,9 +71,7 @@
       (let ([module-id current-module-id])
         ;; restore the old module id
         (set-current-module-id! module-id-backup)
-        (set-refs-from-module-space! module-id '() prefix #t)
-        )
-  ))
+        (set-refs-from-module-space! module-id prefix #t))))
 
 (define (process-lazy-import file-str type item prefix)
   (let ([module-id (file-name->module-id (get-filename file-str))])
@@ -85,5 +80,4 @@
                 (format "Could not lazy require ~a ~a from module ~a"
                         type item module-id)))
         
-    (void)
-  ))
+    (void)))

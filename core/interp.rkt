@@ -115,8 +115,10 @@
         [(Match e1 e2) (interp-match (interp-expr e1 context) e2 context context)]
         [(Def e1 (Assign e2)) 
           (match (interp-def-list e1 e2)
-                 [(Def e1-2 e2-2) (interp-def e1-2 e2-2 context)])]
+                 [(Def e1-2 e2-2) (interp-def e1-2 e2-2 context #f)])]
         [(Def _ _) (cm-error "SYNTAX" "Def is missing an assignment.")]
+        [(Set e1 e2) (interp-def e1 e2 context #t)]
+        [(Set _ _) (cm-error "SYNTAX" "Set is missing an assignment.")]
         [(Defun (Var id) e1 (Assign e2))
           (interp-expr 
             (Def (Var id) (Assign (Lambda e1 (Assign e2))))
@@ -494,7 +496,7 @@
          [res res]))))
 
 
-(define (interp-def e1 e2 context)
+(define (interp-def e1 e2 context update?)
   (match e2
          [(Assign e3) 
           (let ([v3 (interp-expr e3 context)])
@@ -502,24 +504,35 @@
                    ;; sets var in global context hash and returns value to caller
                   [(Prim1 op (Var v)) #:when (member op guard-types)
                     (assign-type-check (list (symbol->string op)) v3 v) 
-                    (set-global-var! v v3 (var-name-private? v))
+                    (if update? 
+                      (update-global-var! v v3)
+                      (set-global-var! v v3 (var-name-private? v)))
                     v3]
                    [(Prefix2 'types types-expr (Var v))
                     (assign-type-check 
                       (check-types-list (interp-expr types-expr context)) v3 v)
-                    (set-global-var! v v3 (var-name-private? v))
+                    (if update? 
+                      (update-global-var! v v3)
+                      (set-global-var! v v3 (var-name-private? v)))
                     v3]
                    [(Prim1 'dynamic (Var v))
-                    (set-global-var! v v3 (var-name-private? v))
+                    (if update? 
+                      (update-global-var! v v3)
+                      (set-global-var! v v3 (var-name-private? v)))
                     v3]
                    [(Prefix2 'struct (Var label) (Var v))
                     (assign-type-check (list (get-struct-type-string label)) v3 v)
-                    (set-global-var! v v3 (var-name-private? v)) 
+                    (if update? 
+                      (update-global-var! v v3)
+                      (set-global-var! v v3 (var-name-private? v)))
                     v3]
                    ;; implied dynamic case
                    [(Var v)
-                    (set-global-var! v v3 (var-name-private? v)) 
+                    (if update? 
+                      (update-global-var! v v3) 
+                      (set-global-var! v v3 (var-name-private? v)))
                     v3]
+                   [_ #:when update? (cm-error "SYNTAX" "Unknown Item on left hand of set.")]
                    [_ (cm-error "SYNTAX" "Unknown Item on left hand of def.")]
 
 

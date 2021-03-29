@@ -1,6 +1,19 @@
 #lang racket
 (require cm/tests/test-utils rackunit)
 
+;; set should not work on an undeclared var
+(check-exn exn:fail? (lambda ()
+  (run-stat "set v := 5.")))
+
+(run-stat-silent "def v := 5.")
+
+(check-equal? (run-stat "set v := 4.")
+'(4))
+
+(check-equal? (run-stat "v.")
+'(4))
+
+
 (run-file-silent "files/basic2/a.cm")
 
 ;; check that resources can be shared across files 

@@ -1,12 +1,6 @@
 . documentation and tests for standard library
 . regex
 
-. module system
-    - lazy_import
-          -- remember to document that the labels can be wrapped in strings to
-              escape, ie. macro "%"
-    - global variable, so info can be shared across files
-
 . Macro system additions
     - {ifdef a|b|c}
         -- if a is def then b else c

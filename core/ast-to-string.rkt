@@ -35,6 +35,8 @@
                                (list (symbol->string (translate-op-name op))))]
            [(Def v e) (list "(" "def " (ast-to-string v) " "
                                 (ast-to-string e) ")")]
+           [(Set v e) (list "(" "set " (ast-to-string v) " "
+                                (ast-to-string e) ")")]
            [(Typedef v e) (list "(" "typedef " (ast-to-string v) " "
                                 (ast-to-string e) ")")]
            [(Let e1 e2 e3) (list "(" "let " (ast-to-string e1) " := "

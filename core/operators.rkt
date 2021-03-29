@@ -21,6 +21,7 @@
         (cons "with"            (OpData 1 "prefix"  0   'With    '()))
         (cons "let"             (OpData 3 "prefix"  0   'Let     '()))
         (cons "def"             (OpData 2 "prefix"  0   'Def     '()))
+        (cons "set"             (OpData 2 "prefix"  0   'Set     '()))
         (cons "lambda"          (OpData 2 "prefix"  0   'Lambda  '()))
         (cons "in"              (OpData 1 "prefix"  0   'In      '()))
         (cons "yields"          (OpData 1 "prefix"  0   'Yields  '()))

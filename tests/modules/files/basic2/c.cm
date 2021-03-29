@@ -2,7 +2,7 @@
 if not defined? "c" then def c := 3 else void.
 
 defun inc () :=
-    def c := c + 1.
+    set c := c + 1.
 
 defun dec () :=
-    def c := c - 1.
+    set c := c - 1.
