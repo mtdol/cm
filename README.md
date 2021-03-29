@@ -103,6 +103,8 @@ As of right now there is no package manager, so modules must be added manually t
 The module installation during setup replaces or adds the `modules.txt` file and fills it
 with the `std_lib` module (required for the repl.)
 
+### import
+
 To import files for use in your program use the `import` macro with this form:
 ```
 # with no prefix
@@ -137,6 +139,46 @@ For example, `std_lib/std.cm` can be loaded with:
 
 # with an "std_" prefix
 #:import:std_ "std_lib::std"
+```
+
+### lazy_import
+
+To avoid cycles in the import graph, there is an additional `lazy_import` macro. `lazy_import` takes items that have
+already been imported into the global context and provides references to them in the current module space.
+
+`lazy_import` is used with the following syntax:
+```
+# no prefix
+#:lazy_import "file" -> var var_name, type type_name, macro macro_name
+
+# prefix of "pref_"
+#:lazy_import:pref_ "file" -> var var_name, type type_name, macro macro_name
+```
+The element to the left of the `->` must be a file name string and will be the file that the items will be provided from.   
+The elements to the right will be a comma seperated list of `var`, `type`, or `macro` followed by the name
+of what you wish to import.
+
+`,` and `->` must be escaped by enclosing the affected name in quotes. Besides escaping, quotes are optional.
+```
+# yes
+#:lazy_import "file.cm" -> macro "a,b"
+
+# no
+#:lazy_import "file.cm" -> macro a,b
+
+# fine, since macro is simply named
+#:lazy_import "file.cm" -> macro ab
+```
+
+An example, using `std.cm`:
+```
+#:lazy_import:std_ "std_lib::std.cm" -> var add1, var pos?, macro "%"
+
+> std_add1:2
+3
+> {std_% @1|@2}
+1
+2
 ```
 
 ### #:lang cm
