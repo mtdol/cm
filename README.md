@@ -116,15 +116,15 @@ To import files for use in your program use the `import` macro with this form:
 
 The strings used on the right side of the `import` macro take one of these three forms:
 ```
-"module::path_to_file_in_module".
+"module::path_to_file_in_module"
 
-"path_to_file".
+"path_to_file"
 
 # same as without the `m:`, but explicit
-"m:module::path_to_file_in_module".
+"m:module::path_to_file_in_module"
 
 # same as without `f:`, but explicit
-"f:path_to_file".
+"f:path_to_file"
 ```
 For example, `std_lib/std.cm` can be loaded with:
 ```
