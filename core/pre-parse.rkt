@@ -1,5 +1,6 @@
 #lang racket
-(require cm/core/error cm/core/operators cm/core/parse-utils cm/core/context)
+(require cm/core/error cm/core/operators cm/core/parse-utils
+         cm/core/context cm/core/macros)
 (provide pre-parse-expr pre-parse)
 (define error-id "PARSE")
 
@@ -34,11 +35,6 @@
                             bcount depth)]
          [(cons "}" t) 
           #:when (= 0 bcount)
-          ;; DEBUG
-          ;(displayln (reverse (cons (reverse (car args)) (cdr args))))
-          ;;DEBUG
-          ;(displayln (apply-macro label 
-                ;(reverse (cons (reverse (car args)) (cdr args)))))
           (append 
             ;; re-parse after we apply the macro
             (parse-macro-tokens 

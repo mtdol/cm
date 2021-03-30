@@ -3,16 +3,17 @@
 @ "Please enter an expr to compute, or `#exit` or `#e` to exit:".
 
 def cont := true.
+def resp := "".
 while cont do {%
       write_string "> "
-    | def resp := read_line
+    | set resp := read_line
     | if resp = "#exit" or resp = "#e" 
         then 
-            (def cont := false) 
+            (set cont := false) 
         else
             try
                 (@ evalxp resp)
             catch e with
-                match e | struct Error (_,msg;) -> @ msg end
+                match e \| struct Error (_,msg;) -> @ msg end
 }//
 @ "Good Bye!".

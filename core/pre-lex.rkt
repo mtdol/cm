@@ -1,9 +1,10 @@
 #lang racket
 (require racket/lazy-require cm/core/error cm/core/context cm/core/modules)
 (lazy-require (cm/core/lex [tokenize-string tokenize-import-string]))
-(provide pre-lex)
+(provide pre-lex unwrap-string unwrap-string-if-necessary)
 
-(define (pre-lex str) (parse-defs (map string-trim (string-split str #rx"\n")) 1))
+(define (pre-lex str) 
+  (parse-defs (map string-trim (string-split str #rx"\n")) 1))
 
 ;; parses macro definitions
 (define (parse-defs lines linenum)
@@ -117,7 +118,7 @@
            [(list _ r1) r1] 
            [_ #f]))
 ;; unwraps if is a string, else just returns str
-(define (unwrap-if-necessary str) 
+(define (unwrap-string-if-necessary str) 
   (match (unwrap-string str)
          [#f str]
          [res res]))
@@ -154,7 +155,7 @@
                  [(cons "," t) #:when (= 1 mode) (aux t 0)]
                  [(cons type (cons var t)) 
                   #:when (= 0 mode)
-                  (cons (cons type (unwrap-if-necessary var)) (aux t 1))]
+                  (cons (cons type (unwrap-string-if-necessary var)) (aux t 1))]
                  [_ (cm-error "LEX" "Improperly formed lazy_import.")])))))
 
 ;; macros have two forms:

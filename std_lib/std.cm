@@ -220,13 +220,14 @@ defun catf f :=
 #:def:arg{a} a
 
 # wraps args
-#:def:wrap{REST} (REST)
+#:def:wrap{arg} (arg)
 
 #:def:vari{op|v|REST} (v) op {vari op|REST}
 #:def+:vari{op|v} (v)
 
 # string generator
-#:def:${REST} {vari $|REST}
+#:def:${v|REST} {string v} $ " " $ {$ REST}
+#:def+:${v} {string v}
 #:def+:${} ""
 
 # code block
@@ -238,8 +239,13 @@ defun catf f :=
 # wraps and builds a list
 #:def:list{REST} ({list_aux REST})
 #:def:list_aux{v|REST} (v), {list_aux REST}
-#:def:list_aux{v} (v);
-#:def:list_aux{} ()
+#:def+:list_aux{v} (v);
+#:def+:list_aux{} ()
 
 # apply args to function
 #:def::{f|REST} appl f {list REST}
+
+# only defines if the given var is defined else returns void
+#:<def:defcheck{types|var}
+if defined? {string var} then void else def types var
+>:#

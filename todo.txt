@@ -2,12 +2,8 @@
 . regex
 
 . Macro system additions
-    - {ifdef a|b|c}
-        -- if a is def then b else c
     - {tok= a|b|c|d}
         -- if tokens in a = tokens in b then c else d
-    - {reverse a|b|...}
-        -- turns a|b|c to c|b|a
     - conditional pre-lex macros
         -- #:ifdef a
             code here

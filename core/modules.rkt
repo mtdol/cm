@@ -4,7 +4,7 @@
 (lazy-require [cm/core/main (run-file silent)])
 (provide process-import process-lazy-import file-name->module-id)
 
-(define modules-already-imported? #f)
+(define modules-file-already-imported? #f)
 (define module-regex #rx"^\"(.+)\"\\:\"(.+)\"$")
 
 ;; the number of times an import has been run
@@ -37,8 +37,8 @@
                       [_ (cm-error "GENERIC" "Modules file is improperly formated.")])] 
               [else (void)])))
 
-(unless modules-already-imported? 
-  (set! modules-already-imported? #t)
+(unless modules-file-already-imported? 
+  (set! modules-file-already-imported? #t)
   (load-module-hash!))
 
 ;; module string -> filename string

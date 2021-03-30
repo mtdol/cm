@@ -59,6 +59,8 @@
                                 (format "Lexing failure around column ~a" colnum))])]
    ))
 
+;; "{ *string ((:?\\\\{|\\\\}|[^{}])+)}"
+
 (define cmlex
   (lexer
    [(eof) eof]
@@ -72,7 +74,7 @@
    [(:: "{" (:* #\space) (:+ (:~ #\space #\{ #\})) (:* #\space) "}") 
     (list "{" (string-trim (substring lexeme 1 (- (string-length lexeme) 1))) "}")]
    ;; "{label " -> ("{" "label")
-   [(:: "{" (:* #\space) (:+ (:~ #\space #\{ #\})) (:or #\newline #\space)) 
+   [(:: "{" (:* #\space) (:+ (:~ #\space #\newline #\{ #\})) (:or #\newline #\space)) 
     (list "{" (string-trim (substring lexeme 1 (sub1 (string-length lexeme)))))]
    [(:or "(" ")" "{" "}" "#") lexeme]
    ["." "dot"]
