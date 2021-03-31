@@ -1,217 +1,5 @@
---
---- IO
---
-
--- allows print to be used like a function
-defun print2 v := print v. 
--- prints and yields void
-defun sprint v := (print v) comma void. 
--- pretty print
-defun pprint vs :=
-    match vs 
-    | () -> void 
-    | v, t -> (@ v) comma (pprint:t)
-    | v -> @ v
-    end.
-
-
---
---- Math, lists
---
-
-defun number? v :=
-    let t := type v in
-        t = "int" or t = "float".
-
-defun add (n1, n2) :=
-    n1 + n2.
-defun sub (n1, n2) :=
-    n1 - n2.
-defun mult (n1, n2) :=
-    n1 * n2.
-defun div (n1, n2) :=
-    n1 / n2.
-defun exp (n1, n2) :=
-    n1 ^ n2.
-
-defun add1 int n := n + 1.
-defun add1f float n := n + 1.0.
-defun sub1 int n := n - 1.
-defun sub1f float n := n - 1.0.
-defun zero? int n := n = 0.
-defun zerof? float n := n = 0.0.
-defun pos? int n := n > 0.
-defun posf? float n := n > 0.0.
-defun neg? int n := n < 0.
-defun negf? float n := n < 0.0.
-defun one? int n := n = 1.
-defun onef? float n := n = 1.0.
-defun even? int n := n % 2 = 0.
-defun odd? int n := n % 2 = 1.
-
-defun to_int n := int n.
-defun to_float n := float n.
-defun to_string n := string n.
-defun to_bool n := bool n.
-
--- maps f onto all members of list lst
-defun map (fun f, list lst) := 
-    | null? lst -> null 
-    else (f:`lst), (appl map (f,~lst;)).
-
--- returns a list with only the elements that are true according to f
-defun filter (fun f, list lst) := 
-    | null? lst -> null 
-    | f:`lst -> `lst, (appl filter (f,~lst;))
-    else appl filter (f,~lst;).
-
--- int | float -> int | float
-defun max (n1, n2) :=
-    if n1 > n2 then n1 else n2.
-
--- int | float -> int | float
-defun min (n1, n2) :=
-    if n1 < n2 then n1 else n2.
-
-
-defun reverse list xs :=
-    let aux := defun _aux_ (xs, acc) :=
-        match xs
-        | () -> acc
-        | x, t -> appl _aux_ (t, (x, acc);)
-        end
-    in
-        appl aux (xs, ();).
-
-defun range (int n1, int n2) :=
-    let aux := defun _aux_ (n1, n2) :=
-        | n1 = n2 -> ()
-        else n1, (appl _aux_ (n1+1, n2;))
-    in
-        | n1 > n2 -> reverse:(appl aux (n2+1,n1+1;))
-        else appl aux (n1,n2;).
-
-defun foldl (fun f, dynamic acc, list vs) :=
-    match vs
-    | () -> acc
-    | v, t -> 
-        let acc2 := appl f (v, acc;) in
-            appl foldl (f, acc2, t;)
-    end.
-
-defun foldr (fun f, dynamic acc, list vs) :=
-    appl foldl (f, acc, (reverse:vs);).
-
-
---
---- String funcs
---
-
--- function form of the substring functionality of the index keyword
-defun substring (string s, int i1, int i2) :=
-    index s (i1,i2;).
-
-defun string_ref (string s, int i) :=
-    index s i.
-
-defun concatenate (string s1, string s2) :=
-    s1 $ s2.
-
-defun string_length string s :=
-    length s.
-
--- turns the string into a list of length 1 substrings
-defun string_to_list string s :=
-    match s
-    | "" -> ()
-    | _ -> (index s 0), (string_to_list : (index s (1, length s;)))
-    end.
-
--- concatenates all of the elems in the list into a single string
-defun list_to_string list ss :=
-    match ss
-    | () -> ""
-    | s, t -> s $ (list_to_string:t)
-    end.
-
--- replaces all instances of target substring with rep
-defun string_replace (string str, string targ, string rep) :=
-    if length str < length targ
-    then str
-    else
-        if 
-            str::(0, length targ;) = targ
-        then 
-            let str2 := str::(length targ, length str;) in
-               rep $ (appl string_replace (str2, targ, rep;)) 
-        else
-            -- get first char
-            let c := str::0 in
-            -- get rest of string
-            let str2 := str::(1, length str;) in
-            c $ (appl string_replace (str2, targ, rep;))//
-               
--- takes a string of form "~1 ~2 ~3 ~1" and turns it into "v1 v2 v3 v1"
-defun format (string str, list vs) :=
-    let aux := defun _aux_ (str, vs, i) := 
-        match vs
-        | () -> str
-        | v, t -> 
-            let str2 := appl string_replace (str, "~"$i, v;) in
-                appl _aux_ (str2, t, add1:i;)
-        end
-    in
-        appl aux (str, vs, 1;)//
-
---
---- Hashmap
---
-
-defun list_to_hash list ms :=
-    appl foldl 
-        ((lam m,h := hash_set h (`m) (~m)),
-        (make_hash ()),
-        ms;). 
-
-defun list_to_mutable_hash list ms :=
-    appl foldl 
-        ((lam m,h := (hash_set h (`m) (~m)) comma h),
-        (make_hash "mutable"),
-        ms;). 
-
---
---- System
---
-
-match system_type
-| "windows" -> (eval "#:def:win{} true") comma void
-| "macosx" -> (eval "#:def:mac{} true") comma void
-| "unix" -> (eval "#:def:unix{} true") comma void
-| _ -> void
-end.
-
--- cds only if the directory exists
-defun cd2 string s :=
-    if dir_exists? s 
-    then 
-        cd s 
-    else 
-        error ("SYSTEM", ("Dir "$s$" does not exist.");).
-
--- pretty print ls of current dir
-defun lsc () :=
-    pprint:(ls ".").
-defun cdc () :=
-    (cd "").
-
--- display contents of file
-defun catf f :=
-    pprint:(getlinesf f).
-
-
---
 --- Macros
---
+--------------------------------
 
 -- macro that yields nothing
 #:def:empty{}
@@ -249,7 +37,7 @@ defun catf f :=
 #:def+:list_aux{} ()
 
 -- apply args to function
-#:def::{f|REST} appl f {list REST}
+#:def::{f|REST} (appl f {list REST})
 
 -- only defines if the given var is defined else returns void
 #:<def:defcheck{types|var}
@@ -262,3 +50,231 @@ if defined? {string var} then void else def types var
 -- multi-argument let
 #:def:let{var|val|REST} let var := (val) in {let REST}
 #:def+:let{var|val} let var := (val)  
+
+
+--- IO
+------------------------------
+
+-- allows print to be used like a function
+defun print2 v := print v. 
+-- prints and yields void
+defun sprint v := (print v) comma void. 
+-- pretty print
+defun pprint vs :=
+    match vs 
+    | () -> void 
+    | v, t -> (@ v) comma (pprint:t)
+    | v -> @ v
+    end.
+
+
+--- Math, lists
+------------------------------
+
+#:def:_number{} types ("int", "float";)
+#:<def:assert_types={a|b}
+if type (a) != type (b) 
+    then error 
+        {list "CONTRACT"
+            | {: format
+                | "Types do not equal: \n~1\n~2"
+                | {list a|b}}}
+    else
+    -- user code after this
+>:#
+
+defun number? v :=
+    let t := type v in
+        t = "int" or t = "float".
+
+defun add ({_number} n1, {_number} n2) :=
+    {assert_types= n1|n2} 
+    n1 + n2.
+defun sub ({_number} n1, {_number} n2) :=
+    {assert_types= n1|n2} 
+    n1 - n2.
+defun mult ({_number} n1, {_number} n2) :=
+    {assert_types= n1|n2} 
+    n1 * n2.
+defun div (float n1, float n2) :=
+    n1 / n2.
+defun exp ({_number} n1, {_number} n2) :=
+    n1 ^ n2.
+
+
+defun add1 {_number} n :=
+    if type n = "int" then n + 1 else n + 1.0.
+defun sub1 {_number} n :=
+    if type n = "int" then n - 1 else n - 1.0.
+defun zero? {_number} n :=
+    if type n = "int" then n = 0 else n = 0.0.
+defun pos? {_number} n :=
+    if type n = "int" then n > 0 else n > 0.0.
+defun neg? {_number} n :=
+    if type n = "int" then n < 0 else n < 0.0.
+defun one? {_number} n :=
+    if type n = "int" then n = 1 else n = 1.0.
+defun even? int n :=
+    n % 2 = 0.
+defun odd? int n :=
+    n % 2 = 1.
+
+defun to_int n := int n.
+defun to_float n := float n.
+defun to_string n := string n.
+defun to_bool n := bool n.
+
+-- maps f onto all members of list lst
+defun map (fun f, list lst) := 
+    | null? lst -> null 
+    else (f:`lst), {: map | f | ~lst}.
+
+-- returns a list with only the elements that are true according to f
+defun filter (fun f, list lst) := 
+    | null? lst -> null 
+    | f:`lst -> `lst, {: filter | f | ~lst}
+    else {: filter | f | ~lst}.
+
+-- int | float -> int | float
+defun max (n1, n2) :=
+    if n1 > n2 then n1 else n2.
+
+-- int | float -> int | float
+defun min (n1, n2) :=
+    if n1 < n2 then n1 else n2.
+
+
+defun reverse list xs :=
+    let aux := defun _aux_ (xs, acc) :=
+        match xs
+        | () -> acc
+        | x, t -> {: _aux_ | t | x | acc}
+        end
+    in
+        {: aux | xs | ()}.
+
+defun range (int n1, int n2) :=
+    let aux := defun _aux_ (n1, n2) :=
+        | n1 = n2 -> ()
+        else n1, {: _aux_ | n1+1 | n2}
+    in
+        | n1 > n2 -> reverse : {: aux | n2+1 | n1+1}
+        else {: aux | n1 | n2}.
+
+defun foldl (fun f, dynamic acc, list vs) :=
+    match vs
+    | () -> acc
+    | v, t -> 
+        let acc2 := {: f | v | acc} in
+            {: foldl | f | acc2 | t}
+    end.
+
+defun foldr (fun f, dynamic acc, list vs) :=
+    appl foldl (f, acc, (reverse:vs);).
+
+
+--- String funcs
+--------------------------------
+
+-- function form of the substring functionality of the index keyword
+defun substring (string s, int i1, int i2) :=
+    index s (i1,i2;).
+
+defun string_ref (string s, int i) :=
+    index s i.
+
+defun concatenate (string s1, string s2) :=
+    s1 $ s2.
+
+defun string_length string s :=
+    length s.
+
+-- turns the string into a list of length 1 substrings
+defun string_to_list string s :=
+    match s
+    | "" -> ()
+    | _ -> (index s 0), (string_to_list : (index s (1, length s;)))
+    end.
+
+-- concatenates all of the elems in the list into a single string
+defun list_to_string list ss :=
+    match ss
+    | () -> ""
+    | s, t -> s $ (list_to_string:t)
+    end.
+
+-- replaces all instances of target substring with rep
+defun string_replace (string str, string targ, string rep) :=
+    if length str < length targ
+    then str
+    else
+        if 
+            str::(0, length targ;) = targ
+        then 
+            let str2 := str::(length targ, length str;) in
+               rep $ {: string_replace | str2 | targ | rep} 
+        else
+            -- get first char
+            let c := str::0 in
+            -- get rest of string
+            let str2 := str::(1, length str;) in
+            c $ {: string_replace | str2 | targ | rep}//
+               
+-- takes a string of form "~1 ~2 ~3 ~1" and turns it into "v1 v2 v3 v1"
+defun format (string str, list vs) :=
+    let aux := defun _aux_ (str, vs, i) := 
+        match vs
+        | () -> str
+        | v, t -> 
+            let str2 := {: string_replace | str | "~" $ i | v} in
+                {: _aux_ | str2 | t | add1:i}
+        end
+    in
+        {: aux | str | vs | 1}//
+
+
+--- Hashmap
+--------------------------------
+
+defun list_to_hash list ms :=
+    {: foldl 
+        | lam m,h := hash_set h (`m) (~m)
+        | make_hash ()
+        | ms}. 
+
+defun list_to_mutable_hash list ms :=
+    {: foldl 
+        | lam m,h := (hash_set h (`m) (~m)) comma h
+        | make_hash "mutable"
+        | ms}. 
+
+
+--- System
+--------------------------------
+
+match system_type
+| "windows" -> (eval "#:def:win{} true") comma void
+| "macosx" -> (eval "#:def:mac{} true") comma void
+| "unix" -> (eval "#:def:unix{} true") comma void
+| _ -> void
+end.
+
+-- cds only if the directory exists
+defun cd2 string s :=
+    if dir_exists? s 
+    then 
+        cd s 
+    else 
+        error ("SYSTEM", ("Dir "$s$" does not exist.");).
+
+-- pretty print ls of current dir
+defun lsc () :=
+    pprint:(ls ".").
+defun cdc () :=
+    (cd "").
+
+-- display contents of file
+defun catf f :=
+    pprint:(getlinesf f).
+
+

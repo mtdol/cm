@@ -17,4 +17,4 @@
         -- -add -remove -show
         -- change install scripts into package managers
 
-! modules system is not working on windows, references result in infinite recursion
+- string replace\format is not working in std.cm

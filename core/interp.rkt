@@ -197,18 +197,13 @@
         ['error 
          (match v
                 ;; TODO use cm error struct and use id
-                [(list id msg) (cm-error-no-linenum id msg)]
-                [msg #:when (string? msg) (cm-error-no-linenum "GENERIC" msg)]
+                [(list id msg) (cm-error id msg)]
+                [msg #:when (string? msg) (cm-error "GENERIC" msg)]
                 [_ (cm-error "CONTRACT" "Invalid argument(s) to error.")])]
         ['eval #:when (string? v) (run v)] 
         ['eval (cm-error "CONTRACT" "eval requires a string argument.")] 
         ['evalxp #:when (string? v) (run-expr v)] 
         ['evalxp (cm-error "CONTRACT" "evalxp requires a string argument.")] 
-        ;['load 
-         ;(match v 
-                ;[s #:when (string? s) (process-import-string s) (Prim0 'void)]
-                ;[_ (cm-error "CONTRACT" "Argument to load must be a file.")])
-             ;]
         ['ls 
          (match (string-coerce v)
                     ["" (map path->string 

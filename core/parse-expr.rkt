@@ -3,7 +3,7 @@
          cm/core/operators cm/core/parse-utils
          cm/core/pre-parse cm/core/context)
 (provide parse-expr half-parse-expr)
-(define error-id "PARSE")
+(define error-id "SYNTAX")
 
 ;; for use in eval of ast nodes
 (define ns (module->namespace 'cm/core/ast))
@@ -76,7 +76,7 @@
              (append (tokens-to-prefix-form (reverse acc))
                             (list h) (tokens-to-prefix-form t))
              ;(append (tokens-to-prefix-form acc) (list h) (tokens-to-prefix-form (reverse t)))
-             (cm-error "PARSE" "Cannot pemdas parse prefix op.")
+             (cm-error error-id "Cannot pemdas parse prefix op.")
              )]
         ;; infix op found matching precedence
         [(cons h t) #:when (and (zero? pcount) (is-operator? h) (= (op-to-precedence h) preced)

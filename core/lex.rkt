@@ -59,8 +59,6 @@
                                 (format "Lexing failure around column ~a" colnum))])]
    ))
 
-;; "{ *string ((:?\\\\{|\\\\}|[^{}])+)}"
-
 (define cmlex
   (lexer
    [(eof) eof]

@@ -2,7 +2,6 @@
 (require cm/core/error cm/core/operators cm/core/parse-utils
          cm/core/context cm/core/macros)
 (provide pre-parse-expr pre-parse)
-(define error-id "PARSE")
 
 ;; this file is for performing adjustments to the token list, so it
 ;; will be parsable by the main parser
@@ -14,11 +13,11 @@
 (define (parse-macro-tokens tokens depth)
   (match tokens
          [_ #:when (> depth 5000) 
-            (cm-error error-id "Too many macro applications. Possible infinite recursion detected.")]
+            (cm-error "MACRO" "Too many macro applications. Possible infinite recursion detected.")]
          ['() '()]
          [(cons "{" (cons h2 t)) 
           (if (string=? h2 "}") 
-            (cm-error error-id "Missing label for macro.")
+            (cm-error "MACRO" "Missing label for macro.")
             (parse-macro-contents t h2 '(()) 0 depth))]
          [(cons h t) (cons h (parse-macro-tokens t depth))]
    ))
@@ -28,7 +27,7 @@
 ;; string list, string, string list list, int, int -> string list
 (define (parse-macro-contents tokens label args bcount depth)
   (match tokens 
-         ['() (cm-error error-id "Missing closing brace for macro application.")]
+         ['() (cm-error "MACRO" "Missing closing brace for macro application.")]
          ;; shifting to next argument
          [(cons "case" t) #:when (zero? bcount) (parse-macro-contents t label 
                             (cons '() (cons (reverse (car args)) (cdr args)))
@@ -68,7 +67,7 @@
            [(cons h t) #:when 
                     (and first? (and (is-operator? h)
                                      (string=? (op-to-position h) "infix")))
-                (cm-error error-id (format "Missing operand(s) for ~a." h))]
+                (cm-error "SYNTAX" (format "Missing operand(s) for ~a." h))]
            [(cons h1 (cons h2 t)) #:when 
                       (and (or (string=? "(" h1) 
                                (and (is-operator? h1) (not (zero? (op-to-arity h1))))) 
@@ -76,6 +75,6 @@
                     (cond [(or (string=? "plus" h2) (string=? "minus" h2))
                         ;; call aux on uni since it is also an operator
                         (cons h1 (aux (cons (string-append ":uni_" h2) t) #f))]
-                          [else (cm-error error-id (format "Missing operand(s) for ~a." h1))])]
+                          [else (cm-error "SYNTAX" (format "Missing operand(s) for ~a." h1))])]
            [(cons h t) (cons h (aux t #f))]
            ['() '()])))
