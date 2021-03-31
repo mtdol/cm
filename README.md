@@ -508,7 +508,7 @@ You can check whether something is a function using the `fun?` question and `fun
 true
 > def fun_app := lam fun f, v := f:v.
 > fun_app : 3.
-1:CONTRACT: Recieved type int for var f but expected fun.
+CONTRACT: Recieved type int for var f but expected fun.
 > fun_app : (lam x := x - 1) : 3.
 2
 ```
@@ -535,39 +535,37 @@ types string_list var
 Examples:
 ```
 > def int x := 5.5.
-1:CONTRACT: Recieved type float for var x but expected one of (int;).
+CONTRACT: Recieved type float for var x but expected one of (int;).
 > def types ("int", "float";) x := 5.5.
 5
 > def types ("int", "float";) x := "5.5".
-1:CONTRACT: Recieved type string for var x but expected one of (int, float;).
+CONTRACT: Recieved type string for var x but expected one of (int, float;).
 
 > typedef S := types ("int","bool";) a, float b;.
 
 > struct S (true,4.5;).
 (struct S (true, 4.5;))
 > struct S (5.5, 4.5;).
-1:GENERIC: Could not validate struct against type schema: ...
+GENERIC: Could not validate struct against type schema: ...
 ```
 
 ## Error Handling
 Errors messages have the following form:
 ```
-linenum|NL:id:(space)main message
+id:(space)main message
 ```
 
 for example:
 ```
 > 5.0 / 0.
-1:CONTRACT: Divide by zero.
+CONTRACT: Divide by zero.
 
 > 6
-1:PARSE: No termination of statement.
+PARSE: No termination of statement.
 
 > error "my error"
-NL:GENERIC: my error
+GENERIC: my error
 ```
-
-`NL` represents the lack of a line number.
 The id represents the type of error and the message body is to be used in debugging.
 
 ### Try Catch
@@ -604,10 +602,10 @@ where the first is the error id and the second is the base message.
 Examples:
 ```
 > error "my message".
-NL:GENERIC: my message
+GENERIC: my message
 
 > error "MY_TYPE","my message";.
-NL:MY_TYPE: my message
+MY_TYPE: my message
 ```
 
 Error IDs are written in all caps with underscore seperators.
@@ -782,7 +780,7 @@ bc
 > index (1,2,3,4;) (1,3;).
 (2,3;)
 > index (hash_set (make_hash ()) 1 3) (1,3;).
-1:HASHREF: Could not find key (1, 3;) in hash.
+HASHREF: Could not find key (1, 3;) in hash.
 ```
 
 Index can also be called using the `::` infix keyword:
