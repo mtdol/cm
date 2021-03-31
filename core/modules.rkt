@@ -51,10 +51,11 @@
                   ;; reference module and append onto provided sub-path
                   [(list _ module file-path)
                    (string-append
-                        (path->string (path->directory-path 
-                                (hash-ref modules module (lambda () 
-                                            (cm-error "GENERIC" (format "Could not find module ~a." module))))))
-                        file-path)]
+                      (path->string (path->directory-path 
+                        (hash-ref modules module (lambda () 
+                          (cm-error "GENERIC" 
+                              (format "Could not find module ~a." module))))))
+                      file-path)]
                   ;; else assume file
                   [_ str]
              )]))
@@ -65,13 +66,16 @@
     (cm-error "IMPORT" "Too many imports detected. Possible import cycle.") 
     (set! num-imports (add1 num-imports)))
   ;; remember the current module id
-  (let ([module-id-backup current-module-id])
-      (do-import! (get-filename str))
-      ;; get the module id of the other file
-      (let ([module-id current-module-id])
-        ;; restore the old module id
-        (set-current-module-id! module-id-backup)
-        (set-refs-from-module-space! module-id prefix #t))))
+  (let ([module-id-backup (get-current-module-id)]
+        [filename (get-filename str)])
+    (unless (not (string=? (get-current-module-id) filename)) 
+      (cm-error "IMPORT" "A module cannot import itself."))
+    (do-import! filename)
+    ;; get the module id of the other file
+    (let ([module-id (get-current-module-id)])
+      ;; restore the old module id
+      (set-current-module-id! module-id-backup)
+      (set-refs-from-module-space! module-id prefix #t))))
 
 (define (process-lazy-import file-str type item prefix)
   (let ([module-id (file-name->module-id (get-filename file-str))])

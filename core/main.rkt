@@ -26,7 +26,7 @@
 
 ;; runs a statement
 (define (run input) (interp (parse-stat (tokenize-string input))))
-;(define (run input) (interp (parse-stat (tokenize-string input))) (print-macro-context))
+;(define (run input) (interp (parse-stat (tokenize-string input))) (print-global-context))
 ;; string -> value list
 (define (run-file file) 
   (set-current-module-id! (file-name->module-id file))

@@ -107,10 +107,10 @@ with the `std_lib` module (required for the repl.)
 
 To import files for use in your program use the `import` macro with this form:
 ```
-# with no prefix
+-- with no prefix
 #:import "file1", "file2", "file3"
 
-# with a prefix of "f_"
+-- with a prefix of "f_"
 #:import:f_ "file1", "file2", "file3"
 ```
 
@@ -120,24 +120,24 @@ The strings used on the right side of the `import` macro take one of these three
 
 "path_to_file"
 
-# same as without the `m:`, but explicit
+-- same as without the `m:`, but explicit
 "m:module::path_to_file_in_module"
 
-# same as without `f:`, but explicit
+-- same as without `f:`, but explicit
 "f:path_to_file"
 ```
 For example, `std_lib/std.cm` can be loaded with:
 ```
-# as a module
+-- as a module
 #:import "std_lib::std.cm"
 
-# as an absolute path
+-- as an absolute path
 #:import "~/code/cm/std_lib/std.cm"
 
-# relative to working directory
+-- relative to working directory
 #:import "cm/std_lib/std.cm"
 
-# with an "std_" prefix
+-- with an "std_" prefix
 #:import:std_ "std_lib::std"
 ```
 
@@ -148,10 +148,10 @@ already been imported into the global context and provides references to them in
 
 `lazy_import` is used with the following syntax:
 ```
-# no prefix
+-- no prefix
 #:lazy_import "file" -> var var_name, type type_name, macro macro_name
 
-# prefix of "pref_"
+-- prefix of "pref_"
 #:lazy_import:pref_ "file" -> var var_name, type type_name, macro macro_name
 ```
 The element to the left of the `->` must be a file name string and will be the file that the items will be provided from.   
@@ -160,13 +160,13 @@ of what you wish to import.
 
 `,` and `->` must be escaped by enclosing the affected name in quotes. Besides escaping, quotes are optional.
 ```
-# yes
+-- yes
 #:lazy_import "file.cm" -> macro "a,b"
 
-# no
+-- no
 #:lazy_import "file.cm" -> macro a,b
 
-# fine, since macro is simply named
+-- fine, since macro is simply named
 #:lazy_import "file.cm" -> macro ab
 ```
 
@@ -188,7 +188,7 @@ to load all of the standard modules that are recommended for the language.
 ```
 #:lang cm
 
-# a function included in std.cm
+-- a function included in std.cm
 @ add1:4.
 ```
 The macro imports various files from the `std_lib` folder.
@@ -205,12 +205,19 @@ Substitute expr for any expression.
 All statements must end in the "dot" operator:
 Additionally `//` can be used as a more visible version of dot.
 ```
-# Invalid
+-- Invalid
 let x := lam n := n + 1 in x:1
-# Valid
+-- Valid
 let x := lam n := n + 1 in x:1.
-# Valid
+-- Valid
 let x := lam n := n + 1 in x:1//
+```
+
+Comments occupy a single line and are written as `--`.
+Inline comments can be written with the `{--}` macro.
+```
+-- line comment
+1 + {-- inline comment} 2
 ```
 
 ## Value Types
@@ -301,7 +308,7 @@ true
 To create a local recursive function, use a global binding of the following form:
 ```
 defun _id_ args := ...
-# or alternatively
+-- or alternatively
 def _id_ := lambda args := ...
 ```
 
@@ -310,7 +317,7 @@ For example:
 let get_last :=
     defun _get_last_ n := match n | () -> () | h, () -> h | h,t -> _get_last_:t end  
 in 
-    # prints 3
+    -- prints 3
     @ get_last:(1,2,3;).
 ```
 
@@ -333,7 +340,7 @@ def odd? := lam int n :=
 | n % 2 = 0 -> false
 else true.
 
-# prints "true"
+-- prints "true"
 @ odd?:3.
 ```
 ## match
@@ -411,7 +418,7 @@ true
 ## lambdas
 Functions can be created with the `lambda` keyword, often shortened to `lam`.
 ```
-# creates a function that adds one to its argument
+-- creates a function that adds one to its argument
 lam x := x + 1.
 ```
 
@@ -431,9 +438,9 @@ Lambdas can be assigned to variables to be used throughout a program:
 Lambdas can be constructed without any arguments and then called with any value.
 ```
 def print5 := lam () := (@ 5) comma void.
-# prints 5
+-- prints 5
 print5:().
-# same
+-- same
 print5:2.
 ```
 
@@ -448,7 +455,7 @@ true
 Lambdas can be guarded with type notations:
 ```
 def add2 := lam int x := x + 2.
-# contract exception
+-- contract exception
 add2:5.0.
 ```
 
@@ -457,7 +464,7 @@ Lambdas remember the local context of when they were created:
 def add_to_3 := 
     let v := 3 in lam x := x + v.
     
-# yields 8
+-- yields 8
 add_to_3:5.
 ```
 
@@ -465,9 +472,9 @@ Lambdas can be chained together:
 ```
 def add_both := lam x := lam y := x + y.
 
-# yields a function
+-- yields a function
 add_both:4.
-# yields 6
+-- yields 6
 add_both:4:2.
 ```
 
@@ -514,7 +521,7 @@ for example:
 ```
 > def cat3 := lam x,y,z := x$y$z.
 
-# equivalent to "C":"B":"A":cat3
+-- equivalent to "C":"B":"A":cat3
 > appl cat3 ("A", "B", "C";).
 ABC
 ```
@@ -578,7 +585,7 @@ struct Error id,message;
 For example to match an error:
 
 ```
-# yields 2
+-- yields 2
 try 
     5.0 / 0.0 
 catch err with
@@ -800,10 +807,10 @@ and features no spaces.
 The macro body is declared just after the name in a single line macro def, and is placed on the lines after the body
 in a multi-line macro def.
 ```
-# single line macro, imports standard lib
+-- single line macro, imports standard lib
 #:lang cm
 
-# same as above, notice that "lang" is the name and "cm" is the body 
+-- same as above, notice that "lang" is the name and "cm" is the body 
 #:<lang
 cm
 >:#
@@ -814,7 +821,7 @@ To declare the schema and body for an inline macro use the following form:
 ```
 #:def:label{args} body
 
-# multi-line
+-- multi-line
 #:<def:label{args}
 body1
 body2
@@ -827,11 +834,11 @@ The names for the vars in the args must match the regex `[a-zA-Z0-9_]+`.
 
 Inline macros are applied with the following form:
 ```
-# no args
+-- no args
 {label}
-# one arg
+-- one arg
 {label arg}
-# two args...
+-- two args...
 {label arg1|arg2}
 ```
 
@@ -875,7 +882,7 @@ To escape `|` simply use `\|` instead.
 The `REST` macro arg can be used to refer to the remaining argments to the macro application.  
 `REST` must be the final argument to the macro def.
 ```
-# variadic infix operator
+-- variadic infix operator
 #:def:vari{op|v|REST} (v) op {vari op|REST}
 #:def+:vari{op|v} (v)
 
@@ -895,12 +902,12 @@ There are a number of features to use or manipulate the system in cm.
 ```
 > ls ".".
 (f.txt, dr, a.c;)
-> # we can use the utility function pprint (pretty print) from std.cm to print the list
+> -- we can use the utility function pprint (pretty print) from std.cm to print the list
 > (ls "."):pprint.
 f.txt
 dr
 a.c
-> # we can also use the utility function "lsc" (list current) as a shorthand for this
+> -- we can also use the utility function "lsc" (list current) as a shorthand for this
 > :>lsc.
 f.txt
 dr
@@ -914,7 +921,7 @@ a.c
 > cd "cm".
 > cd "".
 /home/usr/dir/cm/
-> # we can use the utility function "cdc" to mean cd ""
+> -- we can use the utility function "cdc" to mean cd ""
 > :>cdc.
 /home/usr/dir/cm/
 ```
@@ -951,7 +958,7 @@ true
 ```
 > getlinesf "f.txt".
 ("line 1", "this is line 2", "final line";)
-> # the utility func "catf" will pretty print the file for us
+> -- the utility func "catf" will pretty print the file for us
 > catf:"f.txt".
 line1
 this is line 2
@@ -1005,55 +1012,33 @@ The `peek_string` keyword peeks at standard input (without consuming.) It takes 
 where the first is the number of chars to read, and the second is the number of bytes at the begining of the input to skip.  
 
 The `read_line` keyword will read from standard input until a newline is reached.  
-  
-As an example of these concepts, here is an in language repl implementation:
-```
-@ "Please enter an expr to compute, or `#exit` or `#e` to exit:".
-
-def cont := true.
-while cont do
-    write_string "> " comma
-    (def resp := read_line) comma
-
-    if resp = "#exit" or resp = "#e" 
-    then 
-        (def cont := false) 
-    else
-        try
-            (@ evalxp resp)
-        catch e with
-            match e | struct Error (_,msg;) -> @ msg end
-//
-
-@ "Good Bye!".
-```
+ 
 
 ## Code Examples
 ```
-# Find Factorial n
+-- Find Factorial n
 def fact := lam int n :=
     | n < 2 -> 1
     else n * (fact:(n - 1)).
     
-# prints 24
+-- prints 24
 @ fact:4.
 
+--------------------------------
 
-######################################
-
-# yields larger number
+-- yields larger number
 def max := lam int n1, int n2 :=
     if n1 > n2 then n1 else n2.
 
-# prints 7
+-- prints 7
 @ appl max (4,7;).
-# still prints 7
+-- still prints 7
 @ appl max (7,4;).
 
 
-######################################
+--------------------------------
 
-# Finds last element of list, or errors if list is null
+-- Finds last element of list, or errors if list is null
 def get_last := lam list lst := 
     match lst 
     | () -> error "List was empty." 
@@ -1061,47 +1046,47 @@ def get_last := lam list lst :=
     | h, t -> get_last:t
     end.
    
-# prints 7
+-- prints 7
 @ get_last:(3,5,7;).
 
-# prints 3
+-- prints 3
 @ get_last:(3;).
 
-# throws error
+-- throws error
 @ get_last:null.
 
 
-######################################
+--------------------------------
 
 defun print_range (int r1, int r2) :=
     | r1 > r2 -> void
     else
-        (def __ := r1 - 1) comma 
-        while __ != r2 - 1 do @ def __ := __ + 1.
+        (def _ := r1 - 1) comma 
+        while _ != r2 - 1 do @ set _ := _ + 1//
 
-# prints nothing
+-- prints nothing
 appl print_range (4,4;).
-# prints 4 5 6 7
+-- prints 4 5 6 7
 appl print_range (4,8;).
 
 
-######################################
+--------------------------------
 
-# types valid for btree
+-- types valid for btree
 def b_types := ("struct Bn", "struct Leaf";).
 
-# creates binary tree node schema
+-- creates binary tree node schema
 typedef Bn := 
     dynamic val,
     types b_types left,
     types b_types right;.
     
-# creates leaf schema (notice no args to type constructor)
+-- creates leaf schema (notice no args to type constructor)
 typedef Leaf := ().
 
-# simple binary node (parens are necessary around sub struct constructors for syntax reasons)
+-- simple binary node (parens are necessary around sub struct constructors for syntax reasons)
 def b1 := struct Bn (5, (struct Leaf ()), (struct Leaf ());).
-# another with a deeper subtree
+-- another with a deeper subtree
 def b2 := 
     struct Bn 
         (5,
@@ -1111,7 +1096,7 @@ def b2 :=
             (struct Leaf ());)),
         (struct Leaf ());).
 
-# yields the height of a binary tree
+-- yields the height of a binary tree
 defun bn_height (types b_types n) := 
     match n
     | struct Leaf () -> 1 
@@ -1119,10 +1104,10 @@ defun bn_height (types b_types n) :=
         1 + appl max ((bn_height:left), (bn_height:right);)
     end.
 
-# prints 2
+-- prints 2
 @ bn_height:b1.
-# prints 3
+-- prints 3
 @ bn_height:b2.
-# prints 1
+-- prints 1
 @ bn_height:(struct Leaf ()).
 ```
