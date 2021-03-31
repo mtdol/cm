@@ -244,6 +244,7 @@ defun catf f :=
 
 -- wraps and builds a list
 #:def:list{REST} ({list_aux REST})
+#:def+:list{} ()
 #:def:list_aux{v|REST} (v), {list_aux REST}
 #:def+:list_aux{v} (v);
 #:def+:list_aux{} ()

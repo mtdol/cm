@@ -1,3 +1,3 @@
 def x := 2 * (3 + 2).
 def add1 := lam v := v + 1.
-@ add1:x. # prints 11
+@ add1:x. -- prints 11

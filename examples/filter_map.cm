@@ -1,14 +1,14 @@
 #:lang cm
 
-# filters so only non-negative floats are present,
-# then converts all to ints
+-- filters so only non-negative floats are present,
+-- then converts all to ints
 @ let vals :=
     (appl filter 
         ((lam x := not (negf?:x)),
         (5.7,-0.0,6.8,-5.8;);)) 
     in appl map ((lam x := int x),vals;).
 
-# returns the max of each sub pair (7, 9, 7;)
+-- returns the max of each sub pair (7, 9, 7;)
 @ appl map
     ((lam x := appl max (`x,~x;)),
     ((4,7),(5,9),(7,3););).

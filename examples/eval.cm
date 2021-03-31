@@ -1,2 +1,2 @@
-@ eval "1 + 2 + 3.".  # runs the following code
-                           # and prints the result (6). 
+@ eval "1 + 2 + 3.".  -- runs the following code
+                           -- and prints the result (6). 

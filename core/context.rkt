@@ -12,7 +12,7 @@
 (struct Fun (var type context expr))
 
 (define current-module-id "0")
-(define (get-current-module-id) current-module-id)
+(define (get-current-module-id) (string-copy current-module-id))
 (define (set-current-module-id! val) (set! current-module-id val))
 
 
@@ -23,7 +23,8 @@
          [(GlobalContextKey _ _ _) 
           (follow-key-to-entry (hash-ref global-context ref))]
          [(GlobalContextEntry _ _) ref]
-         [(Reference ref) (follow-key-to-entry ref)]
+         [(Reference ref)
+          (follow-key-to-entry ref)]
          [_ #f]
          ))
 
@@ -240,21 +241,43 @@
     (get-global-context-keys type module-id public-only?))
   )
 
-;; print the macro-context (for debugging)
-(define (print-macro-context)
-  (let aux ([ms (get-global-context-pairs "macro" '() #f)])
+(define (get-label-of-key key)
+  (match key
+         [(GlobalContextKey _ label _) label]
+         [_ #f]))
+
+(define (sort-global-context-pairs pairs)
+  (sort  
+     pairs
+     (lambda (elem1 elem2) 
+       (string<?
+        (get-label-of-key (car elem1))
+        (get-label-of-key (car elem2))))))
+
+;; print the global-context (for debugging)
+(define (print-global-context)
+  (let aux ([ms (append 
+                  (sort-global-context-pairs 
+                    (get-global-context-pairs "macro" '() #f))
+                  (sort-global-context-pairs
+                    (get-global-context-pairs "type" '() #f))
+                  (sort-global-context-pairs 
+                    (get-global-context-pairs "var" '() #f))
+                  )])
     (match ms
         ['() (void)]
         [(cons (cons label (GlobalContextEntry defs _)) t) 
          (display (format "label: ~a\n" label))
-         (print-macro-entries defs)
+         (print-entries defs)
          (displayln "")
          (aux t)]
-    )))
+    ))
+  )
 
-(define (print-macro-entries es)
+(define (print-entries es)
   (match es
          ['() (void)]
          [(cons (MacroRule vars body) t)
           (display (format "vars:\n~a\nbody:\n~a\n" vars body))
-          (print-macro-entries t)]))
+          (print-entries t)]
+         [e (displayln e)]))
