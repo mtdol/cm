@@ -4,7 +4,7 @@
 (check-equal? (run "4 - 1")
 3)
 
-(check-equal? (run "4 -- 1")
+(check-equal? (run "4 - - 1")
 5)
 
 (check-equal? (run "+4 - 1")

@@ -3,7 +3,7 @@
 
 ;; words that cannot be used in variable names
 (define reserved-keywords 
- (set "(" ")" "[" "]" "{" "}" "#" "null" "head" "`"
+ (set "(" ")" "[" "]" "{" "}" "#" "#:" "--" "null" "head" "`"
       "tail" "~" "cons" "," ";" "=" "equal" "equals" "!=" "not_equal" ">" "gt" "<"
       "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" "*" "star"
       "/" "slash" "^" "caret" "%" "mod" "&" "and" "||" "or" "xor" "not" "!" "true" "false"

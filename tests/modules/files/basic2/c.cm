@@ -1,4 +1,4 @@
-# guarded definition, to avoid redefining c when the file is reloaded
+-- guarded definition, to avoid redefining c when the file is reloaded
 if not defined? "c" then def c := 3 else void.
 
 defun inc () :=

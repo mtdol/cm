@@ -1,16 +1,20 @@
 . documentation and tests for standard library
 . regex
+    - regex-match
+    - regex-match*
+    - regex-match?
+    - regex-split
+    - regex-replace
+    - regex-replace*
 
-. Macro system additions
-    - {tok= a|b|c|d}
-        -- if tokens in a = tokens in b then c else d
-    - conditional pre-lex macros
-        -- #:ifdef a
-            code here
-           #:endif
+    - possible form:
+        -- regex {list "match" | "[ab]{2}(c+)" | "aaccf"}
+    - will pretty closely follow racket regex, can point this out in documentation
 
 . enhance cm.exe
     - allow --pkg to be used without cd'ing to the cm directory
     - -pkg
         -- -add -remove -show
         -- change install scripts into package managers
+
+! modules system is not working on windows, references result in infinite recursion

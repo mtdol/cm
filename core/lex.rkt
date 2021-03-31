@@ -30,7 +30,7 @@
 
   [string-char (:~ #\")]
 
-  [comment (:: "#" (:~ ":") (:* (:~ #\newline)))]
+  [comment (:: "--" (:* (:~ #\newline)))]
   [macro (:: "#:" (:* (:~ #\newline)))]
 
 

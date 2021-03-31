@@ -58,7 +58,7 @@
 (check-equal? (tokenize-string "cond|true->2.else3.")
 '("cond" "case" "true" "yields" "2" "dot" "else3" "dot"))
 
-(check-equal? (tokenize-string "cond|tru#e->2.else3.")
+(check-equal? (tokenize-string "cond|tru--e->2.else3.")
 '("cond" "case" "tru"))
 
 (check-equal? (tokenize-string "cond|\ntrue->2.else3.")
@@ -67,11 +67,11 @@
 (check-equal? (tokenize-string "cond|\ntrue->\n2.else3.")
 '("cond" "case" ":newline" "true" "yields" ":newline" "2" "dot" "else3" "dot"))
 
-(check-equal? (tokenize-string "cond|\ntrue#->\n2.else3.")
+(check-equal? (tokenize-string "cond|\ntrue-->\n2.else3.")
 '("cond" "case" ":newline" "true" ":newline" "2" "dot" "else3" "dot"))
 
-(check-equal? (tokenize-string "cond|\nt#rue->\n2.else3.")
+(check-equal? (tokenize-string "cond|\nt--rue->\n2.else3.")
 '("cond" "case" ":newline" "t" ":newline" "2" "dot" "else3" "dot"))
 
-(check-equal? (tokenize-string "cond|\nt#rue->\n2.el#se3.")
+(check-equal? (tokenize-string "cond|\nt--rue->\n2.el--se3.")
 '("cond" "case" ":newline" "t" ":newline" "2" "dot" "el"))

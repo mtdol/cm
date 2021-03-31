@@ -1,12 +1,12 @@
-#
-# IO
-#
+--
+--- IO
+--
 
-# allows print to be used like a function
+-- allows print to be used like a function
 defun print2 v := print v. 
-# prints and yields void
+-- prints and yields void
 defun sprint v := (print v) comma void. 
-# pretty print
+-- pretty print
 defun pprint vs :=
     match vs 
     | () -> void 
@@ -15,9 +15,9 @@ defun pprint vs :=
     end.
 
 
-#
-# Math, lists
-#
+--
+--- Math, lists
+--
 
 defun number? v :=
     let t := type v in
@@ -54,22 +54,22 @@ defun to_float n := float n.
 defun to_string n := string n.
 defun to_bool n := bool n.
 
-# maps f onto all members of list lst
+-- maps f onto all members of list lst
 defun map (fun f, list lst) := 
     | null? lst -> null 
     else (f:`lst), (appl map (f,~lst;)).
 
-# returns a list with only the elements that are true according to f
+-- returns a list with only the elements that are true according to f
 defun filter (fun f, list lst) := 
     | null? lst -> null 
     | f:`lst -> `lst, (appl filter (f,~lst;))
     else appl filter (f,~lst;).
 
-# int | float -> int | float
+-- int | float -> int | float
 defun max (n1, n2) :=
     if n1 > n2 then n1 else n2.
 
-# int | float -> int | float
+-- int | float -> int | float
 defun min (n1, n2) :=
     if n1 < n2 then n1 else n2.
 
@@ -103,11 +103,11 @@ defun foldr (fun f, dynamic acc, list vs) :=
     appl foldl (f, acc, (reverse:vs);).
 
 
-#
-# String funcs
-#
+--
+--- String funcs
+--
 
-# function form of the substring functionality of the index keyword
+-- function form of the substring functionality of the index keyword
 defun substring (string s, int i1, int i2) :=
     index s (i1,i2;).
 
@@ -120,21 +120,21 @@ defun concatenate (string s1, string s2) :=
 defun string_length string s :=
     length s.
 
-# turns the string into a list of length 1 substrings
+-- turns the string into a list of length 1 substrings
 defun string_to_list string s :=
     match s
     | "" -> ()
     | _ -> (index s 0), (string_to_list : (index s (1, length s;)))
     end.
 
-# concatenates all of the elems in the list into a single string
+-- concatenates all of the elems in the list into a single string
 defun list_to_string list ss :=
     match ss
     | () -> ""
     | s, t -> s $ (list_to_string:t)
     end.
 
-# replaces all instances of target substring with rep
+-- replaces all instances of target substring with rep
 defun string_replace (string str, string targ, string rep) :=
     if length str < length targ
     then str
@@ -145,13 +145,13 @@ defun string_replace (string str, string targ, string rep) :=
             let str2 := str::(length targ, length str;) in
                rep $ (appl string_replace (str2, targ, rep;)) 
         else
-            # get first char
+            -- get first char
             let c := str::0 in
-            # get rest of string
+            -- get rest of string
             let str2 := str::(1, length str;) in
             c $ (appl string_replace (str2, targ, rep;))//
                
-# takes a string of form "~1 ~2 ~3 ~1" and turns it into "v1 v2 v3 v1"
+-- takes a string of form "~1 ~2 ~3 ~1" and turns it into "v1 v2 v3 v1"
 defun format (string str, list vs) :=
     let aux := defun _aux_ (str, vs, i) := 
         match vs
@@ -163,9 +163,9 @@ defun format (string str, list vs) :=
     in
         appl aux (str, vs, 1;)//
 
-#
-# Hashmap
-#
+--
+--- Hashmap
+--
 
 defun list_to_hash list ms :=
     appl foldl 
@@ -179,9 +179,9 @@ defun list_to_mutable_hash list ms :=
         (make_hash "mutable"),
         ms;). 
 
-#
-# System
-#
+--
+--- System
+--
 
 match system_type
 | "windows" -> (eval "#:def:win{} true") comma void
@@ -190,7 +190,7 @@ match system_type
 | _ -> void
 end.
 
-# cds only if the directory exists
+-- cds only if the directory exists
 defun cd2 string s :=
     if dir_exists? s 
     then 
@@ -198,54 +198,67 @@ defun cd2 string s :=
     else 
         error ("SYSTEM", ("Dir "$s$" does not exist.");).
 
-# pretty print ls of current dir
+-- pretty print ls of current dir
 defun lsc () :=
     pprint:(ls ".").
 defun cdc () :=
     (cd "").
 
-# display contents of file
+-- display contents of file
 defun catf f :=
     pprint:(getlinesf f).
 
 
-#
-# Macros
-#
+--
+--- Macros
+--
 
-# macro that yields nothing
+-- macro that yields nothing
 #:def:empty{}
 
-# macro that returns what it is given
-#:def:arg{a} a
+-- macro that returns what it is given with arguments flattened out
+#:def:flatten{v|REST} v {flatten REST}
+#:def+:flatten{v} v
+#:def+:flatten{} {empty}
 
-# wraps args
+-- nested comment
+#:def:--{REST} {empty}
+#:def+:--{} {empty}
+
+-- wraps args
 #:def:wrap{arg} (arg)
 
 #:def:vari{op|v|REST} (v) op {vari op|REST}
 #:def+:vari{op|v} (v)
 
-# string generator
+-- string generator
 #:def:${v|REST} {string v} $ " " $ {$ REST}
 #:def+:${v} {string v}
 #:def+:${} ""
 
-# code block
+-- code block
 #:def:%{v|REST} (v) comma {% REST}
 #:def+:%{v} (v) comma void
 #:def+:%{} void
 
 
-# wraps and builds a list
+-- wraps and builds a list
 #:def:list{REST} ({list_aux REST})
 #:def:list_aux{v|REST} (v), {list_aux REST}
 #:def+:list_aux{v} (v);
 #:def+:list_aux{} ()
 
-# apply args to function
+-- apply args to function
 #:def::{f|REST} appl f {list REST}
 
-# only defines if the given var is defined else returns void
+-- only defines if the given var is defined else returns void
 #:<def:defcheck{types|var}
 if defined? {string var} then void else def types var
 >:#
+
+#:def:when{guard|result} if (guard) then (result) else void 
+#:def:unless{guard|result} if (guard) then void else (result)
+
+-- multi-argument let
+#:def:let{var|val|REST} let var := (val) in {let REST}
+#:def+:let{var|val} let var := (val)  
