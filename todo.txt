@@ -17,4 +17,7 @@
         -- -add -remove -show
         -- change install scripts into package managers
 
+- line number issues in pre-parse
+    -- probably should just put linenumbers onto tokens directly
+
 - string replace\format is not working in std.cm

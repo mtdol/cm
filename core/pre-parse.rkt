@@ -8,16 +8,21 @@
 
 ;; prepares the main token list for parsing
 (define (pre-parse tokens) 
+  (set-current-linenum! 1)
   (parse-macro-tokens tokens 0))
 
 (define (parse-macro-tokens tokens depth)
   (match tokens
          [_ #:when (> depth 5000) 
-            (cm-error "MACRO" "Too many macro applications. Possible infinite recursion detected.")]
+            (cm-error-linenum 
+              (get-current-linenum) 
+              "MACRO" 
+              "Too many macro applications. Possible infinite recursion detected.")]
          ['() '()]
          [(cons "{" (cons h2 t)) 
           (if (string=? h2 "}") 
-            (cm-error "MACRO" "Missing label for macro.")
+            (cm-error-linenum 
+              (get-current-linenum) "MACRO" "Missing label for macro.")
             (parse-macro-contents t h2 '(()) 0 depth))]
          [(cons h t) (cons h (parse-macro-tokens t depth))]
    ))
@@ -27,7 +32,9 @@
 ;; string list, string, string list list, int, int -> string list
 (define (parse-macro-contents tokens label args bcount depth)
   (match tokens 
-         ['() (cm-error "MACRO" "Missing closing brace for macro application.")]
+         ['() (cm-error-linenum 
+                (get-current-linenum)
+                "MACRO" "Missing closing brace for macro application.")]
          ;; shifting to next argument
          [(cons "case" t) #:when (zero? bcount) (parse-macro-contents t label 
                             (cons '() (cons (reverse (car args)) (cdr args)))
@@ -67,7 +74,9 @@
            [(cons h t) #:when 
                     (and first? (and (is-operator? h)
                                      (string=? (op-to-position h) "infix")))
-                (cm-error "SYNTAX" (format "Missing operand(s) for ~a." h))]
+                (cm-error-linenum 
+                  (get-current-linenum) 
+                  "SYNTAX" (format "Missing operand(s) for ~a." h))]
            [(cons h1 (cons h2 t)) #:when 
                       (and (or (string=? "(" h1) 
                                (and (is-operator? h1) (not (zero? (op-to-arity h1))))) 
@@ -75,6 +84,8 @@
                     (cond [(or (string=? "plus" h2) (string=? "minus" h2))
                         ;; call aux on uni since it is also an operator
                         (cons h1 (aux (cons (string-append ":uni_" h2) t) #f))]
-                          [else (cm-error "SYNTAX" (format "Missing operand(s) for ~a." h1))])]
+                          [else (cm-error-linenum 
+                                  (get-current-linenum) 
+                                  "SYNTAX" (format "Missing operand(s) for ~a." h1))])]
            [(cons h t) (cons h (aux t #f))]
            ['() '()])))

@@ -44,6 +44,7 @@
 ;; all the files to import for standard cm lang
 (define cm-lang-imports '("std_lib::std.cm"))
 (define (process-macro name body linenum)
+  (set-current-linenum! linenum)
   (match name
          ["lang" 
           (if (string=? body "cm")
@@ -54,8 +55,6 @@
          [name #:when (regexp-match? #rx"^def\\:.*" name)
                (match (regexp-match #rx"^def\\:([^{}]+){([a-zA-Z0-9_\\|]*)\\}$" name)
                       [(list _ r2 r3)
-                       ;; for error linenums
-                       (set-current-linenum! linenum)
                        (set-macro! r2 
                                    (remove-bars (tokenize-string r3))
                                    (tokenize-string body)
@@ -66,7 +65,6 @@
          [name #:when (regexp-match? #rx"^def\\+\\:.*" name)
                (match (regexp-match #rx"^def\\+\\:([^{}]+){([a-zA-Z0-9_\\|]*)\\}$" name)
                       [(list _ r2 r3) 
-                       (set-current-linenum! linenum)
                        (append-to-macro! r2 (remove-bars (tokenize-string r3)) (tokenize-string body)) ""]
                       [_ (cm-error-linenum linenum "LEX" "Invalid macro def name.")]
 
@@ -129,7 +127,9 @@
 (define (file-list-string->list str) 
   (map (lambda (elem) 
          (match (unwrap-string elem) 
-           [#f (cm-error "LEX" "File list arguments must be strings wrapped in quotes.")]
+           [#f (cm-error-linenum 
+                 (get-current-linenum)
+                 "LEX" "File list arguments must be strings wrapped in quotes.")]
            [res res] 
            ))
        ;; remove the "," from the string
@@ -142,10 +142,13 @@
 (define (lazy-import-string->list str)
   (let ([tokens (tokenize-import-string str)])
     (unless (and (> (length tokens) 2) (equal? (car (cdr tokens)) "->"))
-      (cm-error "LEX" "Improperly formed lazy_import."))
+      (cm-error-linenum
+        (get-current-linenum) "LEX" "Improperly formed lazy_import."))
       (values 
         (match (unwrap-string (car tokens)) 
-           [#f (cm-error "LEX" "File arguments to lazy_import must be strings wrapped in quotes.")]
+           [#f (cm-error-linenum 
+                 (get-current-linenum) 
+                 "LEX" "File arguments to lazy_import must be strings wrapped in quotes.")]
            [res res] 
            )
         ;; mode 0 = type name, 1 = cons
@@ -156,7 +159,8 @@
                  [(cons type (cons var t)) 
                   #:when (= 0 mode)
                   (cons (cons type (unwrap-string-if-necessary var)) (aux t 1))]
-                 [_ (cm-error "LEX" "Improperly formed lazy_import.")])))))
+                 [_ (cm-error-linenum 
+                      (get-current-linenum) "LEX" "Improperly formed lazy_import.")])))))
 
 ;; macros have two forms:
 ;; #:name body

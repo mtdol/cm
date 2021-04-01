@@ -51,8 +51,11 @@
    (if (ormap (lambda (type) (assign-types-match? type value id)) types)
      (void)
      (cm-error "CONTRACT" 
-       (format "Recieved type ~a for var ~a but expected one of ~a." 
-               (get-type value) id (string-coerce types)))))
+       (if (= 1 (length types))
+         (format "Recieved type ~a for var ~a but expected ~a." 
+               (get-type value) id (string-coerce (car types)))
+         (format "Recieved type ~a for var ~a but expected one of ~a." 
+               (get-type value) id (string-coerce types))))))
 
 ;; checks that the types list is formated correctly and then yields it, else
 ;; throws an exception

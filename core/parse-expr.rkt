@@ -76,7 +76,7 @@
              (append (tokens-to-prefix-form (reverse acc))
                             (list h) (tokens-to-prefix-form t))
              ;(append (tokens-to-prefix-form acc) (list h) (tokens-to-prefix-form (reverse t)))
-             (cm-error error-id "Cannot pemdas parse prefix op.")
+             (cm-error-linenum (get-current-linenum) error-id "Cannot pemdas parse prefix op.")
              )]
         ;; infix op found matching precedence
         [(cons h t) #:when (and (zero? pcount) (is-operator? h) (= (op-to-precedence h) preced)
@@ -102,10 +102,12 @@
          [(cons h t) #:when (is-operator? h) 
                      (match (parse-op h t) 
                             [ast #:when (not (null? expr-tail))
-            (cm-error error-id 
+            (cm-error-linenum (get-current-linenum) error-id 
                       "Invalid Expression. Probably missing an operator.")]
                             [ast ast])]
-         [_ (cm-error error-id "Invalid Expression. Probably missing an operator.")]))
+         [_ (cm-error-linenum 
+              (get-current-linenum) 
+              error-id "Invalid Expression. Probably missing an operator.")]))
 
 (define (parse-op op tail)
   (let ([nodes (acc-operands tail '() (op-to-arity op) op)]
@@ -122,7 +124,9 @@
      ['() (cond
                 ;; set the tail for later use
                 [(zero? arity) (set! expr-tail '()) (reverse acc)]
-                [else (cm-error error-id (format "Operand(s) missing for ~a." op))])]
+                [else (cm-error-linenum 
+                        (get-current-linenum) 
+                        error-id (format "Operand(s) missing for ~a." op))])]
      [(cons h t) #:when (zero? arity)
             (set! expr-tail (cons h t)) (reverse acc)]
      [(cons h t) #:when (is-operator? h)
@@ -145,5 +149,10 @@
         [(string=? token "system_type") (String (symbol->string (system-type)))]
         [(string=? token "read_line") (Prim0 'read_line)]
         [(is-var-token? token) (Var token)]
-        [(is-operator? token)  (cm-error error-id (format "Operand(s) missing for ~a." token))]
-        [else (cm-error error-id (format "Invalid variable name: ~a." token))]))
+        [(is-operator? token)  
+         (cm-error-linenum 
+            (get-current-linenum) 
+            error-id (format "Operand(s) missing for ~a." token))]
+        [else (cm-error-linenum 
+                (get-current-linenum) 
+                error-id (format "Invalid variable name: ~a." token))]))

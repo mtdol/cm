@@ -1,11 +1,12 @@
 #lang racket
 (require cm/core/lex cm/core/ast cm/core/parse-expr 
          cm/core/parse-stat cm/core/interp cm/core/ast-to-string
-         cm/core/types cm/core/context cm/core/modules)
+         cm/core/types cm/core/context cm/core/modules cm/core/error)
 (provide run run-file run-expr run-tokenize-string run-tokenize-file
          run-parse run-parse-expr run-parse-file run-parse-file run-prefix-form
          run-ast-to-string 
-         display-output display-expr-output silent)
+         display-output display-expr-output silent
+         set-verbose-error-level!)
 
 ;; reads over each list element and prints its tostring
 ;; value list | value -> void
@@ -16,6 +17,8 @@
            ;; if output is void
            [_ (void)]
            ))
+
+(define (set-verbose-error-level!) (set-error-level! VERBOSE_ERR_LEVEL))
 
 ;; coerces an expr to a string and prints
 (define (display-expr-output input)

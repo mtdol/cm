@@ -50,13 +50,13 @@
    [(:: #\" (:* (:or (:: "\\\"") (:~ #\"))) #\") lexeme]
    [(:: #\" (:* (:~ #\"))) (match start-pos [(position colnum linenum _)
                         (cm-error-linenum linenum error-id 
-                                (format "Non-terminated string around column ~a" colnum))])]
+                                (format "Non-terminated string around column ~a." colnum))])]
    ;; everything else (vars and operators)
    [(:+ (:& (:+ any-char) (:~ import-key-token) (:~ whitespace) (:~ #\"))) lexeme]
    ;; custom error behavior
    [any-char (match start-pos [(position colnum linenum _)
                         (cm-error-linenum linenum error-id 
-                                (format "Lexing failure around column ~a" colnum))])]
+                                (format "Lexing failure around column ~a." colnum))])]
    ))
 
 (define cmlex
@@ -121,13 +121,13 @@
    [(:: #\" (:* (:or (:: "\\\"") (:~ #\"))) #\") lexeme]
    [(:: #\" (:* (:~ #\"))) (match start-pos [(position colnum linenum _)
                         (cm-error-linenum linenum error-id 
-                                (format "Non-terminated string around column ~a" colnum))])]
+                                (format "Non-terminated string around column ~a." colnum))])]
    ;; everything else (vars and operators)
    [(:+ (:& (:+ any-char) (:~ key-token) (:~ whitespace) (:~ #\"))) lexeme]
    ;; custom error behavior
    [any-char (match start-pos [(position colnum linenum _)
                         (cm-error-linenum linenum error-id 
-                                (format "Lexing failure around column ~a" colnum))])]
+                                (format "Lexing failure around column ~a." colnum))])]
    ))
 
 

@@ -1,10 +1,22 @@
 #lang racket
-(require racket/lazy-require)
+(require racket/lazy-require cm/core/ast)
 (lazy-require (cm/core/context [get-current-module-id])
               (cm/core/types [value->displayable-string]))
 (provide cm-error cm-error-linenum cm-error-with-line-handler get-current-linenum
-         set-current-linenum! get-trace-data set-trace-data!
+         set-current-linenum! 
+         get-trace-stack push-elem-to-trace-stack! pop-elem-from-trace-stack!
+         reset-trace-stack! ast-node-to-trace-elem run-and-reset-stack
+         trace-stack->string
+         TraceElem
+         VERBOSE_ERR_LEVEL LIGHT_ERR_LEVEL 
+         get-error-level set-error-level!
          get-id-from-message try-with-error)
+
+(define VERBOSE_ERR_LEVEL 1)
+(define LIGHT_ERR_LEVEL 0)
+(define error-level LIGHT_ERR_LEVEL)
+(define (get-error-level) error-level)
+(define (set-error-level! level) (set! error-level level))
 
 (define error-types
     (set (list
@@ -14,35 +26,120 @@
 
 ;; line-number belonging to the current statement
 (define current-linenum 0)
-(define (get-current-linenum) 0)
+(define (get-current-linenum) current-linenum)
 (define (set-current-linenum! linenum) (set! current-linenum linenum))
 
-(define trace-data '())
-(define (get-trace-data) trace-data)
-(define (set-trace-data! v) (set! trace-data v))
+;; (TraceElem "var" "x" "/home/user/cm/std_lib/std.cm" 32)
+;; (TraceElem "fun" "add1" "/home/user/cm/std_lib/std.cm" 32)
+;; (TraceElem "statement" "" "/home/user/cm/std_lib/std.cm" 32)
+;;
+;; "var" | "statement", string, string, int
+(struct TraceElem (type label module-id linenum) #:transparent)
+
+(define trace-stack '())
+(define (get-trace-stack) trace-stack)
+(define (push-elem-to-trace-stack! elem) 
+  (set! trace-stack (cons elem trace-stack)))
+;; pops a element from the trace stack and returns void
+;; if no element is present, then does nothing
+(define (pop-elem-from-trace-stack!)
+  (unless (null? trace-stack)
+    (set! trace-stack (cdr trace-stack))))
+(define (reset-trace-stack!) (set! trace-stack '()))
+
+;; takes in a val, resets stack and returns val
+(define (run-and-reset-stack v) (reset-trace-stack!) v)
+
+(define (ast-node-to-trace-elem ast) 
+  ;; get the label of the struct
+  (let ([type (symbol->string (prefab-struct-key ast))])
+    (match ast
+        [(Prim1 op _) 
+         (TraceElem type op (get-current-module-id) current-linenum)]
+        [(Prim2 op _ _) 
+         (TraceElem type op (get-current-module-id) current-linenum)]
+        [(Prefix2 op _ _) 
+         (TraceElem type op (get-current-module-id) current-linenum)]
+        [(Prefix3 op _ _ _) 
+         (TraceElem type op (get-current-module-id) current-linenum)]
+        [(Var id) 
+         (TraceElem type id (get-current-module-id) current-linenum)]
+        [_ (TraceElem type "" (get-current-module-id) current-linenum)]
+           )))
+
+;; removes all "statement" entries unless they are the first elem in the stack
+;; null -> TraceElem list
+(define (trim-trace-stack) 
+  (match trace-stack
+         ['() '()]
+         [(cons h t) 
+          (cons h 
+            (filter 
+              (lambda (elem) 
+                (match elem [(TraceElem "statement" _ _ _) #f] [_ #t]))
+              trace-stack))]
+         [h h]))
+
+;; formats `until` elements from the trace stack, starting from the freshest elements.
+;; If until is #f, then all elements will be used
+;;
+;; if `trim`, then a statement will only be included if it is the first element
+;; in the trace-stack
+;;
+;; int | bool -> string
+(define (trace-stack->string until trim?)
+  (let ([until (if until until (sub1 (length trace-stack)))])
+  (let aux ([elems (if trim? (trim-trace-stack) trace-stack)] [i 0] [last #f] [last-count 0])
+       (match elems
+              [(cons h t) #:when (equal? h last) (aux t i last (add1 last-count))]
+              [(cons h t)
+               #:when (and (not (zero? last-count)) (not (equal? h last)))
+               (string-append 
+                 (format "  {Repeats ~a time(s)...}\n" last-count)
+                 (aux (cons h t) i #f 0))]
+              ['() #:when (not (zero? last-count)) 
+               (string-append 
+                 (format "  {Repeats ~a time(s)...}" last-count))]
+              [_ #:when (= until i) ""]
+              ['() ""]
+              [(cons (TraceElem type label module-id linenum) t)
+               (string-append 
+                 (if (string=? "" type)
+                   (format "  Module: \"~a\":~a ~a\n"
+                                  module-id linenum  type)
+                   (format "  Module: \"~a\":~a ~a ~a\n"
+                                  module-id linenum type label))
+                   (aux t (add1 i) (car elems) 0))]
+              [(cons (TraceElem "statement" label module-id linenum) t)
+               (string-append 
+                 (format "  Statement:: Module: \"~a\":~a\n"
+                                module-id linenum)
+                 (aux t (add1 i) (car elems) 0))]))))
 
 (define (get-trace-message)
-  (match trace-data
-         ['() 
-          (string-append
-            "module: "
-            (get-current-module-id)
-            "\n"
-            "linenum: "
-            (number->string current-linenum)
-            )]))
+  (match trace-stack
+         [_ #:when (= error-level VERBOSE_ERR_LEVEL)
+            (trace-stack->string #f #f)]
+         [_ 
+            (trace-stack->string 20 #f)]
+         ))
 
-;; general error function
+;; general error function,
+;; performs stack trace
 (define (cm-error id message)
-  (error (string-append
-    id ": "
-    (value->displayable-string message) "\n\n"
-    (get-trace-message))))
+  (let ([trace-message (get-trace-message)])
+    (reset-trace-stack!)
+    (error 
+      (format "~a: ~a\n\nstack trace:\n~a"
+        id (value->displayable-string message) trace-message))))
 
 
+;; simple error function,
+;; no stack trace, but prints line number and module-id
 (define (cm-error-linenum linenum id message)
-  (set-current-linenum! linenum)
-  (cm-error id message))
+  (error 
+    (format "~a: ~a\n\nModule: \"~a\":~a"
+            id message (get-current-module-id) linenum)))
 
 ;; sets current linenum and execs the proc
 (define (cm-error-with-line-handler linenum proc args) 
