@@ -13,43 +13,51 @@
 #:def:--{REST} {empty}
 #:def+:--{} {empty}
 
--- wraps args
-#:def:wrap{arg} (arg)
-
-#:def:vari{op|v|REST} (v) op {vari op|REST}
+#:def:vari{op|v|REST} ((v) op {vari op|REST})
 #:def+:vari{op|v} (v)
 
--- string generator
-#:def:${v|REST} {string v} $ " " $ {$ REST}
-#:def+:${v} {string v}
-#:def+:${} ""
-
 -- code block
-#:def:%{v|REST} (v) comma {% REST}
-#:def+:%{v} (v) comma void
+#:def:%{v|REST} ((v) comma {% REST})
+#:def+:%{v} ((v) comma void)
 #:def+:%{} void
 
-
 -- wraps and builds a list
-#:def:list{REST} ({list_aux REST})
-#:def:list_aux{v|REST} (v), {list_aux REST}
-#:def+:list_aux{v} (v);
-#:def+:list_aux{} ()
+#:def:list{v|REST} ((v), {list REST})
+#:def+:list{v} ((v);)
+#:def+:list{} ()
 
 -- apply args to function
 #:def::{f|REST} (appl f {list REST})
+#:def+::{f} (:>f)
 
 -- only defines if the given var is defined else returns void
-#:<def:defcheck{types|var}
-if defined? {string var} then void else def types var
+#:<def:defcheck{guard|var}
+if defined? {string var} then void else def guard var
 >:#
 
-#:def:when{guard|result} if (guard) then (result) else void 
-#:def:unless{guard|result} if (guard) then void else (result)
+#:def:when{guard|result} (if (guard) then (result) else void) 
+#:def:unless{guard|result} (if (guard) then void else (result))
 
 -- multi-argument let
 #:def:let{var|val|REST} let var := (val) in {let REST}
 #:def+:let{var|val} let var := (val)  
+
+
+-- checks that the types of items in REST equal
+#:<def:assert_types={op|type_str|REST}
+if not ({_assert_types=_aux type_str | REST}) 
+    then error 
+        {list "CONTRACT"
+            | {: format
+                | "Types do not equal for ~1: \n~2"
+                | {list {string op} | string {list REST}}}}
+    else
+    -- user code after this
+>:#
+#:<def:_assert_types=_aux{type_str|a|REST}
+(type (a) = type_str) and {_assert_types=_aux type_str|REST} 
+>:#
+#:def+:_assert_types=_aux{type_str|a} type (a) = type_str
 
 
 --- IO
@@ -72,29 +80,20 @@ defun pprint vs :=
 ------------------------------
 
 #:def:_number{} types ("int", "float";)
-#:<def:assert_types={a|b}
-if type (a) != type (b) 
-    then error 
-        {list "CONTRACT"
-            | {: format
-                | "Types do not equal: \n~1\n~2"
-                | {list a|b}}}
-    else
-    -- user code after this
->:#
+
 
 defun number? v :=
     let t := type v in
         t = "int" or t = "float".
 
 defun add ({_number} n1, {_number} n2) :=
-    {assert_types= n1|n2} 
+    {assert_types= add|type n1|n1|n2} 
     n1 + n2.
 defun sub ({_number} n1, {_number} n2) :=
-    {assert_types= n1|n2} 
+    {assert_types= sub|type n1|n1|n2} 
     n1 - n2.
 defun mult ({_number} n1, {_number} n2) :=
-    {assert_types= n1|n2} 
+    {assert_types= mult|type n1|n1|n2} 
     n1 * n2.
 defun div (float n1, float n2) :=
     n1 / n2.
@@ -148,7 +147,7 @@ defun reverse list xs :=
     let aux := defun _aux_ (xs, acc) :=
         match xs
         | () -> acc
-        | x, t -> {: _aux_ | t | x | acc}
+        | x, t -> {: _aux_ | t | x, acc}
         end
     in
         {: aux | xs | ()}.

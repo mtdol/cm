@@ -1,0 +1,4 @@
+def _b := 3.
+def b := _b.
+
+def f := lam () := _b.

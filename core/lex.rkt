@@ -25,7 +25,7 @@
   ;; operators that can be placed after digits or variables
   ;; ie. in "3+2", + would count
   [key-token (:or "`" "~" "," ";" "=" ">" "<" "+" "-"
-                   "*" "/" "^" "%" "&" "|" "!" "@"
+                   "*" "/" "\\" "^" "%" "&" "|" "!" "@"
             "(" ")" "[" "]" "{" "}" ":" "$" "#" ".")]
 
   [string-char (:~ #\")]
@@ -68,6 +68,9 @@
    [#\newline ":newline"]
    ;; skip comment lines
    [comment (cmlex input-port)]
+   ;; escaped macro braces
+   ["\\{" "\\{"]
+   ["\\}" "\\}"]
    ;; "{label" -> ("{" "label"), regardless of what label is
    [(:: "{" (:* #\space) (:+ (:~ #\space #\{ #\})) (:* #\space) "}") 
     (list "{" (string-trim (substring lexeme 1 (- (string-length lexeme) 1))) "}")]

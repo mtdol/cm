@@ -1,0 +1,5 @@
+#:import "files/private1/b.cm"
+
+def a1 := b.
+-- f refers to a private variable.
+def a2 := :>f.

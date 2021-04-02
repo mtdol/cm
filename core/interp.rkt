@@ -27,7 +27,8 @@
                 ;; each statement in a chain of statements is consed together
                 ;; into a list
                 [(EOP) 
-                 (cons (run-and-reset-stack (prepare-for-output (interp-prep e i))) '())]
+                 ;(cons (run-and-reset-stack (prepare-for-output (interp-prep e i))) '())]
+                 (cons (prepare-for-output (interp-prep e i)) '())]
                 [_ (cons (prepare-for-output (interp-prep e i)) (interp st))])]
         ;; if we get an EOP only, just return void
         [(EOP) (prepare-for-output (trace-interp-expr (Prim0 'void) (hash)))]
@@ -38,7 +39,7 @@
 (define (trace-interp-expr e context)
   (push-elem-to-trace-stack! (ast-node-to-trace-elem e))
   (let ([res (interp-expr e context)])
-    (pop-elem-from-trace-stack!)
+    ;(pop-elem-from-trace-stack!)
     res
     ))
 
@@ -107,7 +108,7 @@
            )]
         ;; general prim cases
         [(Prim2 op e1 e2) (interp-prim2 op (trace-interp-expr e1 context) (trace-interp-expr e2 context))]
-        [(Prim1 op e) (interp-prim1 op (trace-interp-expr e context))]
+        [(Prim1 op e) (interp-prim1 op (trace-interp-expr e context) context)]
         [(Prim0 op) (interp-prim0 op)]
         [(If e1 e2) (interp-if e1 e2 context)]
         [(Cond e) 
@@ -202,7 +203,7 @@
         ['exp (apply-if-type '("int" "float") expt "exp" v1 v2)]))
 
 
-(define (interp-prim1 op v)
+(define (interp-prim1 op v context)
   (match op
         ['print (interp-print v)]
         ['appnull (interp-apply v null)]
@@ -277,6 +278,8 @@
         ['read_string (interp-read-string v)]
         ['write_string (interp-write-string v)]
         ['write_string_raw (interp-write-string-raw v)]
+        ['var
+         (trace-interp-expr (Var (check-var-string-name v)) context)]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]
@@ -507,39 +510,57 @@
          [res res]))))
 
 
-;; gets the label from a guard expr, checks it against the given value,
-;; then returns the label. If the guard is improperly formed, then
-;; the procedure yields #f
+;; gets the label from a left-side expr (such as `int x` in (def int x := 3)),
+;; checks it against the given value,
+;; then returns the guard type(s) and label. If the guard is improperly formed, then
+;; the procedure yields (values #f #f).
 ;;
-;; (guard) expr, value, context -> string | bool
-(define (interp-guard e v context)
+;; If the guard is a null expr then (values '() '()) is returned
+;;
+;; guard-expr, context ->
+;;      (values string list, string | null) | (values bool, bool)
+(define (interp-left-hand-expr e context)
   (match e
+      [(Null) (values '() '())]
       [(Prim1 op (Var label)) #:when (member op guard-types)
-       (assign-type-check (list (symbol->string op)) v label)
-       label]
+       (values (list (symbol->string op)) label)]
+      [(Prim1 op (Prim1 'var var-expr))
+       (interp-left-hand-expr 
+         (Prim1 op (Var (trace-interp-expr var-expr context)))
+         context)]
       [(Prefix2 'types types-expr (Var label))
-       (assign-type-check 
-         (check-types-list (trace-interp-expr types-expr context)) v label)
-                   label]
+       (let ([types-list 
+               (check-types-list (trace-interp-expr types-expr context))]) 
+           (values types-list label))]
+      [(Prefix2 op expr (Prim1 'var var-expr))
+       (interp-left-hand-expr 
+         (Prefix2 op expr (Var (trace-interp-expr var-expr context)))
+         context)]
       [(Prefix2 'struct (Var s-label) (Var label))
-       (assign-type-check (list (get-struct-type-string s-label)) v label)
-       label]
-      [(Prim1 'dynamic (Var label)) label]
+       (let ([guard-type (get-struct-type-string s-label)])
+           (values (list guard-type) label))]
       ;; implied dynamic case
-      [(Var label) label]
-      [_ #f]))
+      [(Var label) (values (list "dynamic") label)]
+      [(Prim1 'var var-expr)
+       (interp-left-hand-expr 
+         (Var (trace-interp-expr var-expr context))
+         context)]
+      [_ (values #f #f)]))
 
 (define (interp-def e1 e2 context update?)
   (match e2
          [(Assign e3) 
-          (let* ([v3 (trace-interp-expr e3 context)]
-                [label (interp-guard e1 v3 context)])
+          (let*-values ([(v3) (trace-interp-expr e3 context)]
+                        [(guard-types label) (interp-left-hand-expr e1 context)])
               (match label
                    [#f #:when update? 
                      (cm-error "SYNTAX" "Unknown Item on left hand of set.")] 
                    [#f (cm-error "SYNTAX" "Unknown Item on left hand of def.")]
+                   ['() (cm-error "SYNTAX" "Def is missing a variable.")]
                    ;; sets var in global context hash and returns value to caller
-                   [_ (if update? 
+                   [_
+                     (assign-type-check guard-types v3 label)
+                     (if update? 
                       (update-global-var! label v3)
                       (set-global-var! label v3 (var-name-private? label)))
                     v3]))]
@@ -548,35 +569,25 @@
 (define (interp-let e1 e2 e3 context)
   (match (cons e2 e3)
          [(cons (Assign e2-2) (In e3-2)) 
-          (let* ([v2 (trace-interp-expr e2-2 context)] 
-                [label (interp-guard e1 v2 context)])
+          (let*-values ([(v2) (trace-interp-expr e2-2 context)] 
+                        [(guard-types label) (interp-left-hand-expr e1 context)])
             (match label
                  [#f (cm-error "SYNTAX" "Unknown Item on left hand of let.")]
+                 ['() (cm-error "SYNTAX" "Let is missing a variable.")]
                  [_ 
+                    (assign-type-check guard-types v2 label)
                     (trace-interp-expr e3-2 (set-local-var label v2 context))]))]
          [_ (cm-error "SYNTAX" "Let is missing an assignment or in.")]))
 
 (define (interp-lambda e1 e2 context)
   (match e2
          [(Assign e3) 
-            (match e1
-                   ;; sets var in global context hash and returns value to caller
-                   [(Prim1 op (Var v)) #:when (member op guard-types)
-                     (Fun v (list (symbol->string op)) context e3)]
-                   [(Prefix2 'types types-expr (Var v))
-                    (Fun v (check-types-list (trace-interp-expr types-expr context))
-                         context e3)]
-                   ;; struct guard
-                   [(Prefix2 'struct (Var label) (Var v)) 
-                     (Fun v (list (get-struct-type-string label)) context e3)]
-                   ;; implied dynamic case
-                   [(Var v)
-                     (Fun v (list "dynamic") context e3)]
-                   ;; no arg lambda
-                   [null
-                     (Fun '() (list) context e3)]
-                   [_ (cm-error "SYNTAX" "Unknown Item on left hand of lambda")]
-                   )]
+          (let*-values ([(guard-types label) (interp-left-hand-expr e1 context)])
+            (match label
+                   [#f (cm-error "SYNTAX" "Unknown Item on left hand of lambda")]
+                   ['() (Fun '() '() context e3)]
+                   [_ (Fun label guard-types context e3)]
+            ))]
          [_ (cm-error "SYNTAX" "Lambda is missing an assignment.")]))
 
 (define (interp-apply v1 v2)

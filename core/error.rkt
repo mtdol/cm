@@ -37,9 +37,13 @@
 (struct TraceElem (type label module-id linenum) #:transparent)
 
 (define trace-stack '())
+(define max-trace-stack-size 100)
 (define (get-trace-stack) trace-stack)
 (define (push-elem-to-trace-stack! elem) 
-  (set! trace-stack (cons elem trace-stack)))
+  (if (>= (length trace-stack) max-trace-stack-size)
+    (set! trace-stack (cons elem (drop-right trace-stack 1)))
+    (set! trace-stack (cons elem trace-stack))))
+
 ;; pops a element from the trace stack and returns void
 ;; if no element is present, then does nothing
 (define (pop-elem-from-trace-stack!)
@@ -54,31 +58,21 @@
   ;; get the label of the struct
   (let ([type (symbol->string (prefab-struct-key ast))])
     (match ast
+        [(Prim0 op) 
+         (TraceElem (symbol->string op) "" (get-current-module-id) current-linenum)]
         [(Prim1 op _) 
-         (TraceElem type op (get-current-module-id) current-linenum)]
+         (TraceElem (symbol->string op) "" (get-current-module-id) current-linenum)]
         [(Prim2 op _ _) 
-         (TraceElem type op (get-current-module-id) current-linenum)]
+         (TraceElem (symbol->string op) "" (get-current-module-id) current-linenum)]
         [(Prefix2 op _ _) 
-         (TraceElem type op (get-current-module-id) current-linenum)]
+         (TraceElem (symbol->string op) "" (get-current-module-id) current-linenum)]
         [(Prefix3 op _ _ _) 
-         (TraceElem type op (get-current-module-id) current-linenum)]
+         (TraceElem (symbol->string op) "" (get-current-module-id) current-linenum)]
         [(Var id) 
          (TraceElem type id (get-current-module-id) current-linenum)]
         [_ (TraceElem type "" (get-current-module-id) current-linenum)]
            )))
 
-;; removes all "statement" entries unless they are the first elem in the stack
-;; null -> TraceElem list
-(define (trim-trace-stack) 
-  (match trace-stack
-         ['() '()]
-         [(cons h t) 
-          (cons h 
-            (filter 
-              (lambda (elem) 
-                (match elem [(TraceElem "statement" _ _ _) #f] [_ #t]))
-              trace-stack))]
-         [h h]))
 
 ;; formats `until` elements from the trace stack, starting from the freshest elements.
 ;; If until is #f, then all elements will be used
@@ -87,9 +81,9 @@
 ;; in the trace-stack
 ;;
 ;; int | bool -> string
-(define (trace-stack->string until trim?)
+(define (trace-stack->string until)
   (let ([until (if until until (sub1 (length trace-stack)))])
-  (let aux ([elems (if trim? (trim-trace-stack) trace-stack)] [i 0] [last #f] [last-count 0])
+  (let aux ([elems trace-stack] [i 0] [last #f] [last-count 0])
        (match elems
               [(cons h t) #:when (equal? h last) (aux t i last (add1 last-count))]
               [(cons h t)
@@ -100,7 +94,7 @@
               ['() #:when (not (zero? last-count)) 
                (string-append 
                  (format "  {Repeats ~a time(s)...}" last-count))]
-              [_ #:when (= until i) ""]
+              [_ #:when (= until i) "  ..."]
               ['() ""]
               [(cons (TraceElem type label module-id linenum) t)
                (string-append 
@@ -119,9 +113,9 @@
 (define (get-trace-message)
   (match trace-stack
          [_ #:when (= error-level VERBOSE_ERR_LEVEL)
-            (trace-stack->string #f #f)]
+            (trace-stack->string 40)]
          [_ 
-            (trace-stack->string 20 #f)]
+            (trace-stack->string 20)]
          ))
 
 ;; general error function,
@@ -130,7 +124,7 @@
   (let ([trace-message (get-trace-message)])
     (reset-trace-stack!)
     (error 
-      (format "~a: ~a\n\nstack trace:\n~a"
+      (format "~a: ~a\n\ncontext:\n~a"
         id (value->displayable-string message) trace-message))))
 
 

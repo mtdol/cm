@@ -1,7 +1,8 @@
 #lang racket
 (require cm/core/ast cm/core/types cm/core/error)
 (provide fix-string ast-cons-to-racket apply-if-type
-         apply-if-type-1 assign-type-check check-types-list valid-against-schema?
+         apply-if-type-1 assign-type-check check-types-list
+         check-var-string-name valid-against-schema?
          interp-def-list interp-lambda-list struct-schema->string)
 
 ;;
@@ -69,6 +70,13 @@
                                 (andmap (lambda (elem) (string? elem)) types-lst)) 
                     types-lst]
          [_ (cm-error "CONTRACT" "Type arguments to types must be a list of strings.")]))
+
+(define (check-var-string-name v)
+  (when (not (string? v))
+    (cm-error "CONTRACT" "Argument to var must be a string."))
+  (when (string=? v "")
+    (cm-error "CONTRACT" "Argument to var must be a non-empty string."))
+  v)
 
 
 ;; checks if the given list matches the schema for the type

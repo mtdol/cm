@@ -16,7 +16,13 @@ const int os = 2;
 #endif
 
 const char pkg_help[] = "Use --install to install or reset the module system.\n";
-const char help[] = "No args: run the repl\nfile: run a file\n-f file: run a file\n--pkg: package manager\n";
+const char help[] = 
+                "No args: run the repl\n"
+                "file: run a file\n"
+                "-f file: run a file\n"
+                "-e: run an expression\n"
+                "-st: run a statement\n"
+                "--pkg: package manager\n";
 
 int main (int argc, char *argv[]) {
     int status = 0;
@@ -59,6 +65,18 @@ int main (int argc, char *argv[]) {
         sprintf (query,
                 "racket -e \"(require cm/core/main) (silent (run-file \\\"%s\\\"))\"",
                 str);
+    } else if (argc == 3 && !(strcmp (argv[1], "-st"))) {
+        strcpy (str, argv[2]);
+        sprintf (query,
+                "racket -e \"(require cm/core/main) (display-output (run \\\"%s\\\"))\"",
+                str);
+        
+    } else if (argc == 3 && !(strcmp (argv[1], "-e"))) {
+        strcpy (str, argv[2]);
+        sprintf (query,
+                "racket -e \"(require cm/core/main) (display-expr-output (run-expr \\\"%s\\\"))\"",
+                str);
+        
     } else {
         handle_invalid_args();
     }

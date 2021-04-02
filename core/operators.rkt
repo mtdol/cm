@@ -83,6 +83,7 @@
         (cons "hash?"           (OpData 1 "prefix"  7   'Prim1   'hash?))
         (cons "mutable_hash?"   (OpData 1 "prefix"  7   'Prim1   'mutable_hash?))
         (cons "defined?"        (OpData 1 "prefix"  7   'Prim1   'defined?))
+        (cons "var"             (OpData 1 "prefix"  7   'Prim1   'var))
         (cons "eval"            (OpData 1 "prefix"  7   'Prim1   'eval))
         (cons "evalxp"          (OpData 1 "prefix"  7   'Prim1   'evalxp))
         (cons "error"           (OpData 1 "prefix"  7   'Prim1   'error))

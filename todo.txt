@@ -13,11 +13,28 @@
 
 . enhance cm.exe
     - allow --pkg to be used without cd'ing to the cm directory
-    - -pkg
+    - --pkg
         -- -add -remove -show
         -- change install scripts into package managers
 
+<critical>
+- when lambdas from other files are called, global private variables cannot be
+    referenced inside
+    -- this is evident from tests/modules/private1.rkt
+
+- get var "str" to work in typedef 
+
 - line number issues in pre-parse
     -- probably should just put linenumbers onto tokens directly
+<critical/>
 
-- string replace\format is not working in std.cm
+- gensym
+
+- generators, ie generates a value when called
+
+- `...` match-expr operator
+
+-- yields ((2, 3;), 1, 4)
+match {list 1|2|3|4}
+| a, b, ..., c; -> b, a, c
+end
