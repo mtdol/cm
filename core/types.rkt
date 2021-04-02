@@ -4,8 +4,15 @@
 
 (struct CmStruct (label args))
 (struct CmHash (hash type handler))
+
+;; ("int", "float";) "var1"
+(struct SchemaElem (types label))
+
 ;; all types used in guards minus structs
 (define guard-types '(int float string bool list pair fun dynamic))
+
+(define max-var-length 500)
+(define (get-max-var-length) max-var-length)
 
 ;; value -> bool
 (define (is-string? v) (string? v))
@@ -31,6 +38,10 @@
 (define (is-type? type value)
   (let ([vtype (get-type value)])
     (or (string=? type "dynamic") (string=? vtype type))))
+
+;; string list, value -> bool
+(define (is-types? types value)
+  (ormap (lambda (type) (is-type? type value)) types))
 
 ;; gives the type string for a label of a struct
 ;; string -> string

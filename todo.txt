@@ -22,8 +22,6 @@
     referenced inside
     -- this is evident from tests/modules/private1.rkt
 
-- get var "str" to work in typedef 
-
 - line number issues in pre-parse
     -- probably should just put linenumbers onto tokens directly
 <critical/>

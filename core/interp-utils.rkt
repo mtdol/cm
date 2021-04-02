@@ -76,68 +76,41 @@
     (cm-error "CONTRACT" "Argument to var must be a string."))
   (when (string=? v "")
     (cm-error "CONTRACT" "Argument to var must be a non-empty string."))
+  (when (> (string-length v) (get-max-var-length))
+    (cm-error 
+      "CONTRACT" 
+      (format "Argument to var must not exceed ~a characters." (get-max-var-length))))
   v)
 
 
 ;; checks if the given list matches the schema for the type
-(define (valid-against-schema? label schema lst)
-  ;(let ([schema (get-type-data label)])
-    (let aux ([lst lst] [schema-lst schema])
-      (match lst
-             ['() (null? schema-lst)]
-             [(cons h t) 
-              (match schema-lst
-                     ['() #f]
-                     [(cons (Var v) schema-t) (aux t schema-t)]
-                     [(cons (Prim1 'dynamic (Var v)) schema-t) (aux t schema-t)]
-                     [(cons (Prim1 'int (Var v)) schema-t)
-                      (if (is-int? h) (aux t schema-t) #f)]
-                     [(cons (Prim1 'float (Var v)) schema-t)
-                      (if (is-float? h) (aux t schema-t) #f)]
-                     [(cons (Prim1 'bool (Var v)) schema-t)
-                      (if (is-bool? h) (aux t schema-t) #f)]
-                     [(cons (Prim1 'string? (Var v)) schema-t)
-                      (if (is-string? h) (aux t schema-t) #f)]
-                     [(cons (Prim1 'pair (Var v)) schema-t)
-                      (if (is-pair? h) (aux t schema-t) #f)]
-                     [(cons (Prim1 'list (Var v)) schema-t)
-                      (if (is-list? h) (aux t schema-t) #f)]
-                     [(cons (Prim1 'fun (Var v)) schema-t)
-                      (if (is-fun? h) (aux t schema-t) #f)]
-                     [(cons (Prefix2 'types types-lst (Var v)) schema-t)
-                           (if (ormap (lambda (elem) (is-type? elem h)) types-lst) 
-                             (aux t schema-t)
-                             #f)]
-                     [(cons (Prefix2 'struct (Var label) (Var v)) schema-t)
-                      (match h
-                             [(CmStruct l2 _) #:when (string=? l2 label) (aux t schema-t)]
-                             [_ #f])]
-                      ;; the schema should have been validated, so we will
-                      ;; only end up here if something is wrong
-                      [_ (cm-error "SYNTAX" (format "Struct instance declaration could not be understood. Struct ~a" label))])]
-             )))
+(define (valid-against-schema? label schemas vs)
+ (let aux ([vs vs] [schemas schemas])
+   (match vs
+     ['() (null? schemas)]
+     [(cons v vs) 
+      (match schemas
+        ['() #f]
+        [(cons (SchemaElem types _) schemas)
+         (if (is-types? types v) (aux vs schemas) #f)]
+        ;; the schema should have been validated, so we will
+        ;; only end up here if something is wrong
+        [_ 
+          (cm-error 
+             "SYNTAX" 
+                 (format "Struct instance declaration could not be understood. Struct ~a" label))])]
+          )))
 
 ;; turns a (valid) struct schema to a string
 (define (struct-schema->string schema)
   (match schema
-         ['() "()"]
-         [(cons (Var id) '()) 
-          (format "~a;" id)]
-         [(cons (Var id) t) 
-          (string-append (format "~a, " id) (struct-schema->string t))]
-         [(cons (Prim1 op (Var id)) '()) 
-          (format "~a ~a;" (symbol->string op) id)]
-         [(cons (Prim1 op (Var id)) t) 
-          (string-append (format "~a ~a, " (symbol->string op) id) (struct-schema->string t))]
-         [(cons (Prefix2 'struct (Var label) (Var id)) '()) 
-          (format "struct ~a ~a;" label id)]
-         [(cons (Prefix2 'struct (Var label) (Var id)) t) 
-          (string-append (format "struct ~a ~a, " label id) (struct-schema->string t))]
-         [(cons (Prefix2 'types ts (Var id)) '()) 
-          (format "types ~a ~a;" (string-coerce ts) id)]
-         [(cons (Prefix2 'types ts (Var id)) t) 
-          (string-append (format "types ~a ~a, " (string-coerce ts) id) (struct-schema->string t))]
-         ))
+    ['() "()"]
+    [(cons (SchemaElem types label) '()) 
+     (format "types ~a ~a;" types label)]
+    [(cons (SchemaElem types label) t) 
+     (string-append (format "types ~a ~a, " types label) 
+                    (struct-schema->string t))]
+    ))
 
 ;; converts a pair to a list if it wasn't already
 (define (pair-to-list p)

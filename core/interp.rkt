@@ -526,7 +526,9 @@
        (values (list (symbol->string op)) label)]
       [(Prim1 op (Prim1 'var var-expr))
        (interp-left-hand-expr 
-         (Prim1 op (Var (trace-interp-expr var-expr context)))
+         (Prim1 
+           op 
+           (Var (check-var-string-name (trace-interp-expr var-expr context))))
          context)]
       [(Prefix2 'types types-expr (Var label))
        (let ([types-list 
@@ -534,7 +536,8 @@
            (values types-list label))]
       [(Prefix2 op expr (Prim1 'var var-expr))
        (interp-left-hand-expr 
-         (Prefix2 op expr (Var (trace-interp-expr var-expr context)))
+         (Prefix2 op expr 
+            (Var (check-var-string-name (trace-interp-expr var-expr context))))
          context)]
       [(Prefix2 'struct (Var s-label) (Var label))
        (let ([guard-type (get-struct-type-string s-label)])
@@ -543,7 +546,7 @@
       [(Var label) (values (list "dynamic") label)]
       [(Prim1 'var var-expr)
        (interp-left-hand-expr 
-         (Var (trace-interp-expr var-expr context))
+         (Var (check-var-string-name (trace-interp-expr var-expr context)))
          context)]
       [_ (values #f #f)]))
 
@@ -617,37 +620,26 @@
           ))
 
 (define (interp-typedef e1 e2 context)
-  (match e2 [(Assign e2-2)
-  (let ([lst2 (ast-cons-to-racket e2-2)])
-  (match e1
+  (match e2 
+    [(Assign e2-2)
+      (let ([lst2 (ast-cons-to-racket e2-2)])
+      (match e1
          [(Var v) #:when (list? lst2)
           (let verify-schema ([lst lst2] [acc '()])
-            (match lst
-                   ;; set schema if no errors were found
-                   ['() (set-type! v (reverse acc) (var-name-private? v)) (Prim0 'void)]
-                   [(cons (Var _) t) (verify-schema t (cons (car lst) acc))]
-                   [(cons (Prim1 grd (Var _)) t) #:when 
-                                (member grd guard-types) 
-                        (verify-schema t (cons (car lst) acc))]
-                   [(cons (Prefix2 'types types-expr (Var id)) t)
-                    (check-types-list (trace-interp-expr types-expr context))
-                    ;; we place a modified types node in the resulting schema
-                    ;; (the types list is aleady interp'd and checked)
-                    (verify-schema t 
-                        (cons 
-                          (Prefix2 'types 
-                                   (check-types-list (trace-interp-expr types-expr context))
-                                   (Var id))
-                          acc))]
-                   ;; struct inside a struct
-                   [(cons (Prefix2 'struct label (Var _)) t) 
-                        (verify-schema t (cons (car lst) acc))]
-                   [(cons h t) (cm-error "SYNTAX" 
-                        (format "Unknown element ~a inside typedef schema." h))]))]
-         [(Var v) (cm-error "SYNTAX" "Invalid schema for typedef. Schema must be a list.")]
-         [_ (cm-error "SYNTAX" "Missing Label for typedef.")]))
-    ]
-    [_ (cm-error "SYNTAX" "Improperly formed typedef.")]))
+           (match lst
+              ;; set schema if no errors were found
+              ['() (set-type! v (reverse acc) (var-name-private? v)) (Prim0 'void)]
+              [(cons h t)
+               (let-values 
+                 ([(guard-types label) (interp-left-hand-expr h context)])
+                 (match label
+                  [#f (cm-error "SYNTAX" 
+                   (format "Unknown element ~a inside typedef schema." h))]
+                  [_ (verify-schema t 
+                    (cons (SchemaElem guard-types label) acc))]))]))]
+           [(Var v) (cm-error "SYNTAX" "Invalid schema for typedef. Schema must be a list.")]
+           [_ (cm-error "SYNTAX" "Missing Label for typedef.")]))]
+  [_ (cm-error "SYNTAX" "Improperly formed typedef.")]))
 
 (define (interp-struct e1 e2 context)
   (match e1
