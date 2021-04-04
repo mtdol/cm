@@ -1,7 +1,6 @@
 #lang racket
 (require racket/lazy-require cm/core/ast)
-(lazy-require (cm/core/context [get-current-module-id])
-              (cm/core/types [value->displayable-string]))
+(lazy-require (cm/core/types [value->displayable-string]))
 (provide cm-error cm-error-linenum cm-error-with-line-handler get-current-linenum
          set-current-linenum! 
          get-trace-stack push-elem-to-trace-stack! pop-elem-from-trace-stack!
@@ -54,23 +53,23 @@
 ;; takes in a val, resets stack and returns val
 (define (run-and-reset-stack v) (reset-trace-stack!) v)
 
-(define (ast-node-to-trace-elem ast) 
+(define (ast-node-to-trace-elem ast module-id) 
   ;; get the label of the struct
   (let ([type (symbol->string (prefab-struct-key ast))])
     (match ast
         [(Prim0 op) 
-         (TraceElem (symbol->string op) "" (get-current-module-id) current-linenum)]
+         (TraceElem (symbol->string op) "" module-id current-linenum)]
         [(Prim1 op _) 
-         (TraceElem (symbol->string op) "" (get-current-module-id) current-linenum)]
+         (TraceElem (symbol->string op) "" module-id current-linenum)]
         [(Prim2 op _ _) 
-         (TraceElem (symbol->string op) "" (get-current-module-id) current-linenum)]
+         (TraceElem (symbol->string op) "" module-id current-linenum)]
         [(Prefix2 op _ _) 
-         (TraceElem (symbol->string op) "" (get-current-module-id) current-linenum)]
+         (TraceElem (symbol->string op) "" module-id current-linenum)]
         [(Prefix3 op _ _ _) 
-         (TraceElem (symbol->string op) "" (get-current-module-id) current-linenum)]
+         (TraceElem (symbol->string op) "" module-id current-linenum)]
         [(Var id) 
-         (TraceElem type id (get-current-module-id) current-linenum)]
-        [_ (TraceElem type "" (get-current-module-id) current-linenum)]
+         (TraceElem type id module-id current-linenum)]
+        [_ (TraceElem type "" module-id current-linenum)]
            )))
 
 
@@ -130,10 +129,10 @@
 
 ;; simple error function,
 ;; no stack trace, but prints line number and module-id
-(define (cm-error-linenum linenum id message)
+(define (cm-error-linenum module-id linenum id message)
   (error 
     (format "~a: ~a\n\nModule: \"~a\":~a"
-            id message (get-current-module-id) linenum)))
+            id message module-id linenum)))
 
 ;; sets current linenum and execs the proc
 (define (cm-error-with-line-handler linenum proc args) 

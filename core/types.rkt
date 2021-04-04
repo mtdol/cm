@@ -8,6 +8,10 @@
 ;; ("int", "float";) "var1"
 (struct SchemaElem (types label))
 
+;; what a lambda expr yields
+(struct Fun (var type context expr module-id))
+
+
 ;; all types used in guards minus structs
 (define guard-types '(int float string bool list pair fun dynamic))
 
@@ -22,7 +26,7 @@
 (define (is-list? v) (list? v))
 (define (is-pair? v) (pair? v))
 (define (is-null? v) (null? v))
-(define (is-fun? v) (match v [(Fun _ _ _ _) #t] [_ #f]))
+(define (is-fun? v) (match v [(Fun _ _ _ _ _) #t] [_ #f]))
 (define (is-struct? v) (match v [(CmStruct _ _) #t] [_ #f]))
 (define (is-hash? v) (match v [(CmHash _ _ _) #t] [_ #f]))
 (define (is-mutable-hash? v) (match v [(CmHash _ "mutable" _) #t] [_ #f]))
@@ -126,7 +130,7 @@
          ["eof" "eof"]
          ["mutable hash" "mutable hash"]
          ["immutable hash" "immutable hash"]
-         ["fun" (match v [(Fun var type context expr)
+         ["fun" (match v [(Fun var type context expr _)
                           (format "Fun ~a ~a" type var)])]
          [_ (cm-error "GENERIC" (format "String coersion error for ~a." v))])]))
 (define (int-coerce v) 

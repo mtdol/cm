@@ -1,12 +1,18 @@
 #lang racket
 (require cm/core/lex cm/core/ast cm/core/parse-expr 
          cm/core/parse-stat cm/core/interp cm/core/ast-to-string
-         cm/core/types cm/core/context cm/core/modules cm/core/error)
-(provide run run-file run-expr run-tokenize-string run-tokenize-file
-         run-parse run-parse-expr run-parse-file run-parse-file run-prefix-form
+         cm/core/types cm/core/context cm/core/modules cm/core/error
+         )
+(provide run run-file run-expr run-tokenize-string
+         run-parse run-parse-expr run-prefix-form
          run-ast-to-string 
          display-output display-expr-output silent
-         set-verbose-error-level!)
+         set-verbose-error-level!
+         current-module-id get-current-module-id set-current-module-id!)
+
+(define current-module-id "0")
+(define (get-current-module-id) current-module-id)
+(define (set-current-module-id! id) (set! current-module-id id))
 
 ;; reads over each list element and prints its tostring
 ;; value list | value -> void
@@ -28,23 +34,47 @@
 (define (silent input) input (void))
 
 ;; runs a statement
-(define (run input) (interp (parse-stat (tokenize-string input))))
-;(define (run input) (interp (parse-stat (tokenize-string input))) (print-global-context))
+;; string -> value list
+(define (run input) 
+  (interp 
+    (parse-stat 
+      (tokenize-string 
+        input current-module-id)
+      current-module-id)
+    current-module-id))
+
 ;; string -> value list
 (define (run-file file) 
-  (set-current-module-id! (file-name->module-id file))
-  (interp (parse-stat (tokenize-file file))))
+  (let* ([id (file-name->module-id file)]
+        [res 
+          (begin 
+            (set-current-module-id! id)
+            (interp 
+              (parse-stat 
+                (tokenize-string (file->string id) id)
+                id)
+              id))])
+    ;; reset the module-id
+    (set-current-module-id! id)
+    res
+      ))
 
 ;; runs an expr (no dot)
-(define (run-expr input) (interp (parse-expr (tokenize-string input))))
+(define (run-expr input) 
+  (interp 
+    (parse-expr (tokenize-string input current-module-id) current-module-id)
+    current-module-id))
 
-(define (run-tokenize-string input) (tokenize-string input))
-(define (run-tokenize-file file) (tokenize-file file))
+(define (run-tokenize-string input) (tokenize-string input current-module-id))
 
-(define (run-parse input) (parse-stat (tokenize-string input)))
-(define (run-parse-expr input) (parse-expr (tokenize-string input)))
-(define (run-parse-file file) (parse-stat (tokenize-file file)))
+(define (run-parse input) 
+  (parse-stat (tokenize-string input current-module-id) current-module-id))
+(define (run-parse-expr input)
+  (parse-expr (tokenize-string input current-module-id) current-module-id))
 
-(define (run-prefix-form input) (half-parse-expr (tokenize-string input)))
+(define (run-prefix-form input) 
+  (half-parse-expr (tokenize-string input current-module-id) current-module-id))
 
-(define (run-ast-to-string input) (ast-to-string (parse-stat (tokenize-string input))))
+(define (run-ast-to-string input) 
+  (ast-to-string 
+    (parse-stat (tokenize-string input current-module-id) current-module-id)))

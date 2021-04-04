@@ -7,14 +7,15 @@
 ;; will be parsable by the main parser
 
 ;; prepares the main token list for parsing
-(define (pre-parse tokens) 
+(define (pre-parse tokens module-id) 
   (set-current-linenum! 1)
-  (parse-macro-tokens tokens 0))
+  (parse-macro-tokens tokens module-id 0))
 
-(define (parse-macro-tokens tokens depth)
+(define (parse-macro-tokens tokens module-id depth)
   (match tokens
          [_ #:when (> depth 5000) 
             (cm-error-linenum 
+              module-id
               (get-current-linenum) 
               "MACRO" 
               "Too many macro applications. Possible infinite recursion detected.")]
@@ -22,43 +23,52 @@
          [(cons "{" (cons h2 t)) 
           (if (string=? h2 "}") 
             (cm-error-linenum 
+              module-id
               (get-current-linenum) "MACRO" "Missing label for macro.")
-            (parse-macro-contents t h2 '(()) 0 depth))]
-         [(cons h t) (cons h (parse-macro-tokens t depth))]
+            (parse-macro-contents t h2 '(()) module-id 0 depth))]
+         [(cons h t) (cons h (parse-macro-tokens t module-id depth))]
    ))
 
 ;; once inside a macro body, parses its contents into an arguments list
 ;;
 ;; string list, string, string list list, int, int -> string list
-(define (parse-macro-contents tokens label args bcount depth)
+(define (parse-macro-contents tokens label args module-id bcount depth)
   (match tokens 
          ['() (cm-error-linenum 
+                module-id
                 (get-current-linenum)
                 "MACRO" "Missing closing brace for macro application.")]
          ;; shifting to next argument
          [(cons "case" t) #:when (zero? bcount) (parse-macro-contents t label 
                             (cons '() (cons (reverse (car args)) (cdr args)))
-                            bcount depth)]
+                            module-id bcount depth)]
          [(cons "}" t) 
           #:when (= 0 bcount)
           (append 
             ;; re-parse after we apply the macro
             (parse-macro-tokens 
               (apply-macro label 
-                (reverse (cons (reverse (car args)) (cdr args))))
+                (reverse (cons (reverse (car args)) (cdr args))) module-id)
+              module-id
               (add1 depth))
-            (parse-macro-tokens t depth))]
+            (parse-macro-tokens t module-id depth))]
          [(cons "}" t) (parse-macro-contents t label 
-                            (cons (cons "}" (car args)) (cdr args)) (sub1 bcount) depth)]
+                            (cons (cons "}" (car args)) (cdr args))
+                            module-id (sub1 bcount) depth)]
          [(cons "{" t) (parse-macro-contents t label 
-                            (cons (cons "{" (car args)) (cdr args)) (add1 bcount) depth)]
+                            (cons (cons "{" (car args)) (cdr args))
+                            module-id (add1 bcount) depth)]
          [(cons h t) (parse-macro-contents t label 
-                            (cons (cons h (car args)) (cdr args)) bcount depth)]))
+                            (cons (cons h (car args)) (cdr args))
+                            module-id bcount depth)]))
+
+(define current-module-id "0")
 
 ;; prepares tokens for parsing of an expr
-(define (pre-parse-expr tokens)
+(define (pre-parse-expr tokens module-id)
+  (set! current-module-id module-id)
   (replace-unary-plus-minus
-  (check-balanced-parens 
+    (check-balanced-parens 
         tokens)))
 
 ;; replaces unary minus with :uni_minus and unary plus with :uni_plus
@@ -75,6 +85,7 @@
                     (and first? (and (is-operator? h)
                                      (string=? (op-to-position h) "infix")))
                 (cm-error-linenum 
+                  current-module-id
                   (get-current-linenum) 
                   "SYNTAX" (format "Missing operand(s) for ~a." h))]
            [(cons h1 (cons h2 t)) #:when 
@@ -85,6 +96,7 @@
                         ;; call aux on uni since it is also an operator
                         (cons h1 (aux (cons (string-append ":uni_" h2) t) #f))]
                           [else (cm-error-linenum 
+                                  current-module-id
                                   (get-current-linenum) 
                                   "SYNTAX" (format "Missing operand(s) for ~a." h1))])]
            [(cons h t) (cons h (aux t #f))]

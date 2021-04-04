@@ -34,8 +34,8 @@
 
 (run-stat-silent ":>destroy_ref.")
 
-(check-equal? (run-stat ":>a_c.")
-'(23))
+(check-equal? (run-stat ":>a_c2.")
+'(22))
 
 
 (run-file-silent "files/basic2/b.cm")

@@ -8,12 +8,6 @@
 ;; type = "var" | "type" | "macro"
 (struct GlobalContextKey (type name module-id) #:transparent)
 (struct Reference (target))
-;; what a lambda expr yields
-(struct Fun (var type context expr))
-
-(define current-module-id "0")
-(define (get-current-module-id) (string-copy current-module-id))
-(define (set-current-module-id! val) (set! current-module-id val))
 
 
 ;; context members can reference other context members, so we will follow
@@ -64,13 +58,13 @@
 
 (define global-context (make-hash))
 
-(define (set-global-var! var value private?) 
-  (hash-set! global-context (GlobalContextKey "var" var current-module-id) 
+(define (set-global-var! var value private? module-id) 
+  (hash-set! global-context (GlobalContextKey "var" var module-id) 
              (GlobalContextEntry value private?)))
 
 ;; derefs to the source of a mapping and alters it
-(define (update-global-var! var value)
-  (let ([key (GlobalContextKey "var" var current-module-id)])
+(define (update-global-var! var value module-id)
+  (let ([key (GlobalContextKey "var" var module-id)])
       (unless (hash-has-key? global-context key) 
         (cm-error "UNDEFINED" 
             (format "Var ~a has not yet been defined and thus cannot be set." var)))
@@ -82,51 +76,59 @@
                     (hash-set! global-context key2
                          (GlobalContextEntry value private?))]))))
 
-(define (get-global-var-data var)
-        (match (hash-ref global-context (GlobalContextKey "var" var current-module-id) (lambda () #f))
+(define (get-global-var-data var module-id)
+        (match (hash-ref global-context (GlobalContextKey "var" var module-id) (lambda () #f))
                [#f #f]
                [(GlobalContextEntry data _) data]
                [(Reference ref) (follow-key-to-data ref)]))
 
 ;; Types
 
-(define (set-type! type schema private?)
+(define (set-type! type schema private? module-id)
   (hash-set! global-context
-             (GlobalContextKey "type" type current-module-id)
+             (GlobalContextKey "type" type module-id)
              (GlobalContextEntry schema private?)))
 
 
-(define (get-type-data type)
-        (match (hash-ref global-context (GlobalContextKey "type" type current-module-id) (lambda () #f))
+(define (get-type-data type module-id)
+        (match (hash-ref global-context (GlobalContextKey "type" type module-id) (lambda () #f))
                [#f #f]
                [(GlobalContextEntry data _) data]
                [(Reference ref) (follow-key-to-data ref)]))
 
-(define (type-exists? type)
-  (hash-has-key? global-context (GlobalContextKey "type" type current-module-id)))
+(define (type-exists? type module-id)
+  (hash-has-key? global-context (GlobalContextKey "type" type module-id)))
 
 
 ;; Macros
 
 ;; clean redefine the macro
-(define (set-macro! label vars value private?) 
-  (hash-set! global-context (GlobalContextKey "macro" label current-module-id) 
-             (GlobalContextEntry (list (MacroRule (check-macro-vars vars) value)) private?)))
+(define (set-macro! label vars value private? module-id) 
+  (hash-set! global-context (GlobalContextKey "macro" label module-id) 
+             (GlobalContextEntry 
+               (list (MacroRule 
+                  (check-macro-vars vars)
+                  value
+                  module-id))
+               private?)))
 
 ;; append onto the macros definitions
-(define (append-to-macro! label vars value)
-  (if (hash-has-key? global-context (GlobalContextKey "macro" label current-module-id))
-    (match (hash-ref global-context (GlobalContextKey "macro" label current-module-id))
+(define (append-to-macro! label vars value module-id)
+  (if (hash-has-key? global-context (GlobalContextKey "macro" label module-id))
+    (match (hash-ref global-context (GlobalContextKey "macro" label module-id))
      [(GlobalContextEntry defs private?)
-      (hash-set! global-context (GlobalContextKey "macro" label current-module-id) 
+      (hash-set! global-context (GlobalContextKey "macro" label module-id) 
                  (GlobalContextEntry (append defs
-                         (list (MacroRule (check-macro-vars vars) value))) private?))])
+                         (list (MacroRule 
+                                 (check-macro-vars vars)
+                                 value 
+                                 module-id))) private?))])
       (set-macro! label vars value (var-name-private? label))
                  ))
 
 
-(define (get-macro-defs label)
-        (match (hash-ref global-context (GlobalContextKey "macro" label current-module-id) (lambda () #f))
+(define (get-macro-defs label module-id)
+        (match (hash-ref global-context (GlobalContextKey "macro" label module-id) (lambda () #f))
                [#f #f]
                [(GlobalContextEntry defs _) defs]
                [(Reference ref) (follow-key-to-data ref)]))
@@ -176,14 +178,14 @@
 ;; else returns #f
 ;;
 ;; string = ("macro" "type" "var"), string, string, string, bool -> bool
-(define (map-reference type name module-id prefix public-only?)
-  (let ([key (GlobalContextKey type name module-id)])
+(define (map-reference type name from-module-id to-module-id prefix public-only?)
+  (let ([key (GlobalContextKey type name from-module-id)])
   (if (and 
         (entry-exists? key public-only?)
         (not (maps-to-reference? key)))
     (begin 
       (hash-set! global-context 
-                 (GlobalContextKey type (string-append prefix name) current-module-id)
+                 (GlobalContextKey type (string-append prefix name) to-module-id)
                  (Reference key))
       #t)
     #f)))
@@ -193,16 +195,17 @@
 ;; included in the given module referenced by module-id. 
 ;; Every item is added with the given prefix.
 ;;
-;; string, list, string, bool -> void
-(define (set-refs-from-module-space! module-id prefix public-only?)
+;; string, string, list, string, bool -> void
+(define (set-refs-from-module-space! 
+          from-module-id to-module-id prefix public-only?)
   (map 
     ;; maps each reference; only keys that lead to public members will succeed
     (lambda (elem) 
       (match elem
              [(GlobalContextKey type name id)
-              (map-reference type name id prefix public-only?)]))
+              (map-reference type name id to-module-id prefix public-only?)]))
     ;; only use keys that belong to the current module
-    (get-global-context-keys '() module-id public-only?))
+    (get-global-context-keys '() from-module-id public-only?))
   (void))
 
 ;; gets all GlobalContextKeys from global context that meet the given criteria
@@ -277,7 +280,7 @@
 (define (print-entries es)
   (match es
          ['() (void)]
-         [(cons (MacroRule vars body) t)
-          (display (format "vars:\n~a\nbody:\n~a\n" vars body))
+         [(cons (MacroRule vars body module-id) t)
+          (display (format "module:~a\nvars:\n~a\nbody:\n~a\n" module-id vars body))
           (print-entries t)]
          [e (displayln e)]))

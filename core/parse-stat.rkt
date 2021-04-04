@@ -6,16 +6,17 @@
 
 ;; takes a master token list and parses its sub-expressions
 
-(define (parse-stat tokens)
-  (let aux ([tokens (pre-parse tokens)] [acc '()] [linenum 1] [curr-linenum 1])
+(define (parse-stat tokens module-id)
+  (let aux ([tokens (pre-parse tokens module-id)] [acc '()] [linenum 1] [curr-linenum 1])
     (match tokens 
            [(cons "dot" t) 
             ;; use error handler to display line numbers during errors
             (Stat linenum (cm-error-with-line-handler
-                curr-linenum parse-expr (list (reverse acc)))
+                curr-linenum parse-expr (list (reverse acc) module-id))
                   (aux t '() curr-linenum curr-linenum))]
            [(cons ":newline" t) (aux t acc linenum (add1 curr-linenum))]
            [(cons h t) (aux t (cons h acc) linenum curr-linenum)]
            ['() #:when (not (null? acc)) 
-            (cm-error-linenum linenum error-id "No termination of statement.")]
+            (cm-error-linenum 
+              module-id linenum error-id "No termination of statement.")]
            ['() (EOP)])))

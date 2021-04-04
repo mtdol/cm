@@ -1,11 +1,13 @@
 #lang racket
 (require cm/core/pre-lex)
-(provide tokenize-file tokenize-string tokenize-import-string)
+(provide tokenize-string tokenize-import-string)
 (define error-id "LEX")
 
 (require cm/core/error cm/core/reserved-keywords
   parser-tools/lex
     (prefix-in : parser-tools/lex-sre))
+
+(define current-module-id "0")
 
 (define-tokens value-tokens (NUM VAR STR))
 
@@ -49,13 +51,13 @@
    [(:: ",") ","]
    [(:: #\" (:* (:or (:: "\\\"") (:~ #\"))) #\") lexeme]
    [(:: #\" (:* (:~ #\"))) (match start-pos [(position colnum linenum _)
-                        (cm-error-linenum linenum error-id 
+                        (cm-error-linenum current-module-id linenum error-id 
                                 (format "Non-terminated string around column ~a." colnum))])]
    ;; everything else (vars and operators)
    [(:+ (:& (:+ any-char) (:~ import-key-token) (:~ whitespace) (:~ #\"))) lexeme]
    ;; custom error behavior
    [any-char (match start-pos [(position colnum linenum _)
-                        (cm-error-linenum linenum error-id 
+                        (cm-error-linenum current-module-id linenum error-id 
                                 (format "Lexing failure around column ~a." colnum))])]
    ))
 
@@ -123,13 +125,13 @@
    [(:: (:+ digit) #\. (:+ digit)) lexeme]
    [(:: #\" (:* (:or (:: "\\\"") (:~ #\"))) #\") lexeme]
    [(:: #\" (:* (:~ #\"))) (match start-pos [(position colnum linenum _)
-                        (cm-error-linenum linenum error-id 
+                        (cm-error-linenum current-module-id linenum error-id 
                                 (format "Non-terminated string around column ~a." colnum))])]
    ;; everything else (vars and operators)
    [(:+ (:& (:+ any-char) (:~ key-token) (:~ whitespace) (:~ #\"))) lexeme]
    ;; custom error behavior
    [any-char (match start-pos [(position colnum linenum _)
-                        (cm-error-linenum linenum error-id 
+                        (cm-error-linenum current-module-id linenum error-id 
                                 (format "Lexing failure around column ~a." colnum))])]
    ))
 
@@ -138,9 +140,9 @@
   (port-count-lines! ip)
     (flatten (port->list lex ip)))
 
-
-(define (tokenize-file name) (tokenize-string 
-                (file->string (path->string (path->complete-path name)))))
-(define (tokenize-string str) (tokenize-input (open-input-string (pre-lex str)) cmlex))
+(define (tokenize-string str module-id) 
+  (set! current-module-id module-id)
+  (tokenize-input (open-input-string (pre-lex str module-id)) cmlex))
+;; for use with the simple lexer
 (define (tokenize-import-string str) 
   (tokenize-input (open-input-string str) import-list-lex))

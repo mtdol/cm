@@ -12,12 +12,15 @@
 ;; Matthew Dolinka
 ;; cm parser
 
+(define current-module-id "0")
 
-(define (parse-expr tokens) 
-  (parse-to-ast (tokens-to-prefix-form (pre-parse-expr tokens))))
+(define (parse-expr tokens module-id)
+  (set! current-module-id module-id)
+  (parse-to-ast (tokens-to-prefix-form (pre-parse-expr tokens module-id))))
 
-(define (half-parse-expr tokens)
-  (tokens-to-prefix-form (pre-parse-expr tokens)))
+(define (half-parse-expr tokens module-id)
+  (set! current-module-id module-id)
+  (tokens-to-prefix-form (pre-parse-expr tokens module-id)))
 
 ;; all precedences that will be parsed in anti-pemdas order
 ;; anti-pemdas means parsing from left to right,
@@ -76,7 +79,8 @@
              (append (tokens-to-prefix-form (reverse acc))
                             (list h) (tokens-to-prefix-form t))
              ;(append (tokens-to-prefix-form acc) (list h) (tokens-to-prefix-form (reverse t)))
-             (cm-error-linenum (get-current-linenum) error-id "Cannot pemdas parse prefix op.")
+             (cm-error-linenum 
+               current-module-id (get-current-linenum) error-id "Cannot pemdas parse prefix op.")
              )]
         ;; infix op found matching precedence
         [(cons h t) #:when (and (zero? pcount) (is-operator? h) (= (op-to-precedence h) preced)
@@ -102,10 +106,11 @@
          [(cons h t) #:when (is-operator? h) 
                      (match (parse-op h t) 
                             [ast #:when (not (null? expr-tail))
-            (cm-error-linenum (get-current-linenum) error-id 
+            (cm-error-linenum current-module-id (get-current-linenum) error-id 
                       "Invalid Expression. Probably missing an operator.")]
                             [ast ast])]
          [_ (cm-error-linenum 
+              current-module-id
               (get-current-linenum) 
               error-id "Invalid Expression. Probably missing an operator.")]))
 
@@ -125,6 +130,7 @@
                 ;; set the tail for later use
                 [(zero? arity) (set! expr-tail '()) (reverse acc)]
                 [else (cm-error-linenum 
+                        current-module-id
                         (get-current-linenum) 
                         error-id (format "Operand(s) missing for ~a." op))])]
      [(cons h t) #:when (zero? arity)
@@ -151,8 +157,10 @@
         [(is-var-token? token) (Var token)]
         [(is-operator? token)  
          (cm-error-linenum 
+           current-module-id
             (get-current-linenum) 
             error-id (format "Operand(s) missing for ~a." token))]
         [else (cm-error-linenum 
+                current-module-id
                 (get-current-linenum) 
                 error-id (format "Invalid variable name: ~a." token))]))

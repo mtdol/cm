@@ -1,11 +1,12 @@
 #lang racket
 (require racket/lazy-require cm/core/error)
-(lazy-require (cm/core/context [get-macro-defs print-macro-context]) 
+(lazy-require (cm/core/context 
+                [get-macro-defs print-macro-context]) 
               (cm/core/types [is-string-token?])
               (cm/core/pre-lex [unwrap-string]))
 (provide (all-defined-out))
 
-(struct MacroRule (vars body))
+(struct MacroRule (vars body module-id))
 
 (define (invalid-args-error label args)
   (let ([num-args (if (equal? args '(())) 0 (length args))])
@@ -29,14 +30,14 @@
     "\"")))
 
 ;; {ifdef "macro_name" | then | else}
-(define (apply-ifdef-macro args)
+(define (apply-ifdef-macro args module-id)
   (unless (= (length args) 3) (invalid-args-error "ifdef" args))
   (when (null? (car args)) 
     (cm-error "MACRO" "ifdef is missing a guard argument."))
   (when (or (not (= 1 (length (car args)))) 
             (not (is-string-token? (caar args)))) 
     (cm-error "MACRO" "Guard argument to ifdef must be a single string."))
-  (if (get-macro-defs (unwrap-string (caar args)))
+  (if (get-macro-defs (unwrap-string (caar args)) module-id)
     (list-ref args 1)
     (list-ref args 2)))
 
@@ -57,21 +58,21 @@
 
 
 ;; string, string list list -> string list
-(define (apply-macro label args) 
+(define (apply-macro label args module-id) 
   (match label
     ;; first check if a preloaded macro
     ["reverse" (apply-reverse-macro args)]
     ["string" (apply-string-macro args)]
-    ["ifdef" (apply-ifdef-macro args)]
+    ["ifdef" (apply-ifdef-macro args module-id)]
     ;; then run user defined macros
     [_ 
-     (let aux ([entry (get-macro-defs label)])
+     (let aux ([entry (get-macro-defs label module-id)])
       (match entry
              [#f (cm-error "MACRO" (format "Macro not defined: ~a" label))]
              ['() (invalid-args-error label args)]
-             [(cons (MacroRule vars body) t) 
+             [(cons (MacroRule vars body module-id) t) 
               #:when (args-match-macro-entry? args vars)
-                  (apply-macro-args vars args body)]
+              (apply-macro-args vars args body)]
              [(cons _ t) (aux t)]
              ))]))
 

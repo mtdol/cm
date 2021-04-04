@@ -18,10 +18,6 @@
         -- change install scripts into package managers
 
 <critical>
-- when lambdas from other files are called, global private variables cannot be
-    referenced inside
-    -- this is evident from tests/modules/private1.rkt
-
 - line number issues in pre-parse
     -- probably should just put linenumbers onto tokens directly
 <critical/>

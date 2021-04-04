@@ -61,25 +61,21 @@
              )]))
 
 ;; processes import command
-(define (process-import str prefix)
+(define (process-import str prefix current-module-id)
   (if (> num-imports max-imports) 
     (cm-error "IMPORT" "Too many imports detected. Possible import cycle.") 
     (set! num-imports (add1 num-imports)))
   ;; remember the current module id
-  (let ([module-id-backup (get-current-module-id)]
-        [filename (get-filename str)])
-    (unless (not (string=? (get-current-module-id) filename)) 
+  (let ([id (file-name->module-id (get-filename str))])
+    (unless (not (string=? current-module-id id)) 
       (cm-error "IMPORT" "A module cannot import itself."))
-    (do-import! filename)
-    ;; get the module id of the other file
-    (let ([module-id (get-current-module-id)])
-      ;; restore the old module id
-      (set-current-module-id! module-id-backup)
-      (set-refs-from-module-space! module-id prefix #t))))
+    (do-import! id)
+    ;; restore the old module id
+    (set-refs-from-module-space! id current-module-id prefix #t)))
 
-(define (process-lazy-import file-str type item prefix)
+(define (process-lazy-import file-str type item prefix current-module-id)
   (let ([module-id (file-name->module-id (get-filename file-str))])
-    (when (not (map-reference type item module-id prefix #t))
+    (when (not (map-reference type item module-id current-module-id prefix #t))
       (cm-error "IMPORT" 
                 (format "Could not lazy require ~a ~a from module ~a"
                         type item module-id)))
