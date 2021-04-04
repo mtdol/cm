@@ -68,7 +68,6 @@
     [(is-float? v) "float"]
     [(is-int? v) "int"]
     [(is-bool? v) "bool"]
-    [(is-null? v) "null"]
     [(is-list? v) "list"]
     [(is-pair? v) "pair"]
     [(is-fun? v) "fun"]
@@ -117,6 +116,7 @@
          (match v
                 [(CmStruct label vals) (format "(struct ~a ~a)" label (string-coerce vals))]
                 )]
+        [(is-null? v) "()"]
     [else
   (match (get-type v)
          ["string" v]
@@ -125,7 +125,6 @@
          ["bool" (match v [(Bool 1) "true"] [(Bool 0) "false"])]
          ["list" (string-append "(" (list-to-string v) ")")]
          ["pair" (string-append "(" (list-to-string v) ")")]
-         ["null" "()"]
          ["void" ""]
          ["eof" "eof"]
          ["mutable hash" "mutable hash"]
@@ -144,7 +143,6 @@
          ["bool" (match v [(Bool i) i])]
          ["list" (cm-error "CONTRACT" "Cannot coerce a list to an int.")]
          ["pair" (cm-error "CONTRACT" "Cannot coerce a pair to an int.")]
-         ["null" (cm-error "CONTRACT" "Cannot coerce a null to an int.")]
          ["void" (cm-error "CONTRACT" "Cannot coerce a void to an int.")]
          ["eof" (cm-error "CONTRACT" "Cannot coerce an eof to an int.")]
          ["fun" (cm-error "CONTRACT" "Cannot coerce a fun to an int.")]
@@ -160,7 +158,6 @@
          ["bool" (match v [(Bool 1) 1.0] [(Bool 0) 0.0])]
          ["list" (cm-error "CONTRACT" "Cannot coerce a list to a float.")]
          ["pair" (cm-error "CONTRACT" "Cannot coerce a pair to a float.")]
-         ["null" (cm-error "CONTRACT" "Cannot coerce a null to a float.")]
          ["void" (cm-error "CONTRACT" "Cannot coerce a void to a float.")]
          ["eof" (cm-error "CONTRACT" "Cannot coerce an eof to a float.")]
          ["fun" (cm-error "CONTRACT" "Cannot coerce a fun to a float.")]
@@ -179,7 +176,6 @@
          ["bool" v]
          ["list" (Bool 1)]
          ["pair" (Bool 1)]
-         ["null" (Bool 1)]
          ["void" (cm-error "CONTRACT" "Cannot coerce a void to a bool")]
          ["eof" (cm-error "CONTRACT" "Cannot coerce an eof to a bool")]
          ["fun" (cm-error "CONTRACT" "Cannot coerce a fun to a bool.")]

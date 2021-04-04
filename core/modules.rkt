@@ -2,7 +2,7 @@
 (require racket/lazy-require racket/runtime-path)
 (require cm/core/error cm/core/ast cm/core/context)
 (lazy-require [cm/core/main (run-file silent)])
-(provide process-import process-lazy-import file-name->module-id)
+(provide process-import process-lazy-import file-name->module-id get-filename)
 
 (define modules-file-already-imported? #f)
 (define module-regex #rx"^\"(.+)\"\\:\"(.+)\"$")

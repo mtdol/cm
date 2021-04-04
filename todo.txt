@@ -22,9 +22,6 @@
     -- probably should just put linenumbers onto tokens directly
 <critical/>
 
-- gensym
-
-- generators, ie generates a value when called
 
 - `...` match-expr operator
 

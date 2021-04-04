@@ -277,13 +277,14 @@
         ['hash? (racket-to-bool (is-hash? v))]
         ['mutable_hash? (racket-to-bool (is-mutable-hash? v))]
         ;; get-global-var-data will return false if v not yet defined
-        ['defined? (racket-to-bool (get-global-var-data v module-id))]
+        ['defined? (interp-defined? v context module-id)]
         ['hash_keys (interp-hash-keys v)]
         ['hash_values (interp-hash-values v)]
         ['hash_to_list (interp-hash-to-list v)]
         ['read_string (interp-read-string v)]
         ['write_string (interp-write-string v)]
         ['write_string_raw (interp-write-string-raw v)]
+        ['gensym (interp-gensym v context module-id)]
         ['var
          (trace-interp-expr (Var (check-var-string-name v)) context module-id)]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
@@ -798,3 +799,25 @@
 
 (define (interp-write-string-raw v1)
   (display (string-coerce v1)) (Prim0 'void))
+
+(define last-gensym-id 0)
+(define (interp-gensym v1 context module-id)
+  (unless (is-string? v1) 
+    (cm-error "CONTRACT" "The prefix for gensym must be a string."))
+  (let ([id last-gensym-id])
+    (set! last-gensym-id (add1 id))
+    (string-append v1 (number->string id))
+    ))
+
+(define (interp-defined? v1 context current-module-id)
+  (match v1
+         [(list (? is-string? label) (? is-string? id))
+          (racket-to-bool 
+            (or
+              (get-local-var-data label context)
+              (get-global-var-data label id)))]
+         [(? is-string? label) 
+          (racket-to-bool
+            (or
+              (get-local-var-data label context)
+              (get-global-var-data label current-module-id)))]))

@@ -3,7 +3,8 @@
 (lazy-require (cm/core/context 
                 [get-macro-defs print-macro-context]) 
               (cm/core/types [is-string-token?])
-              (cm/core/pre-lex [unwrap-string]))
+              (cm/core/pre-lex [unwrap-string])
+              (cm/core/modules [get-filename file-name->module-id]))
 (provide (all-defined-out))
 
 (struct MacroRule (vars body module-id))
@@ -41,6 +42,19 @@
     (list-ref args 1)
     (list-ref args 2)))
 
+(define (apply-current-module-macro args module-id)
+  (unless (equal? args '(())) (invalid-args-error "current_module" args))
+  (list (string-append "\"" module-id "\"")))
+
+;; turns a module style string into a in language string
+(define (apply-to-module-id-macro args)
+  (unless (and (= (length args) 1) (not (equal? args '(()))))
+    (invalid-args-error "->module_id" args))
+  (list (string-append 
+    "\"" (file-name->module-id 
+           (get-filename (unwrap-string (caar args))))
+    "\"")))
+
 
 ;;
 ;; Macro Utils
@@ -64,6 +78,8 @@
     ["reverse" (apply-reverse-macro args)]
     ["string" (apply-string-macro args)]
     ["ifdef" (apply-ifdef-macro args module-id)]
+    ["current_module" (apply-current-module-macro args module-id)]
+    ["->module_id" (apply-to-module-id-macro args)]
     ;; then run user defined macros
     [_ 
      (let aux ([entry (get-macro-defs label module-id)])

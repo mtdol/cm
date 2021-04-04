@@ -199,9 +199,11 @@
 ;; assert_types={}
 ;;
 
-(check-equal? (run-stat "{assert_types= main|\"int\"|1|2} 5.")
+(check-equal? (run-stat "{assert_types= \"main\"|{list \"int\"}|1|2} 5.")
 '(5))
 
-
 (check-exn exn:fail? (lambda ()
-  (run-stat "{assert_types= main|\"int\"|1|2.2} 5.")))
+  (run-stat "{assert_types= \"main\"|{list \"int\"}|1|2.2} 5.")))
+
+(check-equal? (run-stat "{assert_types= \"main\"|{list \"int\"|\"float\"}|1|2.2} 5.")
+'(5))

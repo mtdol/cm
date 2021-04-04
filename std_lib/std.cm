@@ -44,20 +44,23 @@ if defined? {string var} then void else def guard var
 
 
 -- checks that the types of items in REST equal
-#:<def:assert_types={op|type_str|REST}
-if not ({_assert_types=_aux type_str | REST}) 
+#:<def:assert_types={op|types|REST}
+if not ({_assert_types=_aux types | REST}) 
     then error 
         {list "CONTRACT"
             | {: format
-                | "Types do not equal for ~1: \n~2"
-                | {list {string op} | string {list REST}}}}
+                | "Types for ~2 must be one of ~1:\n~3"
+                | {list string (types) | op | string {list REST}}}}
     else
     -- user code after this
 >:#
-#:<def:_assert_types=_aux{type_str|a|REST}
-(type (a) = type_str) and {_assert_types=_aux type_str|REST} 
+#:<def:_assert_types=_aux{types|a|REST}
+{: ormap | lambda typ := typ = type (a) | types} and
+    {_assert_types=_aux types|REST} 
 >:#
-#:def+:_assert_types=_aux{type_str|a} type (a) = type_str
+#:<def+:_assert_types=_aux{types|a}
+{: ormap | lambda typ := typ = type (a) | types}
+>:#
 
 
 --- IO
@@ -87,13 +90,13 @@ defun number? v :=
         t = "int" or t = "float".
 
 defun add ({_number} n1, {_number} n2) :=
-    {assert_types= add|type n1|n1|n2} 
+    {assert_types= "add"|{list type n1}|n1|n2} 
     n1 + n2.
 defun sub ({_number} n1, {_number} n2) :=
-    {assert_types= sub|type n1|n1|n2} 
+    {assert_types= "sub"|{list type n1}|n1|n2} 
     n1 - n2.
 defun mult ({_number} n1, {_number} n2) :=
-    {assert_types= mult|type n1|n1|n2} 
+    {assert_types= "mult"|{list type n1}|n1|n2} 
     n1 * n2.
 defun div (float n1, float n2) :=
     n1 / n2.
@@ -126,13 +129,13 @@ defun to_bool n := bool n.
 -- maps f onto all members of list lst
 defun map (fun f, list lst) := 
     | null? lst -> null 
-    else (f:`lst), {: map | f | ~lst}.
+    else (f:`lst), {: map | f | ~lst}//
 
 -- returns a list with only the elements that are true according to f
 defun filter (fun f, list lst) := 
     | null? lst -> null 
     | f:`lst -> `lst, {: filter | f | ~lst}
-    else {: filter | f | ~lst}.
+    else {: filter | f | ~lst}//
 
 -- int | float -> int | float
 defun max (n1, n2) :=
@@ -150,15 +153,30 @@ defun reverse list xs :=
         | x, t -> {: _aux_ | t | x, acc}
         end
     in
-        {: aux | xs | ()}.
+        {: aux | xs | ()}//
 
+defun append list lsts :=
+    let f := lambda lst, acc :=
+        {assert_types= "append"|{list "list"}|lst}
+        {: foldl
+            | lambda elem, acc :=
+                elem, acc
+            | acc
+            | lst}
+    in
+        reverse : {: foldl | f | () | lsts}//
+
+-- simple range, no iterator, just returns a list
 defun range (int n1, int n2) :=
     let aux := defun _aux_ (n1, n2) :=
-        | n1 = n2 -> ()
-        else n1, {: _aux_ | n1+1 | n2}
+        {% 
+          def _v_ := ()
+          | while {iter {: iter_range|n2|n1}} 
+                do set _v_ := (:>iter_get, _v_) 
+        } comma _v_
     in
-        | n1 > n2 -> reverse : {: aux | n2+1 | n1+1}
-        else {: aux | n1 | n2}.
+        | n1 > n2 -> {: aux|n1+1|n2+1}
+        else {: aux|n1-1|n2-1}//
 
 defun foldl (fun f, dynamic acc, list vs) :=
     match vs
@@ -166,10 +184,89 @@ defun foldl (fun f, dynamic acc, list vs) :=
     | v, t -> 
         let acc2 := {: f | v | acc} in
             {: foldl | f | acc2 | t}
-    end.
+    end//
 
 defun foldr (fun f, dynamic acc, list vs) :=
-    appl foldl (f, acc, (reverse:vs);).
+    {: foldl | f | acc | reverse:vs}//
+
+defun ormap (fun f, list vs) :=
+    match vs
+    | () -> false
+    | v, vs when bool (f:v) -> true
+    | _, vs -> {: ormap|f|vs}
+    end//
+
+defun andmap (fun f, list vs) :=
+    match vs
+    | () -> true
+    | v, vs when not bool (f:v) -> false
+    | _, vs -> {: andmap|f|vs}
+    end//
+
+-- ?, list -> bool | list
+defun member (dynamic elem, list vs) :=
+    match vs
+    | () -> false
+    | v, vs when v == elem -> vs 
+    | _, vs -> {: member | elem | vs}
+    end//
+
+-- ?, list -> bool
+defun member? (dynamic elem, list vs) :=
+    list? {: member | elem | vs}//
+
+
+--- Iterators, Generators
+--------------------------------
+
+-- generates a string that is undefined when treated as a variable
+defun gen_undefined (string prefix, string module) := 
+    {%
+      def _v_ := 0
+    | while defined? {list set _v_ := gensym prefix | module} do void
+    } comma _v_
+    //
+
+-- eof will signal the end of the iteration
+#:def:iter{a} (a) !== eof
+
+def _seed := 0.
+def _active? := false.
+
+-- if the iter is active then iters with delta, else returns void
+defun iter (fun delta) :=
+    if _active? then
+        set _seed := delta : _seed
+    else
+        eof//
+
+defun iter_init (dynamic val) :=
+    {% set _active? := true | set _seed := val} comma val//
+
+defun iter_open? () :=
+    _active?//
+
+defun iter_get () :=
+    _seed//
+
+-- closes the iterator and returns eof
+defun iter_term () :=
+    {% set _active? := false} comma eof//
+
+-- iterative range function
+defun iter_range (int n1, int n2) :=
+    -- readjust indexes and open iter
+    | not :>iter_open? -> 
+        -- iter stays closed
+        | n1 = n2 -> eof
+        else iter_init:n1
+    | n1 < n2 -> 
+        | :>iter_get = n2 - 1 -> :>iter_term
+        else iter:add1
+    -- n1 > n2
+    else
+        | :>iter_get = n2 + 1 -> :>iter_term
+        else iter:sub1//
 
 
 --- String funcs
