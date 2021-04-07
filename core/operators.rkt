@@ -33,7 +33,6 @@
         (cons "do"              (OpData 1 "prefix"  0   'Do      '()))
         (cons "when"            (OpData 2 "infix"   0   'Prim2   'when))
         (cons "appl"            (OpData 2 "prefix"  0   'Prefix2 'appl))
-        (cons "load"            (OpData 1 "prefix"  0   'Prim1   'load))
         (cons "assign"          (OpData 1 "prefix"  0   'Assign  '()))
         (cons "typedef"         (OpData 2 "prefix"  0   'Typedef '()))
         (cons "comma"           (OpData 2 "infix"   0   'Prim2   'comma))

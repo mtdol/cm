@@ -301,12 +301,14 @@
             (get-type v) "."))]
         ['head  #:when (or (string=? (get-type v) "list" ) 
                         (string=? (get-type v) "pair"))
+        (when (null? v) (cm-error "CONTRACT" "Cannot head deref null."))
         (car v)]
         ['head (cm-error "CONTRACT" (string-append 
             "Applied head to non list or pair. Given type "
             (get-type v) "."))]
         ['tail  #:when (or (string=? (get-type v) "list" ) 
                         (string=? (get-type v) "pair"))
+        (when (null? v) (cm-error "CONTRACT" "Cannot tail deref null."))
         (cdr v)]
         ['tail (cm-error "CONTRACT" (string-append 
             "Applied tail to non list or pair. Given type "

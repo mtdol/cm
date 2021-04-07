@@ -15,14 +15,29 @@ const int os = 1;
 const int os = 2;
 #endif
 
-const char pkg_help[] = "Use --install to install or reset the module system.\n";
+const char pkg_help[] = 
+                "No args: show this help text\n"
+                "\n"
+                "--add <module-abbrev> <module-path>:\n"
+                "   Add the given module abbrev to the module system.\n"
+                "\n"
+                "--remove <module-abbrev>:\n"
+                "   Removes the given module-abbrev from the module system.\n"
+                "\n"
+                "--show:\n"
+                "   Show the current state of the module system.\n"
+                "\n"
+                "--help, -h: show this help text\n";
+
 const char help[] = 
                 "No args: run the repl\n"
                 "file: run a file\n"
                 "-f file: run a file\n"
                 "-e: run an expression\n"
-                "-st: run a statement\n"
-                "--pkg: package manager\n";
+                "-E: run a statement\n"
+                "--install: install cm; reset the module system\n"
+                "--pkg: package manager\n"
+                "--help, -h: show this help text\n";
 
 int main (int argc, char *argv[]) {
     int status = 0;
@@ -33,18 +48,18 @@ int main (int argc, char *argv[]) {
     if (argc == 1) {
         strcpy (query, "racket -e \"(require cm/core/repl)\"");
 
+    } else if (argc == 2 && !(strcmp (argv[1], "--install"))) {
+        if (os == win32) {
+            strcpy (query, ".\\install.ps1");
+        } else {
+            strcpy (query, "./install.sh");
+        }
     // package manager options
     } else if (argc >= 2 && !(strcmp (argv[1], "--pkg"))) {
         if (argc == 2 || (argc == 3 && 
-                    (!(strcmp (argv[2], "--help")) || (strcmp (argv[2], "-h"))))) {
+                    (!(strcmp (argv[2], "--help")) || !(strcmp (argv[2], "-h"))))) {
             printf (pkg_help);
             return 0;
-        } else if (argc == 3 && !(strcmp (argv[2], "--install"))) {
-            if (os == win32) {
-                strcpy (query, ".\\install.ps1");
-            } else {
-                strcpy (query, "./install.sh");
-            }
         } else {
             handle_invalid_args();
         }
@@ -65,7 +80,7 @@ int main (int argc, char *argv[]) {
         sprintf (query,
                 "racket -e \"(require cm/core/main) (silent (run-file \\\"%s\\\"))\"",
                 str);
-    } else if (argc == 3 && !(strcmp (argv[1], "-st"))) {
+    } else if (argc == 3 && !(strcmp (argv[1], "-E"))) {
         strcpy (str, argv[2]);
         sprintf (query,
                 "racket -e \"(require cm/core/main) (display-output (run \\\"%s\\\"))\"",

@@ -21,6 +21,11 @@
 #:def+:%{v} ((v) comma void)
 #:def+:%{} void
 
+-- prints all given args and yields void
+#:def:@{a|REST} (@ (a)) comma {@ REST}
+#:def+:@{a} ((@ (a)) comma void)
+#:def+:@{} void
+
 -- wraps and builds a list
 #:def:list{v|REST} ((v), {list REST})
 #:def+:list{v} ((v);)
@@ -67,16 +72,16 @@ if not ({_assert_types=_aux types | REST})
 ------------------------------
 
 -- allows print to be used like a function
-defun print2 v := print v. 
+defun print2 v := print v// 
 -- prints and yields void
-defun sprint v := (print v) comma void. 
+defun sprint v := (print v) comma void// 
 -- pretty print
 defun pprint vs :=
     match vs 
     | () -> void 
     | v, t -> (@ v) comma (pprint:t)
-    | v -> @ v
-    end.
+    | v -> (@ v) comma void
+    end//
 
 
 --- Math, lists
@@ -87,21 +92,21 @@ defun pprint vs :=
 
 defun number? v :=
     let t := type v in
-        t = "int" or t = "float".
+        t = "int" or t = "float"//
 
 defun add ({_number} n1, {_number} n2) :=
     {assert_types= "add"|{list type n1}|n1|n2} 
-    n1 + n2.
+    n1 + n2//
 defun sub ({_number} n1, {_number} n2) :=
     {assert_types= "sub"|{list type n1}|n1|n2} 
-    n1 - n2.
+    n1 - n2//
 defun mult ({_number} n1, {_number} n2) :=
     {assert_types= "mult"|{list type n1}|n1|n2} 
-    n1 * n2.
+    n1 * n2//
 defun div (float n1, float n2) :=
-    n1 / n2.
+    n1 / n2//
 defun exp ({_number} n1, {_number} n2) :=
-    n1 ^ n2.
+    n1 ^ n2//
 
 
 defun add1 {_number} n :=
@@ -139,11 +144,11 @@ defun filter (fun f, list lst) :=
 
 -- int | float -> int | float
 defun max (n1, n2) :=
-    if n1 > n2 then n1 else n2.
+    if n1 > n2 then n1 else n2//
 
 -- int | float -> int | float
 defun min (n1, n2) :=
-    if n1 < n2 then n1 else n2.
+    if n1 < n2 then n1 else n2//
 
 
 defun reverse list xs :=
@@ -230,8 +235,8 @@ defun gen_undefined (string prefix, string module) :=
 -- eof will signal the end of the iteration
 #:def:iter{a} (a) !== eof
 
-def _seed := 0.
-def _active? := false.
+def _seed := 0//
+def _active? := false//
 
 -- if the iter is active then iters with delta, else returns void
 defun iter (fun delta) :=
@@ -274,30 +279,30 @@ defun iter_range (int n1, int n2) :=
 
 -- function form of the substring functionality of the index keyword
 defun substring (string s, int i1, int i2) :=
-    index s (i1,i2;).
+    index s (i1,i2;)//
 
 defun string_ref (string s, int i) :=
-    index s i.
+    index s i//
 
 defun concatenate (string s1, string s2) :=
-    s1 $ s2.
+    s1 $ s2//
 
 defun string_length string s :=
-    length s.
+    length s//
 
 -- turns the string into a list of length 1 substrings
 defun string_to_list string s :=
     match s
     | "" -> ()
     | _ -> (index s 0), (string_to_list : (index s (1, length s;)))
-    end.
+    end//
 
 -- concatenates all of the elems in the list into a single string
 defun list_to_string list ss :=
     match ss
     | () -> ""
     | s, t -> s $ (list_to_string:t)
-    end.
+    end//
 
 -- replaces all instances of target substring with rep
 defun string_replace (string str, string targ, string rep) :=
@@ -336,13 +341,13 @@ defun list_to_hash list ms :=
     {: foldl 
         | lam m,h := hash_set h (`m) (~m)
         | make_hash ()
-        | ms}. 
+        | ms}//
 
 defun list_to_mutable_hash list ms :=
     {: foldl 
         | lam m,h := (hash_set h (`m) (~m)) comma h
         | make_hash "mutable"
-        | ms}. 
+        | ms}//
 
 
 --- System
@@ -353,7 +358,7 @@ match system_type
 | "macosx" -> (eval "#:def:mac{} true") comma void
 | "unix" -> (eval "#:def:unix{} true") comma void
 | _ -> void
-end.
+end//
 
 -- cds only if the directory exists
 defun cd2 string s :=
@@ -361,14 +366,14 @@ defun cd2 string s :=
     then 
         cd s 
     else 
-        error ("SYSTEM", ("Dir "$s$" does not exist.");).
+        error ("SYSTEM", ("Dir "$s$" does not exist.");)//
 
 -- pretty print ls of current dir
 defun lsc () :=
     pprint:(ls ".").
 defun cdc () :=
-    (cd "").
+    (cd "")//
 
 -- display contents of file
 defun catf f :=
-    pprint:(getlinesf f).
+    pprint:(getlinesf f)//

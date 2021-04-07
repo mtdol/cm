@@ -17,11 +17,16 @@
         -- -add -remove -show
         -- change install scripts into package managers
 
+. change error when file cannot be found to be more cm-like
+
 <critical>
 - line number issues in pre-parse
     -- probably should just put linenumbers onto tokens directly
 <critical/>
 
+
+- std.cm
+    -- build_list
 
 - `...` match-expr operator
 
