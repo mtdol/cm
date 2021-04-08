@@ -11,12 +11,6 @@
         -- regex {list "match" | "[ab]{2}(c+)" | "aaccf"}
     - will pretty closely follow racket regex, can point this out in documentation
 
-. enhance cm.exe
-    - allow --pkg to be used without cd'ing to the cm directory
-    - --pkg
-        -- -add -remove -show
-        -- change install scripts into package managers
-
 . change error when file cannot be found to be more cm-like
 
 <critical>

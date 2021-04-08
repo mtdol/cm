@@ -40,19 +40,13 @@
 
 (define (get-basic-modules-file-text)
   (format 
-    "# this is a comment\n\"std_lib\":\"~a\"" 
-    (path->complete-path std_lib-path)))
+    "\"std_lib\":\"~a\"" 
+    (modules:string->module-path-string std_lib-path)))
 (define (reset-modules-file)
   (display-to-file 
     (get-basic-modules-file-text)
     modules-file-path
     #:exists 'truncate))
-
-(define (add-to-modules-file label path)
-  (display-to-file 
-    (format "\n\"~a\":\"~a\"" label path)
-    modules-file-path
-    #:exists 'append))
 
 (match args
   ['() (enter! cm/core/repl)]
@@ -67,6 +61,11 @@
    #:when (or (string=? v "-h") (string=? v "help"))
    (displayln pkg-help-text)]
   [(list "--pkg" "show") (modules:show-modules)]
-  [(list "--pkg" "add" a1 a2) (add-to-modules-file a1 a2)]
+  [(list "--pkg" "add" a1 a2) 
+   (modules:add-to-modules a1 (modules:string->module-path-string a2))
+   (modules:write-modules)]
+  [(list "--pkg" "remove" a1) 
+   (modules:remove-from-modules a1)
+   (modules:write-modules)]
   [(list f) (main:silent (main:run-file f))]
   [_ (displayln "Invalid args.")])

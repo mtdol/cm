@@ -3,7 +3,8 @@
 (require cm/core/error cm/core/ast cm/core/context)
 (lazy-require [cm/core/main (run-file silent)])
 (provide process-import process-lazy-import file-name->module-id get-filename
-         show-modules)
+         show-modules write-modules add-to-modules remove-from-modules
+         string->module-path-string)
 
 (define modules-file-already-imported? #f)
 (define module-regex #rx"^\"(.+)\"\\:\"(.+)\"$")
@@ -16,10 +17,19 @@
 ;;
 ;; string -> string
 (define (file-name->module-id name)
-        (path->string (path->complete-path name)))
+        (path->string (simplify-path (path->complete-path name))))
+
+;; takes in a path to a directory and turns it into a module path
+;;
+;; string -> string
+(define (string->module-path-string path)
+  (path->string
+  (path->directory-path
+    (simplify-path
+      (path->complete-path path)))))
 
 ;; start from path of this source file and arive at module file
-(define-runtime-path module-file-path "../config/modules.txt")
+(define-runtime-path modules-file-path "../config/modules.txt")
 
 
 (define modules (make-hash))
@@ -29,7 +39,7 @@
     (silent (run-file file)) (void))
 
 (define (load-module-hash!)
-           (for ([line (file->lines module-file-path)])
+           (for ([line (file->lines modules-file-path)])
             (cond 
                 ;; ignore comments and empty lines
               [(not (regexp-match? #rx"^[\\t ]*$|^[\\t ]*\\#" line))
@@ -42,17 +52,37 @@
   (set! modules-file-already-imported? #t)
   (load-module-hash!))
 
+
 (define (show-modules)
   (let ([elems 
           (sort (hash->list modules) 
                 #:key car string<?)])
-    (display "Module_name:Module_path\n\n")
+    (display "\"Module_name\":\"Module_path\"\n\n")
     (map 
       (lambda (elem) 
         (display (format "\"~a\":\"~a\"\n" (car elem) (cdr elem))))
       elems)
     (void)
     ))
+
+(define (add-to-modules abbrev path)
+  (hash-set! modules abbrev path))
+
+(define (remove-from-modules abbrev)
+  (hash-remove! modules abbrev))
+
+;; writes the modules hash to the file
+(define (write-modules)
+  (let ([elems 
+          (sort (hash->list modules) 
+                #:key car string<?)])
+    (let ([str
+     (foldl 
+      (lambda (elem acc) 
+        (string-append (format "\"~a\":\"~a\"\n" (car elem) (cdr elem)) acc))
+      "" elems)])
+    (display-to-file str modules-file-path #:exists 'truncate)
+  )))
 
 ;; module string -> filename string
 (define (get-filename str)
