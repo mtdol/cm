@@ -16,27 +16,8 @@ raco pkg install
 
 The modules system must also be installed:
 ```
-# windows
-cd "path to cm dir"
-./install.ps1
-
-# linux
-cd "path to cm dir"
-./install.sh
+cm.rkt --install
 ```
-
-Optionally, use
-```
-gcc cm.c -o cm.exe
-```
-or `make` to compile the cm excecutable, which can make it easier to run files or the repl.
-
-When the executable is compiled, you can use:
-```
-cd "path to cm dir"
-./cm.exe -install
-```
-to automatically install the module system.
 
 ## Repl
 When build is stable, use:
@@ -45,10 +26,10 @@ racket ./repl.rkt
 ```
 in language directory (core) to test language expressions.
 
-Also you can simply run cm.exe to load the repl.
+Also you can simply run cm.rkt to load the repl.
 ```
 cd "path to cm directory"
-./cm.exe
+./cm.rkt
 ```
 
 ## Running Files
@@ -71,19 +52,19 @@ racket -e '(require cm/core/main) (displayln (run-parse "statement here"))'
 racket -e '(require cm/core/main) (run-parse-expr "expression here")'
 ...
 ```
-Aditionally, cm.exe can be used to run cm files:
+Aditionally, `cm.rkt` can be used to run cm files:
 ```
-./cm.exe "path to file"
+./cm.rkt "path to file"
 ```
 The -f switch is normally implied and indicates a file arg.
 ```
 # -f is not really necessary
-./cm.exe -f "path to file"
+./cm.rkt -f "path to file"
 ```
 
 To learn further about how to use cm.exe, use the `--help` or `-h` switch to display help text.
 ```
-./cm.exe --help
+./cm.rkt --help
 ```
 
 There are example files in the `examples` directory, although some may not always work as the language changes.
@@ -100,7 +81,9 @@ The file has this form:
 "module2":"path_to_module2"
 ```
 
-As of right now there is no package manager, so modules must be added manually to `modules.txt`.
+The `cm.rkt` script contains a package manager that can be run using the `--pkg` switch.  
+This package manager will allow you to more easily add modules without having to manually edit the
+modules file in your editor.
 
 The module installation during setup replaces or adds the `modules.txt` file and fills it
 with the `std_lib` module (required for the repl.)
