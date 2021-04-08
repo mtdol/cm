@@ -19,6 +19,12 @@ The modules system must also be installed:
 cm.rkt --install
 ```
 
+On windows make sure to set the default application to run `.rkt` files to `racket.exe`,
+else you will have to run `cm.rkt` with the racket application every time:
+```
+racket cm.rkt args
+```
+
 ## Repl
 When build is stable, use:
 ```
