@@ -26,7 +26,7 @@ racket ./repl.rkt
 ```
 in language directory (core) to test language expressions.
 
-Also you can simply run cm.rkt to load the repl.
+Also you can simply run `cm.rkt` to load the repl.
 ```
 cd "path to cm directory"
 ./cm.rkt
