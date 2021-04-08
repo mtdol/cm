@@ -2,7 +2,8 @@
 (require racket/lazy-require racket/runtime-path)
 (require cm/core/error cm/core/ast cm/core/context)
 (lazy-require [cm/core/main (run-file silent)])
-(provide process-import process-lazy-import file-name->module-id get-filename)
+(provide process-import process-lazy-import file-name->module-id get-filename
+         show-modules)
 
 (define modules-file-already-imported? #f)
 (define module-regex #rx"^\"(.+)\"\\:\"(.+)\"$")
@@ -40,6 +41,18 @@
 (unless modules-file-already-imported? 
   (set! modules-file-already-imported? #t)
   (load-module-hash!))
+
+(define (show-modules)
+  (let ([elems 
+          (sort (hash->list modules) 
+                #:key car string<?)])
+    (display "Module_name:Module_path\n\n")
+    (map 
+      (lambda (elem) 
+        (display (format "\"~a\":\"~a\"\n" (car elem) (cdr elem))))
+      elems)
+    (void)
+    ))
 
 ;; module string -> filename string
 (define (get-filename str)
