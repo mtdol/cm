@@ -2,6 +2,7 @@
 (require cm/core/lex cm/core/ast cm/core/parse-expr 
          cm/core/parse-stat cm/core/interp cm/core/ast-to-string
          cm/core/types cm/core/context cm/core/modules cm/core/error
+         cm/core/pre-parse
          )
 (provide run run-file run-expr run-tokenize-string
          run-parse run-parse-expr run-prefix-form
@@ -62,7 +63,9 @@
 ;; runs an expr (no dot)
 (define (run-expr input) 
   (interp 
-    (parse-expr (tokenize-string input current-module-id) current-module-id)
+    (parse-expr 
+      (pre-parse (tokenize-string input current-module-id) current-module-id)
+      current-module-id)
     current-module-id))
 
 (define (run-tokenize-string input) (tokenize-string input current-module-id))

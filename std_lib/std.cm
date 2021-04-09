@@ -87,49 +87,56 @@ defun pprint vs :=
 --- Math, lists
 ------------------------------
 
-#:def:_number{} types ("int", "float";)
+-- shorthand for number types to be used with `types`
+#:def:number{} ("int", "float";)
 
 
 defun number? v :=
     let t := type v in
         t = "int" or t = "float"//
 
-defun add ({_number} n1, {_number} n2) :=
+defun add (types {number} n1, types {number} n2) :=
     {assert_types= "add"|{list type n1}|n1|n2} 
     n1 + n2//
-defun sub ({_number} n1, {_number} n2) :=
+defun sub (types {number} n1, types {number} n2) :=
     {assert_types= "sub"|{list type n1}|n1|n2} 
     n1 - n2//
-defun mult ({_number} n1, {_number} n2) :=
+defun mult (types {number} n1, types {number} n2) :=
     {assert_types= "mult"|{list type n1}|n1|n2} 
     n1 * n2//
 defun div (float n1, float n2) :=
     n1 / n2//
-defun exp ({_number} n1, {_number} n2) :=
+defun exp (types {number} n1, types {number} n2) :=
     n1 ^ n2//
 
 
-defun add1 {_number} n :=
+defun add1 types {number} n :=
     if type n = "int" then n + 1 else n + 1.0.
-defun sub1 {_number} n :=
+defun sub1 types {number} n :=
     if type n = "int" then n - 1 else n - 1.0.
-defun zero? {_number} n :=
+defun zero? types {number} n :=
     if type n = "int" then n = 0 else n = 0.0.
-defun pos? {_number} n :=
+defun pos? types {number} n :=
     if type n = "int" then n > 0 else n > 0.0.
-defun neg? {_number} n :=
+defun neg? types {number} n :=
     if type n = "int" then n < 0 else n < 0.0.
-defun one? {_number} n :=
+defun one? types {number} n :=
     if type n = "int" then n = 1 else n = 1.0.
 defun even? int n :=
     n % 2 = 0.
 defun odd? int n :=
     n % 2 = 1.
 
+-- spits back what you give it
+defun value dynamic v := v.
+
 defun to_int n := int n.
 defun to_float n := float n.
 defun to_string n := string n.
 defun to_bool n := bool n.
+
+defun car pair v := head v.
+defun cdr pair v := tail v.
 
 -- maps f onto all members of list lst
 defun map (fun f, list lst) := 
@@ -143,11 +150,13 @@ defun filter (fun f, list lst) :=
     else {: filter | f | ~lst}//
 
 -- int | float -> int | float
-defun max (n1, n2) :=
+defun max (types {number} n1, types {number} n2) :=
+    {assert_types= "max"|{list type n1}|n1|n2} 
     if n1 > n2 then n1 else n2//
 
 -- int | float -> int | float
-defun min (n1, n2) :=
+defun min (types {number} n1, types {number} n2) :=
+    {assert_types= "min"|{list type n1}|n1|n2} 
     if n1 < n2 then n1 else n2//
 
 
@@ -205,7 +214,7 @@ defun andmap (fun f, list vs) :=
     match vs
     | () -> true
     | v, vs when not bool (f:v) -> false
-    | _, vs -> {: andmap|f|vs}
+    | _, vs -> {: andmap | f | vs}
     end//
 
 -- ?, list -> bool | list
@@ -219,6 +228,29 @@ defun member (dynamic elem, list vs) :=
 -- ?, list -> bool
 defun member? (dynamic elem, list vs) :=
     list? {: member | elem | vs}//
+
+-- applies f to each integer in [n1 n2)
+defun build_list_range (int n1, int n2, fun f) :=
+    {: foldl 
+        | lambda elem, acc :=
+            (f:elem), acc
+        | ()
+        | 
+            -- so we don't have to reverse the resulting list,
+            -- just alter the indices
+            \| n1 >= n2 ->
+                {: range | n2 + 1 | n1 + 1}
+            else 
+                {: range | n2 - 1 | n1 - 1}
+    }// 
+
+-- applies f to each integer [0 n)
+defun build_list (int n, fun f) :=
+    | neg?:n ->
+        error {list "CONTRACT" 
+            | "Arg `n` to `build_list` must be non-negative."}
+    else
+        {: build_list_range | 0 | n | f}//
 
 
 --- Iterators, Generators
@@ -253,6 +285,9 @@ defun iter_open? () :=
 
 defun iter_get () :=
     _seed//
+
+defun iter_set (dynamic val) :=
+    set _seed := val//
 
 -- closes the iterator and returns eof
 defun iter_term () :=
@@ -309,7 +344,16 @@ defun string_replace (string str, string targ, string rep) :=
     if length str < length targ
     then str
     else
-        if 
+        -- special empty string case
+        | targ = "" ->
+            | str = "" -> rep
+            else
+                rep $ str::0 $ {: string_replace 
+                    | str::(1, length str;) 
+                    | targ 
+                    | rep}
+        -- general cases
+        else if 
             str::(0, length targ;) = targ
         then 
             let str2 := str::(length targ, length str;) in
