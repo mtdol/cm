@@ -639,7 +639,7 @@
       (let ([lst2 (ast-cons-to-racket e2-2)])
       (match e1
          [(Var v) #:when (list? lst2)
-          (let verify-schema ([lst lst2] [acc '()])
+          (let verify-schema ([lst lst2] [acc '()] [acc/labels '()])
            (match lst
               ;; set schema if no errors were found
               ['() (set-type! v (reverse acc) (var-name-private? v) module-id) (Prim0 'void)]
@@ -649,8 +649,17 @@
                  (match label
                   [#f (cm-error "SYNTAX" 
                    (format "Unknown element ~a inside typedef schema." h))]
-                  [_ (verify-schema t 
-                    (cons (SchemaElem guard-types label) acc))]))]))]
+                  [_
+                    (when (member label acc/labels) 
+                      (cm-error 
+                        "CONTRACT" 
+                        (format 
+                          (string-append "struct ~a: Cannot have duplicate "
+                                         "identifier within typedef: ~a") 
+                          v label)))
+                    (verify-schema t 
+                      (cons (SchemaElem guard-types label) acc)
+                      (cons label acc/labels))]))]))]
            [(Var v) (cm-error "SYNTAX" "Invalid schema for typedef. Schema must be a list.")]
            [_ (cm-error "SYNTAX" "Missing Label for typedef.")]))]
   [_ (cm-error "SYNTAX" "Improperly formed typedef.")]))

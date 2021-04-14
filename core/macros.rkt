@@ -50,6 +50,8 @@
 (define (apply-to-module-id-macro args)
   (unless (and (= (length args) 1) (not (equal? args '(()))))
     (invalid-args-error "->module_id" args))
+  (unless (not (equal? (caar args) "\"\""))
+    (cm-error "MACRO" "->module_id requires a non-empty argument."))
   (list (string-append 
     "\"" (file-name->module-id 
            (get-filename (unwrap-string (caar args))))

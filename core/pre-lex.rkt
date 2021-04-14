@@ -119,7 +119,7 @@
 ;;
 ;; string -> string | bool
 (define (unwrap-string str)
-  (match (regexp-match #rx"^\\\"(.+)\\\"$" str) 
+  (match (regexp-match #rx"^\\\"(.*)\\\"$" str) 
            [(list _ r1) r1] 
            [_ #f]))
 ;; unwraps if is a string, else just returns str

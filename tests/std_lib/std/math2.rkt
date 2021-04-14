@@ -70,6 +70,46 @@
   (run "{: max | 3.2| 3}")))
 
 ;;
+;; minf, maxf
+;;
+
+(check-equal? (run "{: minf | value | -3 | 2}")
+-3)
+
+(check-equal? (run "{: minf | abs | -3 | 2}")
+2)
+
+(check-equal? (run "{: minf | abs | 3 | 2}")
+2)
+
+(check-equal? (run "{: minf | abs | -3 | -2}")
+-2)
+
+(check-equal? (run "{: maxf | value | -3 | 2}")
+2)
+
+(check-equal? (run "{: maxf | abs | -3 | 2}")
+-3)
+
+(check-equal? (run "{: maxf | abs | 3 | 2}")
+3)
+
+(check-equal? (run "{: maxf | abs | -3 | -2}")
+-3)
+
+(check-equal? (run "{: minf | to_int | \"3\"| \"2\"}")
+"2")
+
+(check-equal? (run "{: minf | to_int | \"-3\"| \"2\"}")
+"-3")
+
+(check-equal? (run "{: maxf | to_int | \"3\"| \"2\"}")
+"3")
+
+(check-equal? (run "{: maxf | to_int | \"-3\"| \"2\"}")
+"2")
+
+;;
 ;; reverse
 ;;
 
@@ -106,6 +146,37 @@
 
 (check-exn exn:fail? (lambda ()
   (run "{: append | {list {list 3} | 4}}")))
+
+;;
+;; flatten
+;;
+
+(check-equal? (run "{: flatten | {list 1}}")
+'(1))
+
+(check-equal? (run "{: flatten | {list 1 | 2}}")
+'(1 2))
+
+(check-equal? (run "{: flatten | {list}}")
+'())
+
+(check-equal? (run "{: flatten | {list {list}}}")
+'())
+
+(check-equal? (run "{: flatten | {list {list 1}}}")
+'(1))
+
+(check-equal? (run "{: flatten | {list {list 1 | 2} | 3}}")
+'(1 2 3))
+
+(check-equal? (run "{: flatten | {list 1 | {list 2 | 3}}}")
+'(1 2 3))
+
+(check-equal? (run "{: flatten | {list {list 1} | 2}}")
+'(1 2))
+
+(check-equal? (run "{: flatten | {list {list 1 | {list {list 2 | 3}}} | 4}}")
+'(1 2 3 4))
 
 ;;
 ;; range
@@ -227,6 +298,46 @@
 
 (check-exn exn:fail? (lambda ()
   (run "{: member | 3 | 2}")))
+
+
+;;
+;; remove
+;;
+
+(check-equal? (run "{: remove | 3 | {list 1|2|3}}")
+'(1 2))
+
+(check-equal? (run "{: remove | 3 | {list 1|3}}")
+'(1))
+
+(check-equal? (run "{: remove | 3 | {list 3|1}}")
+'(1))
+
+(check-equal? (run "{: remove | 3 | {list 3|1|3}}")
+'(1))
+
+(check-equal? (run "{: remove | 3 | {list 3|1|3|2}}")
+'(1 2))
+
+(check-equal? (run "{: remove | 3 | {list 3}}")
+'())
+
+(check-equal? (run "{: remove | 3 | {list}}")
+'())
+
+(check-equal? (run "{: remove | 3 | {list 2}}")
+'(2))
+
+(check-equal? (run "{: remove | 3 | {list 1|2}}")
+'(1 2))
+
+(check-equal? (run "{: remove | 3,4 | {list 3,4|1,2}}")
+'((1 . 2)))
+
+(run-silent "typedef S := a,b;")
+
+(check-equal? (run "{: remove | struct S {list 1|2} | {list 1,2|\"s\"|struct S {list 1|2}|\"dd\"}}")
+'((1 . 2) "s" "dd"))
 
 
 ;;

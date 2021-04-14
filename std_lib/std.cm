@@ -130,6 +130,9 @@ defun odd? int n :=
 -- spits back what you give it
 defun value dynamic v := v.
 
+defun abs types {number} v :=
+    if neg?:v then -v else v.
+
 defun to_int n := int n.
 defun to_float n := float n.
 defun to_string n := string n.
@@ -159,6 +162,20 @@ defun min (types {number} n1, types {number} n2) :=
     {assert_types= "min"|{list type n1}|n1|n2} 
     if n1 < n2 then n1 else n2//
 
+-- generalized max func
+--
+-- (any -> int | float) -> any
+defun maxf (fun f, dynamic n1, dynamic n2) :=
+    if f:n1 < f:n2 then
+        n2
+    else
+        n1//
+
+defun minf (fun f, dynamic n1, dynamic n2) :=
+    if f:n1 > f:n2 then
+        n2
+    else
+        n1//
 
 defun reverse list xs :=
     let aux := defun _aux_ (xs, acc) :=
@@ -179,6 +196,13 @@ defun append list lsts :=
             | lst}
     in
         reverse : {: foldl | f | () | lsts}//
+
+defun flatten list lsts :=
+    match lsts
+    | () -> ()
+    | list lst, lsts -> {: append | {list (flatten:lst) | (flatten:lsts)}}
+    | elem, lsts -> elem, (flatten:lsts)
+    end//
 
 -- simple range, no iterator, just returns a list
 defun range (int n1, int n2) :=
@@ -228,6 +252,14 @@ defun member (dynamic elem, list vs) :=
 -- ?, list -> bool
 defun member? (dynamic elem, list vs) :=
     list? {: member | elem | vs}//
+
+-- removes the item elem from the list vs
+defun remove (dynamic elem, list vs) :=
+    match vs
+    | () -> ()
+    | v, vs when elem == v -> {: remove | elem | vs}
+    | v, vs -> v, {: remove | elem | vs}
+    end//
 
 -- applies f to each integer in [n1 n2)
 defun build_list_range (int n1, int n2, fun f) :=

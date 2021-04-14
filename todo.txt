@@ -11,15 +11,13 @@
         -- regex {list "match" | "[ab]{2}(c+)" | "aaccf"}
     - will pretty closely follow racket regex, can point this out in documentation
 
-. change error when file cannot be found to be more cm-like
-
-std.cm
-    -- generalized min, max
-
 <critical>
 - line number issues in pre-parse
     -- probably should just put linenumbers onto tokens directly
 <critical/>
+
+- `schemof`
+    -- returns the schema as a list of strings
 
 - ability to index structs by schema elem names
     >> typedef S := a,b;.

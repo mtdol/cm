@@ -12,7 +12,7 @@
          current-module-id get-current-module-id set-current-module-id!)
 
 (define current-module-id "0")
-(define (get-current-module-id) current-module-id)
+(define (get-current-module-id) (string-copy current-module-id))
 (define (set-current-module-id! id) (set! current-module-id id))
 
 ;; reads over each list element and prints its tostring
@@ -46,8 +46,10 @@
 
 ;; string -> value list
 (define (run-file file) 
+  (unless (file-exists? file) 
+    (cm-error "GENERAL" (format "File does not exist: \"~a\"" file)))
   (let* ([id (file-name->module-id file)]
-        [res 
+         [res 
           (begin 
             (set-current-module-id! id)
             (interp 

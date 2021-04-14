@@ -21,6 +21,11 @@
 (check-exn exn:fail? (lambda ()
   (run "typedef := a;")))
 
+;; cannot have a duplicate id in schema
+(check-exn exn:fail? (lambda ()
+  (run "typedef := int a, float a;")))
+(check-exn exn:fail? (lambda ()
+  (run "typedef := a,b,a;")))
 
 (run-silent "typedef S := a;")
 
