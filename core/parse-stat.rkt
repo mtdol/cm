@@ -11,10 +11,11 @@
   (let aux ([tokens (pre-parse tokens module-id)] [acc '()] [linenum 1] [curr-linenum 1])
     (match tokens 
            [(cons (? (tok=? "dot")) t) 
-            ;; use error handler to display line numbers during errors
-            (Stat linenum (cm-error-with-line-handler
-                (if (null? acc) curr-linenum (line (last acc))) 
-                parse-expr (list (reverse acc) module-id))
+            ;; set linenum for error messages
+            (set-current-linenum! 
+              (if (null? acc) curr-linenum (line (last acc))))
+            (Stat linenum 
+                  (parse-expr (reverse acc) module-id)
                   (aux t '() curr-linenum curr-linenum))]
            [(cons h t) 
             (aux t (cons h acc) linenum 

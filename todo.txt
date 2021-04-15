@@ -12,7 +12,6 @@
     - will pretty closely follow racket regex, can point this out in documentation
 
 - line number re-reform:
-    -- line numbers do not help when calling a func in another file
     -- change trace to show only function names
 
 - `schemaof`

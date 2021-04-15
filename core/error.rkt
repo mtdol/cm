@@ -1,12 +1,13 @@
 #lang racket
 (require racket/lazy-require cm/core/ast)
 (lazy-require (cm/core/types [value->displayable-string]))
-(provide cm-error cm-error-linenum cm-error-with-line-handler get-current-linenum
-         set-current-linenum! set-check-current-linenum!
+(provide cm-error cm-error-linenum 
+         get-current-linenum set-current-linenum! set-check-current-linenum!
          get-trace-stack push-elem-to-trace-stack! pop-elem-from-trace-stack!
          reset-trace-stack! ast-node-to-trace-elem run-and-reset-stack
          trace-stack->string
          TraceElem
+         DebugData
          VERBOSE_ERR_LEVEL LIGHT_ERR_LEVEL 
          get-error-level set-error-level!
          get-id-from-message try-with-error)
@@ -39,6 +40,9 @@
 ;; "var" | "statement", string, string, int
 (struct TraceElem (type label module-id linenum) #:transparent)
 
+;; object used to hold debug information during interp
+(struct DebugData (linenum))
+
 (define trace-stack '())
 (define max-trace-stack-size 100)
 (define (get-trace-stack) trace-stack)
@@ -57,23 +61,24 @@
 ;; takes in a val, resets stack and returns val
 (define (run-and-reset-stack v) (reset-trace-stack!) v)
 
-(define (ast-node-to-trace-elem ast module-id) 
+(define (ast-node-to-trace-elem ast module-id debug) 
   ;; get the label of the struct
-  (let ([type (symbol->string (prefab-struct-key ast))])
+  (let ([type (symbol->string (prefab-struct-key ast))]
+        [linenum (match debug [(DebugData linenum) linenum])])
     (match ast
         [(Prim0 op) 
-         (TraceElem (symbol->string op) "" module-id current-linenum)]
+         (TraceElem (symbol->string op) "" module-id linenum)]
         [(Prim1 op _) 
-         (TraceElem (symbol->string op) "" module-id current-linenum)]
+         (TraceElem (symbol->string op) "" module-id linenum)]
         [(Prim2 op _ _) 
-         (TraceElem (symbol->string op) "" module-id current-linenum)]
+         (TraceElem (symbol->string op) "" module-id linenum)]
         [(Prefix2 op _ _) 
-         (TraceElem (symbol->string op) "" module-id current-linenum)]
+         (TraceElem (symbol->string op) "" module-id linenum)]
         [(Prefix3 op _ _ _) 
-         (TraceElem (symbol->string op) "" module-id current-linenum)]
+         (TraceElem (symbol->string op) "" module-id linenum)]
         [(Var id) 
-         (TraceElem type id module-id current-linenum)]
-        [_ (TraceElem type "" module-id current-linenum)]
+         (TraceElem type id module-id linenum)]
+        [_ (TraceElem type "" module-id linenum)]
            )))
 
 
@@ -137,11 +142,6 @@
   (error 
     (format "~a: ~a\n\nModule: \"~a\":~a"
             id message module-id linenum)))
-
-;; sets current linenum and execs the proc
-(define (cm-error-with-line-handler linenum proc args) 
-  (set! current-linenum linenum)
-    (apply proc args))
 
 
 ;; throws an error of the given type if an exception is raised

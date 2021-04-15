@@ -92,7 +92,7 @@ defun pprint vs :=
 
 
 defun number? v :=
-    let t := type v in
+    let t := type f in
         t = "int" or t = "float"//
 
 defun add (types {number} n1, types {number} n2) :=
