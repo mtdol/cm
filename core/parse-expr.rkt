@@ -1,7 +1,8 @@
 #lang racket
 (require cm/core/error cm/core/types cm/core/ast
          cm/core/operators cm/core/parse-utils
-         cm/core/pre-parse cm/core/context)
+         cm/core/pre-parse cm/core/context
+         cm/core/tokens)
 (provide parse-expr half-parse-expr)
 (define error-id "SYNTAX")
 
@@ -34,7 +35,7 @@
     (match tokens
            ['() '()]
            ;; fundamental value
-           [(list h) #:when (not (is-operator? h)) (list h)] 
+           [(list h) #:when (not (is-operator? (tok h))) (list h)] 
            ;; unwrap all outer parens from token list, convert to s-expr and
            ;; then rewrap with one layer of parens
            [tokens (tokens-to-prefix-form-aux (unwrap-expr tokens) '() 0 0 
@@ -50,14 +51,14 @@
             (let aux ([tokens (if anti-pemdas? (reverse acc) acc)] [acc '()] [pcount 0])
                 (match tokens
                        ['() (reverse acc)]
-                       [(cons ")" t) #:when (= 1 pcount)
-                            (append (tokens-to-prefix-form (reverse (cons ")" acc))) 
+                       [(cons (? (tok=? ")") h1) t) #:when (= 1 pcount)
+                            (append (tokens-to-prefix-form (reverse (cons h1 acc))) 
                                     (aux t '() 0))]
-                       [(cons "(" t) #:when (= 0 pcount)
+                       [(cons (? (tok=? "(") h1) t) #:when (= 0 pcount)
                             (append (reverse acc) 
-                                    (aux t '("(") 1))]
-                       [(cons "(" t) (aux t (cons "(" acc) (add1 pcount))]
-                       [(cons ")" t) (aux t (cons ")" acc) (sub1 pcount))]
+                                    (aux t (list h1) 1))]
+                       [(cons (? (tok=? "(") h1) t) (aux t (cons h1 acc) (add1 pcount))]
+                       [(cons (? (tok=? ")") h1) t) (aux t (cons h1 acc) (sub1 pcount))]
                        [(cons h t) (aux t (cons h acc) pcount)]))]
         ;; try again since we didn't find an op of current precedence
         ['() #:when (set-member? anti-pemdas (add1 preced))
@@ -66,54 +67,59 @@
         ['() 
          (tokens-to-prefix-form-aux (if anti-pemdas? acc (reverse acc)) '() (add1 preced) 0 #f)]
         ;; increment pcount
-        [(cons "(" t) (tokens-to-prefix-form-aux t (cons "(" acc) preced 
-                                (if anti-pemdas? (add1 pcount) (sub1 pcount)) anti-pemdas?)]
+        [(cons (? (tok=? "(") h1) t) 
+         (tokens-to-prefix-form-aux t (cons h1 acc) preced 
+           (if anti-pemdas? (add1 pcount) (sub1 pcount)) anti-pemdas?)]
         ;; decrement pcount
-        [(cons ")" t) (tokens-to-prefix-form-aux t (cons ")" acc) preced 
+        [(cons (? (tok=? ")") h1) t) (tokens-to-prefix-form-aux t (cons h1 acc) preced 
                         (if anti-pemdas? (sub1 pcount) (add1 pcount)) anti-pemdas?)]
         ;; prefix op found matching precedence
-        [(cons h t) #:when (and (zero? pcount) (is-operator? h) (= (op-to-precedence h) preced)
-                                (string=? (op-to-position h) "prefix"))
+        [(cons h t) #:when (and (zero? pcount) (is-operator? (tok h)) (= (op-to-precedence (tok h)) preced)
+                                (string=? (op-to-position (tok h)) "prefix"))
 
             (if anti-pemdas? 
              (append (tokens-to-prefix-form (reverse acc))
                             (list h) (tokens-to-prefix-form t))
-             ;(append (tokens-to-prefix-form acc) (list h) (tokens-to-prefix-form (reverse t)))
              (cm-error-linenum 
                current-module-id (get-current-linenum) error-id "Cannot pemdas parse prefix op.")
              )]
         ;; infix op found matching precedence
-        [(cons h t) #:when (and (zero? pcount) (is-operator? h) (= (op-to-precedence h) preced)
-                                (string=? (op-to-position h) "infix"))
+        [(cons h t) #:when (and (zero? pcount) (is-operator? (tok h)) (= (op-to-precedence (tok h)) preced)
+                                (string=? (op-to-position (tok h)) "infix"))
             (if anti-pemdas? 
              (append (list h) (tokens-to-prefix-form (reverse acc))
                           (tokens-to-prefix-form t))
              (append (list h) (tokens-to-prefix-form (reverse t)) (tokens-to-prefix-form acc)))]
         ;; fundamental value
-        [(list h) #:when (and (null? acc) (not (is-operator? h))) (list h)] 
+        [(list h) #:when (and (null? acc) (not (is-operator? (tok h)))) (list h)] 
         ;; general case
         [(cons h t) (tokens-to-prefix-form-aux t (cons h acc) preced pcount anti-pemdas?)]))
 
 ;; used in parse-to-ast to check for expressions with too many operands.
 (define expr-tail '())
 
-;; Takes in a list of tokes in prefix order and produces an ast.
+;; Takes in a list of tokens in prefix order and produces an ast.
 ;; Does not accept expressions with parenthesis.
+;;
+;; token list -> expr
 (define (parse-to-ast tokens)
   (match tokens
          ['() (Prim0 'void)]
-         [(cons h '()) (parse-value h)]
-         [(cons h t) #:when (is-operator? h) 
-                     (match (parse-op h t) 
-                            [ast #:when (not (null? expr-tail))
-            (cm-error-linenum current-module-id (get-current-linenum) error-id 
+         [(cons h '()) (parse-value (tok h))]
+         [(cons h t) 
+          #:when (is-operator? (tok h)) 
+           (match (parse-op (tok h) t) 
+                 [ast #:when (not (null? expr-tail))
+                    (cm-error-linenum 
+                      current-module-id (get-current-linenum) error-id 
                       "Invalid Expression. Probably missing an operator.")]
-                            [ast ast])]
+                 [ast ast])]
          [_ (cm-error-linenum 
               current-module-id
               (get-current-linenum) 
               error-id "Invalid Expression. Probably missing an operator.")]))
 
+;; string, token list -> expr
 (define (parse-op op tail)
   (let ([nodes (acc-operands tail '() (op-to-arity op) op)]
         [name1 (op-to-node-name op)]
@@ -124,6 +130,7 @@
          [_ (apply (eval name1 ns) (cons name2 nodes))])))
         
 
+;; token list, expr list, integer, string -> expr list
 (define (acc-operands tokens acc arity op)
   (match tokens
      ['() (cond
@@ -135,12 +142,13 @@
                         error-id (format "Operand(s) missing for ~a." op))])]
      [(cons h t) #:when (zero? arity)
             (set! expr-tail (cons h t)) (reverse acc)]
-     [(cons h t) #:when (is-operator? h)
-                 (let ([res (parse-op h t)])
+     [(cons h t) #:when (is-operator? (tok h))
+                 (let ([res (parse-op (tok h) t)])
             (acc-operands expr-tail (cons res acc) (sub1 arity) op))]
      [(cons h t)
-            (acc-operands t (cons (parse-value h) acc) (sub1 arity) op)]))
+            (acc-operands t (cons (parse-value (tok h)) acc) (sub1 arity) op)]))
 
+;; string -> expr
 (define (parse-value token)
   (cond 
         [(is-int-token? token) (Int (string->number token))]

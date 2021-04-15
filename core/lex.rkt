@@ -62,30 +62,42 @@
    ))
 
 (define cmlex
-  (lexer
-   [(eof) eof]
+  (lexer-src-pos
+   [(eof) (return-without-pos eof)]
    ;; recursively call the lexer on the remaining input after a tab or space.  Returning the
    ;; result of that operation.  This effectively skips all whitespace.
-   [(:or #\tab #\space) (cmlex input-port)]
-   [#\newline ":newline"]
-   ;; skip comment lines
-   [comment (cmlex input-port)]
+   [(:or #\tab #\space #\newline) (return-without-pos (cmlex input-port))]
+   [comment (return-without-pos (cmlex input-port))]
    ;; escaped macro braces
    ["\\{" "\\{"]
    ["\\}" "\\}"]
    ;; "{label" -> ("{" "label"), regardless of what label is
    [(:: "{" (:* #\space) (:+ (:~ #\space #\{ #\})) (:* #\space) "}") 
-    (list "{" (string-trim (substring lexeme 1 (- (string-length lexeme) 1))) "}")]
+    (return-without-pos 
+      (list 
+        (make-position-token "{" start-pos end-pos) 
+        (make-position-token 
+          (string-trim (substring lexeme 1 (- (string-length lexeme) 1)))
+          start-pos end-pos) 
+        (make-position-token "}" start-pos end-pos)))]
    ;; "{label " -> ("{" "label")
    [(:: "{" (:* #\space) (:+ (:~ #\space #\newline #\{ #\})) (:or #\newline #\space)) 
-    (list "{" (string-trim (substring lexeme 1 (sub1 (string-length lexeme)))))]
+    (return-without-pos 
+      (list 
+        (make-position-token "{" start-pos end-pos) 
+        (make-position-token 
+          (string-trim (substring lexeme 1 (sub1 (string-length lexeme))))
+          start-pos end-pos)))]
    [(:or "(" ")" "{" "}" "#") lexeme]
    ["." "dot"]
    ["//" "dot"]
    ["`" "head"]
    ["~" "tail"]
    ["," "cons"]
-   [";" (list "cons" "null")]
+   [";" (return-without-pos 
+          (list 
+            (make-position-token "cons" start-pos end-pos) 
+            (make-position-token "null" start-pos end-pos)))]
    ["()" "null"]
    ["[]" "null"]
    ["[" "("]

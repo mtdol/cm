@@ -1,5 +1,5 @@
 #lang racket
-(require racket/lazy-require cm/core/error)
+(require racket/lazy-require cm/core/error cm/core/tokens)
 (lazy-require (cm/core/context 
                 [get-macro-defs print-macro-context]) 
               (cm/core/types [is-string-token?])
@@ -11,7 +11,7 @@
 
 (define (invalid-args-error label args)
   (let ([num-args (if (equal? args '(())) 0 (length args))])
-    (cm-error 
+    (cm-error-linenum (macros:get-current-module-id) (get-current-linenum) 
       "MACRO" 
       (format "No matching rule for macro with label ~a and ~a args." label num-args))))
 
@@ -22,45 +22,52 @@
 ;; turns a list of tokens into a space seperated string
 (define (apply-string-macro args)
   (unless (= (length args) 1) (invalid-args-error "string" args))
-  (list (string-append 
+  (list (Token (string-append 
     "\"" 
     (string-trim (foldl 
-        (lambda (elem acc) (string-append acc elem " "))
+        (lambda (elem acc) (string-append acc (tok elem) " "))
         ""
         (flatten args)))
-    "\"")))
+    "\""))))
 
 ;; {ifdef "macro_name" | then | else}
 (define (apply-ifdef-macro args module-id)
   (unless (= (length args) 3) (invalid-args-error "ifdef" args))
   (when (null? (car args)) 
-    (cm-error "MACRO" "ifdef is missing a guard argument."))
+    (cm-error-linenum (macros:get-current-module-id) (get-current-linenum)
+                      "MACRO" "ifdef is missing a guard argument."))
   (when (or (not (= 1 (length (car args)))) 
-            (not (is-string-token? (caar args)))) 
-    (cm-error "MACRO" "Guard argument to ifdef must be a single string."))
-  (if (get-macro-defs (unwrap-string (caar args)) module-id)
+            (not (is-string-token? (tok (caar args))))) 
+    (cm-error-linenum (macros:get-current-module-id) (get-current-linenum)
+              "MACRO" "Guard argument to ifdef must be a single string."))
+  (if (get-macro-defs (unwrap-string (tok (caar args))) module-id)
     (list-ref args 1)
     (list-ref args 2)))
 
 (define (apply-current-module-macro args module-id)
   (unless (equal? args '(())) (invalid-args-error "current_module" args))
-  (list (string-append "\"" module-id "\"")))
+  (list (Token (string-append "\"" module-id "\""))))
 
 ;; turns a module style string into a in language string
 (define (apply-to-module-id-macro args)
   (unless (and (= (length args) 1) (not (equal? args '(()))))
     (invalid-args-error "->module_id" args))
-  (unless (not (equal? (caar args) "\"\""))
-    (cm-error "MACRO" "->module_id requires a non-empty argument."))
-  (list (string-append 
+  (unless (not (equal? (tok (caar args)) "\"\""))
+    (cm-error-linenum (macros:get-current-module-id) (get-current-linenum)
+      "MACRO" "->module_id requires a non-empty argument."))
+  (list (Token (string-append 
     "\"" (file-name->module-id 
-           (get-filename (unwrap-string (caar args))))
-    "\"")))
+           (get-filename (unwrap-string (tok (caar args)))))
+    "\""))))
 
 
 ;;
 ;; Macro Utils
 ;;
+
+(define macros:current-module-id "0")
+(define (macros:get-current-module-id) (string-copy macros:current-module-id))
+(define (macros:set-current-module-id! id) (set! macros:current-module-id id))
 
 ;; checks that macro vars are well formed
 ;;
@@ -73,9 +80,10 @@
          [vs (cm-error "SYNTAX" (format "Invalid Macro vars: ~a" vs))]))
 
 
-;; string, string list list -> string list
+;; token, token list list, string -> token list
 (define (apply-macro label args module-id) 
-  (match label
+  (macros:set-current-module-id! module-id)
+  (match (tok label)
     ;; first check if a preloaded macro
     ["reverse" (apply-reverse-macro args)]
     ["string" (apply-string-macro args)]
@@ -84,10 +92,12 @@
     ["->module_id" (apply-to-module-id-macro args)]
     ;; then run user defined macros
     [_ 
-     (let aux ([entry (get-macro-defs label module-id)])
+     (let aux ([entry (get-macro-defs (tok label) module-id)])
       (match entry
-             [#f (cm-error "MACRO" (format "Macro not defined: ~a" label))]
-             ['() (invalid-args-error label args)]
+             [#f (cm-error-linenum 
+                   module-id (get-current-linenum)
+                   "MACRO" (format "Macro not defined: ~a" (tok label)))]
+             ['() (invalid-args-error (tok label) args)]
              [(cons (MacroRule vars body module-id) t) 
               #:when (args-match-macro-entry? args vars)
               (apply-macro-args vars args body)]
@@ -96,7 +106,7 @@
 
 ;; replaces each instance of each var in the body with its accompanying arg
 ;;
-;; string list, string list list, string list -> string list
+;; string list, token list list, token list -> token list
 (define (apply-macro-args vars args body) 
   (match (cons vars args)
          [(cons '() _) body]
@@ -105,11 +115,11 @@
 
 ;; applies the given var onto body
 ;;
-;; string, string list, string list list, string list -> string list
+;; string, token list, token list list, token list -> token list
 (define (apply-macro-var var arg rest body)
     (flatten (foldl 
                 (lambda (elem acc)
-                  (if (string=? elem var) 
+                  (if (string=? (tok elem) var) 
                     (cond
                         [(string=? var "REST") (append acc (transform-rest (cons arg rest)))]
                         [else (append acc arg)])
@@ -123,7 +133,7 @@
 ;; ie. {a|b} is valid for '(arg1 arg2), but not '(arg1)
 ;; and {a|REST} is valid for '(arg1 ...) but not '(arg1)
 ;;
-;; string list list, string list -> bool
+;; token list list, string list -> bool
 (define (args-match-macro-entry? args vars)
   (cond
     [(equal? args '(())) (null? vars)]
@@ -132,9 +142,9 @@
 
 ;; '(("1" "+" "2") ("3")) -> '("1" "+" "2" "case" "3")
 ;;
-;; string list list -> string list
+;; token list list -> token list
 (define (transform-rest rest)
   (match rest
          ['() '()]
          [(cons h '()) h]
-         [(cons h t) (append h (list "case") (transform-rest t))]))
+         [(cons h t) (append h (list (Token "case")) (transform-rest t))]))

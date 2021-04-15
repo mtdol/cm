@@ -1,5 +1,7 @@
 #lang racket
-(require racket/lazy-require cm/core/error cm/core/context cm/core/modules)
+(require racket/lazy-require 
+         cm/core/error cm/core/context cm/core/modules
+         cm/core/tokens)
 (lazy-require (cm/core/lex [tokenize-string tokenize-import-string]))
 (provide pre-lex unwrap-string unwrap-string-if-necessary)
 
@@ -59,11 +61,13 @@
          [name #:when (regexp-match? #rx"^def\\:.*" name)
                (match (regexp-match #rx"^def\\:([^{}]+){([a-zA-Z0-9_\\|]*)\\}$" name)
                       [(list _ r2 r3)
-                       (set-macro! r2 
-                                   (remove-bars (tokenize-string r3 module-id))
-                                   (tokenize-string body module-id)
-                                   (var-name-private? r2)
-                                   module-id) ""]
+                       (set-macro! 
+                         r2 
+                         (map tok (remove-bars (tokenize-string r3 module-id)))
+                         (map token->nl-token (tokenize-string body module-id))
+                         (var-name-private? r2)
+                         module-id)
+                       ""]
                       [_ (cm-error-linenum module-id linenum "LEX" "Invalid macro def name.")]
 
                  )]
@@ -71,8 +75,12 @@
                (match (regexp-match #rx"^def\\+\\:([^{}]+){([a-zA-Z0-9_\\|]*)\\}$" name)
                       [(list _ r2 r3) 
                        (append-to-macro! 
-                         r2 (remove-bars (tokenize-string r3 module-id))
-                         (tokenize-string body module-id) module-id) ""]
+                         r2 
+                         (map tok
+                            (remove-bars (tokenize-string r3 module-id)))
+                         (map token->nl-token (tokenize-string body module-id))
+                         module-id)
+                       ""]
                       [_ (cm-error-linenum module-id linenum "LEX" "Invalid macro def name.")]
 
                  )]
@@ -113,7 +121,7 @@
 
 ;; removes "case" from a list, so it can be stored in the macro context
 (define (remove-bars ts)
-  (filter (lambda (elem) (not (string=? elem "case"))) ts))
+  (filter (lambda (elem) (not (string=? (tok elem) "case"))) ts))
 
 ;; unwraps the given string and returns it else false
 ;;

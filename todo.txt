@@ -11,12 +11,11 @@
         -- regex {list "match" | "[ab]{2}(c+)" | "aaccf"}
     - will pretty closely follow racket regex, can point this out in documentation
 
-<critical>
-- line number issues in pre-parse
-    -- probably should just put linenumbers onto tokens directly
-<critical/>
+- line number re-reform:
+    -- line numbers do not help when calling a func in another file
+    -- change trace to show only function names
 
-- `schemof`
+- `schemaof`
     -- returns the schema as a list of strings
 
 - ability to index structs by schema elem names
@@ -26,8 +25,7 @@
     >> s::"a"
 
 - `...` match-expr operator
-
--- yields ((2, 3;), 1, 4)
-match {list 1|2|3|4}
-| a, b, ..., c; -> b, a, c
-end
+  -- yields ((2, 3;), 1, 4)
+  match {list 1|2|3|4}
+  | a, b, ..., c; -> b, a, c
+  end

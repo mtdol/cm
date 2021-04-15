@@ -1,5 +1,5 @@
 #lang racket
-(require (prefix-in main: cm/core/main))
+(require (prefix-in main: cm/core/main) (prefix-in tokens: cm/core/tokens))
 (provide (all-defined-out))
 
 (define (run str) 
@@ -15,4 +15,4 @@
 (define (parse str)
   (main:run-parse-expr str))
 (define (tokenize str) 
-  (main:run-tokenize-string str))
+  (map tokens:tok (main:run-tokenize-string str)))

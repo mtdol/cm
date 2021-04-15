@@ -2,7 +2,7 @@
 (require racket/lazy-require cm/core/ast)
 (lazy-require (cm/core/types [value->displayable-string]))
 (provide cm-error cm-error-linenum cm-error-with-line-handler get-current-linenum
-         set-current-linenum! 
+         set-current-linenum! set-check-current-linenum!
          get-trace-stack push-elem-to-trace-stack! pop-elem-from-trace-stack!
          reset-trace-stack! ast-node-to-trace-elem run-and-reset-stack
          trace-stack->string
@@ -27,6 +27,10 @@
 (define current-linenum 0)
 (define (get-current-linenum) current-linenum)
 (define (set-current-linenum! linenum) (set! current-linenum linenum))
+;; only sets the new linenum if > 0
+(define (set-check-current-linenum! linenum)
+  (when (> linenum 0)
+    (set! current-linenum linenum)))
 
 ;; (TraceElem "var" "x" "/home/user/cm/std_lib/std.cm" 32)
 ;; (TraceElem "fun" "add1" "/home/user/cm/std_lib/std.cm" 32)
