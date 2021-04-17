@@ -30,10 +30,13 @@
                    "*" "/" "\\" "^" "%" "&" "|" "!" "@"
             "(" ")" "[" "]" "{" "}" ":" "$" "#" ".")]
 
-  [string-char (:~ #\")]
-
   [comment (:: "--" (:* (:~ #\newline)))]
-  [macro (:: "#:" (:* (:~ #\newline)))]
+
+  ;; based of standard racket string style
+  [str (:: "\"" (:* string-element) "\"")]
+  [string-element (:or (:~ "\"" "\\")
+                        string-escape)]
+  [string-escape (:: #\\ any-char)]
 
 
   [import-key-token (:or ",")]
@@ -135,7 +138,7 @@
    ["->" "yields"]
    [(:+ digit) lexeme]
    [(:: (:+ digit) #\. (:+ digit)) lexeme]
-   [(:: #\" (:* (:or (:: "\\\"") (:~ #\"))) #\") lexeme]
+   [str lexeme]
    [(:: #\" (:* (:~ #\"))) (match start-pos [(position colnum linenum _)
                         (cm-error-linenum current-module-id linenum error-id 
                                 (format "Non-terminated string around column ~a." colnum))])]

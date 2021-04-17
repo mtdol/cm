@@ -77,7 +77,7 @@
                          (add-history "#parsexp")
                          (repl))]
          ["#prefix" (begin (displayln "prefix expression mode")
-                         (set! mode (compose displayln run-prefix-form))
+                         (set! mode (compose display-output run-prefix-form))
                          (add-history "#prefix")
                          (repl))]
          ["#tostring" (begin (displayln "ast to string mode")

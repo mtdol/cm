@@ -19,8 +19,6 @@
 
 <critical>
 - private macros don't seem to be referencable outside of their module
-- lexing failure
-    -- "\"
 <critical/>
 
 - line number re-reform:

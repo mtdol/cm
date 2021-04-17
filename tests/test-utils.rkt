@@ -15,4 +15,4 @@
 (define (parse str)
   (main:run-parse-expr str))
 (define (tokenize str) 
-  (map tokens:tok (main:run-tokenize-string str)))
+  (main:run-tokenize-string str))
