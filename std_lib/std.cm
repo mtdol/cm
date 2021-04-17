@@ -13,8 +13,9 @@
 #:def:--{REST} {empty}
 #:def+:--{} {empty}
 
-#:def:vari{op|v|REST} ((v) op {vari op|REST})
-#:def+:vari{op|v} (v)
+#:def:vari{op|REST} ({_vari_aux op|REST}) 
+#:def:_vari_aux{op|v|REST} (v) op {_vari_aux op|REST}
+#:def+:_vari_aux{op|v} (v)
 
 -- code block
 #:def:%{v|REST} ((v) comma {% REST})
@@ -22,8 +23,8 @@
 #:def+:%{} void
 
 -- prints all given args and yields void
-#:def:@{a|REST} (@ (a)) comma {@ REST}
-#:def+:@{a} ((@ (a)) comma void)
+#:def:@{v|REST} (@ (v)) comma {@ REST}
+#:def+:@{v} ((@ (v)) comma void)
 #:def+:@{} void
 
 -- wraps and builds a list
@@ -130,27 +131,27 @@ defun odd? int n :=
 -- spits back what you give it
 defun value dynamic v := v.
 
-defun abs types {number} v :=
-    if neg?:v then -v else v.
+defun abs types {number} n :=
+    if neg?:n then -n else n.
 
-defun to_int n := int n.
-defun to_float n := float n.
-defun to_string n := string n.
-defun to_bool n := bool n.
+defun to_int v := int v.
+defun to_float v := float v.
+defun to_string v := string v.
+defun to_bool v := bool v.
 
 defun car pair v := head v.
 defun cdr pair v := tail v.
 
 -- maps f onto all members of list lst
-defun map (fun f, list lst) := 
-    | null? lst -> null 
-    else (f:`lst), {: map | f | ~lst}//
+defun map (fun f, list vs) := 
+    | null? vs -> null 
+    else (f:`vs), {: map | f | ~vs}//
 
 -- returns a list with only the elements that are true according to f
-defun filter (fun f, list lst) := 
-    | null? lst -> null 
-    | f:`lst -> `lst, {: filter | f | ~lst}
-    else {: filter | f | ~lst}//
+defun filter (fun f, list vs) := 
+    | null? vs -> null 
+    | f:`vs -> `vs, {: filter | f | ~vs}
+    else {: filter | f | ~vs}//
 
 -- int | float -> int | float
 defun max (types {number} n1, types {number} n2) :=
@@ -165,17 +166,17 @@ defun min (types {number} n1, types {number} n2) :=
 -- generalized max func
 --
 -- (any -> int | float) -> any
-defun maxf (fun f, dynamic n1, dynamic n2) :=
-    if f:n1 < f:n2 then
-        n2
+defun maxf (fun f, dynamic v1, dynamic v2) :=
+    if f:v1 < f:v2 then
+        v2
     else
-        n1//
+        v1//
 
-defun minf (fun f, dynamic n1, dynamic n2) :=
-    if f:n1 > f:n2 then
-        n2
+defun minf (fun f, dynamic v1, dynamic v2) :=
+    if f:v1 > f:v2 then
+        v2
     else
-        n1//
+        v1//
 
 defun reverse list xs :=
     let aux := defun _aux_ (xs, acc) :=
@@ -297,12 +298,12 @@ defun gen_undefined (string prefix, string module) :=
     //
 
 -- eof will signal the end of the iteration
-#:def:iter{a} (a) !== eof
+#:def:iter{a} (not eof? (a))
 
 def _seed := 0//
 def _active? := false//
 
--- if the iter is active then iters with delta, else returns void
+-- if the iter is active then iters with delta, else returns eof
 defun iter (fun delta) :=
     if _active? then
         set _seed := delta : _seed
@@ -403,7 +404,7 @@ defun format (string str, list vs) :=
         match vs
         | () -> str
         | v, t -> 
-            let str2 := {: string_replace | str | "~" $ i | v} in
+            let str2 := {: string_replace | str | "~" $ i | string v} in
                 {: _aux_ | str2 | t | add1:i}
         end
     in
@@ -422,7 +423,7 @@ defun list_to_hash list ms :=
 defun list_to_mutable_hash list ms :=
     {: foldl 
         | lam m,h := (hash_set h (`m) (~m)) comma h
-        | make_hash "mutable"
+        | make_hash {list "mutable"}
         | ms}//
 
 
@@ -451,5 +452,5 @@ defun cdc () :=
     (cd "")//
 
 -- display contents of file
-defun catf f :=
+defun catf string f :=
     pprint:(getlinesf f)//

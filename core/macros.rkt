@@ -15,10 +15,6 @@
       "MACRO" 
       (format "No matching rule for macro with label ~a and ~a args." label num-args))))
 
-;; a|b|c -> bca
-(define (apply-reverse-macro args)
-  (flatten (reverse args)))
-
 ;; turns a list of tokens into a space seperated string
 (define (apply-string-macro args)
   (unless (= (length args) 1) (invalid-args-error "string" args))
@@ -85,7 +81,6 @@
   (macros:set-current-module-id! module-id)
   (match (tok label)
     ;; first check if a preloaded macro
-    ["reverse" (apply-reverse-macro args)]
     ["string" (apply-string-macro args)]
     ["ifdef" (apply-ifdef-macro args module-id)]
     ["current_module" (apply-current-module-macro args module-id)]

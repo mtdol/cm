@@ -1,15 +1,27 @@
-. documentation and tests for standard library
+. documentation
+    - regex when done
+    - general look-over
+
+. std.cm
+    - tests for io/system
+
 . regex
-    - regex-match
-    - regex-match*
-    - regex-match?
-    - regex-split
-    - regex-replace
-    - regex-replace*
+    - regexp-match
+    - regexp-match*
+    - regexp-match?
+    - regexp-split
+    - regexp-replace
+    - regexp-replace*
 
     - possible form:
         -- regex {list "match" | "[ab]{2}(c+)" | "aaccf"}
     - will pretty closely follow racket regex, can point this out in documentation
+
+<critical>
+- private macros don't seem to be referencable outside of their module
+- lexing failure
+    -- "\"
+<critical/>
 
 - line number re-reform:
     -- change trace to show only function names

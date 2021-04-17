@@ -49,50 +49,33 @@
         [(Prefix2 'appl e1 e2) (interp-appl e1 e2 context module-id debug)]
         [(Prefix2 'index e1 e2) (interp-index e1 e2 context module-id debug)]
         [(Prim2 'appindex e1 e2) (interp-index e1 e2 context module-id debug)]
-        [(Prefix2 'writestrf e1 e2) (match 
-                (cons (string-coerce
-                        (trace-interp-expr e1 context module-id debug)) 
-                      (string-coerce 
-                        (trace-interp-expr e2 context module-id debug)))
-                    [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
-                                  (cm-error "CONTRACT" "Missing argument to writestrf.")]
-                    [(cons v1 v2) (with-handlers* 
-                            ([exn:fail? (lambda (exn) 
-                                (cm-error "SYSTEM" (format "Could not write to file \"~a\"" v2)))])
-                       (display-to-file v1 v2 #:exists 'replace)) (Prim0 'void)])]
-        [(Prefix2 'appendstrf e1 e2) (match 
-                (cons (string-coerce
-                        (trace-interp-expr e1 context module-id debug)) 
-                      (string-coerce 
-                        (trace-interp-expr e2 context module-id debug)))
-                    [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
-                                  (cm-error "CONTRACT" "Missing argument to appendstrf.")]
-                    [(cons v1 v2) (with-handlers* 
-                            ([exn:fail? (lambda (exn) 
-                                (cm-error "SYSTEM" (format "Could not append to file \"~a\"" v2)))])
-                       (display-to-file v1 v2 #:exists 'append)) (Prim0 'void)])]
-        [(Prefix2 'cp e1 e2) (match 
-                (cons (string-coerce
-                        (trace-interp-expr e1 context module-id debug)) 
-                      (string-coerce 
-                        (trace-interp-expr e2 context module-id debug)))
-                    [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
-                                  (cm-error "CONTRACT" "Missing argument to cp.")]
-                    [(cons v1 v2) (with-handlers* 
-                            ([exn:fail? (lambda (exn) 
-                                (cm-error "SYSTEM" (format "Could not copy \"~a\" to \"~a\"" v1 v2)))])
-                       (copy-directory/files v1 v2)) (Prim0 'void)])]
-        [(Prefix2 'mv e1 e2) (trace-interp-expr (Prefix2 'cp e1 e2) context module-id debug)
-                             (trace-interp-expr (Prim1 'rm e1) context module-id debug)]
-        [(Prefix2 'hash_ref e1 e2) (interp-hash-ref 
-                                     (trace-interp-expr e1 context module-id debug)
-                                     (trace-interp-expr e2 context module-id debug))]
-        [(Prefix2 'hash_has_key? e1 e2) (interp-hash-has-key? 
-                                     (trace-interp-expr e1 context module-id debug)
-                                     (trace-interp-expr e2 context module-id debug))]
-        [(Prefix2 'peek_string e1 e2) (interp-peek-string 
-                                     (trace-interp-expr e1 context module-id debug)
-                                     (trace-interp-expr e2 context module-id debug))]
+        [(Prefix2 'writestrf e1 e2) 
+         (interp-writestrf 
+           (trace-interp-expr e1 context module-id debug)
+           (trace-interp-expr e2 context module-id debug))]
+        [(Prefix2 'appendstrf e1 e2) 
+         (interp-appendstrf 
+           (trace-interp-expr e1 context module-id debug)
+           (trace-interp-expr e2 context module-id debug))]
+        [(Prefix2 'cp e1 e2) 
+         (interp-cp 
+           (trace-interp-expr e1 context module-id debug)
+           (trace-interp-expr e2 context module-id debug))]
+        [(Prefix2 'mv e1 e2) 
+         (trace-interp-expr (Prefix2 'cp e1 e2) context module-id debug)
+         (trace-interp-expr (Prim1 'rm e1) context module-id debug)]
+        [(Prefix2 'hash_ref e1 e2) 
+         (interp-hash-ref 
+           (trace-interp-expr e1 context module-id debug)
+           (trace-interp-expr e2 context module-id debug))]
+        [(Prefix2 'hash_has_key? e1 e2) 
+         (interp-hash-has-key? 
+           (trace-interp-expr e1 context module-id debug)
+           (trace-interp-expr e2 context module-id debug))]
+        [(Prefix2 'peek_string e1 e2) 
+         (interp-peek-string 
+           (trace-interp-expr e1 context module-id debug)
+           (trace-interp-expr e2 context module-id debug))]
         [(Prefix3 'hash_set e1 e2 e3) 
          (interp-hash-set 
            (trace-interp-expr e1 context module-id debug)
@@ -225,49 +208,66 @@
         ['evalxp #:when (string? v) (run-expr v)] 
         ['evalxp (cm-error "CONTRACT" "evalxp requires a string argument.")] 
         ['ls 
-         (match (string-coerce v)
-                    ["" (map path->string 
-                             (try-with-error "GENERIC" "ls: Could not load directory \".\"." 
-                                             directory-list (list ".")))]
-                    [v1 (map path->string 
-                             (try-with-error "GENERIC" (format "ls: Could not load directory \"~a\"." v1)
-                             directory-list (list v1)))])]
-        ['cd (match (string-coerce v)
-                    ["" (path->string 
-                          (try-with-error "SYSTEM" "cd: Could not load directory \".\"."
-                                          current-directory '()))]
-                    [v1 
-                      (try-with-error "SYSTEM" (format "cd: Could not load directory \"~a\"." v1)
+         (assert-contract (list "string") v "ls")
+         (match v
+           ["" (map path->string 
+                     (try-with-error "GENERIC" "ls: Could not load directory \".\"." 
+                                     directory-list (list ".")))]
+           [v1 (map path->string 
+                     (try-with-error "GENERIC" (format "ls: Could not load directory \"~a\"." v1)
+                     directory-list (list v1)))])]
+        ['cd 
+         (assert-contract (list "string") v "cd")
+         (match v
+               ["" (path->string 
+                     (try-with-error "SYSTEM" "cd: Could not load directory \".\"."
+                                     current-directory '()))]
+               [v1 
+                 (try-with-error "SYSTEM" (format "cd: Could not load directory \"~a\"." v1)
                                       current-directory (list v1)) (Prim0 'void)])]
-        ['mkdir (match (string-coerce v)
-                    ["" (cm-error "CONTRACT" "Missing argument to mkdir.")]
-                    [v1 
-                      (try-with-error "SYSTEM" (format "cd: Could not make directory \"~a\"." v1)
-                                      make-directory (list v1)) (Prim0 'void)])]
-        ['rm (match (string-coerce v)
-                    ["" (cm-error "CONTRACT" "Missing argument to rm")]
-                    [v1 
-                      (try-with-error "SYSTEM" (format "cd: Could not delete file or directory \"~a\"." v1)
-                                      delete-directory/files (list v1)) (Prim0 'void)])]
-        ['getlinesf (match (string-coerce v)
-                    ["" (cm-error "CONTRACT" "Missing argument to getlinesf.")]
-                    [v1 (try-with-error "SYSTEM" (format "getlinesf: Could not load file \"~a\"." v1)
-                                        file->lines (list v1))])]
-        ['system (racket-to-bool (system (string-coerce v)))]
-        ['sysres (with-output-to-string (lambda () (system (string-coerce v))))]
+        ['mkdir 
+         (assert-contract (list "string") v "mkdir")
+         (match v
+               ["" (cm-error "CONTRACT" "Missing argument to mkdir.")]
+               [v1 
+                 (try-with-error "SYSTEM" (format "cd: Could not make directory \"~a\"." v1)
+                                    make-directory (list v1)) (Prim0 'void)])]
+        ['rm 
+         (assert-contract (list "string") v "rm")
+         (match v
+           ["" (cm-error "CONTRACT" "Missing argument to rm")]
+           [v1 
+             (try-with-error "SYSTEM" (format "cd: Could not delete file or directory \"~a\"." v1)
+                                 delete-directory/files (list v1)) (Prim0 'void)])]
+        ['getlinesf 
+         (assert-contract (list "string") v "getlinesf")
+         (match v
+           ["" (cm-error "CONTRACT" "Missing argument to getlinesf.")]
+           [v1 (try-with-error "SYSTEM" (format "getlinesf: Could not load file \"~a\"." v1)
+                                   file->lines (list v1))])]
+        ['system 
+         (assert-contract (list "string") v "system")
+         (match v
+           [_ (racket-to-bool (system v))])]
+        ['sysres
+         (assert-contract (list "string") v "sysres")
+         (match v
+           [_ (with-output-to-string (lambda () (system v)))])]
         ['file_exists? 
-         (match (string-coerce v)
-                    ["" (cm-error "CONTRACT" "Missing argument to file_exists?")]
-                    [v1 (racket-to-bool (file-exists? (string-coerce v1)))])]
+         (assert-contract (list "string") v "file_exists?")
+         (match v
+           ["" (cm-error "CONTRACT" "Missing argument to file_exists?")]
+           [v1 (racket-to-bool (file-exists? v1))])]
         ['dir_exists? 
-         (match (string-coerce v)
-                    ["" (cm-error "CONTRACT" "Missing argument to dir_exists?")]
-                    [v1 (racket-to-bool (directory-exists? (string-coerce v1)))])]
+         (assert-contract (list "string") v "dir_exists?")
+         (match v
+           ["" (cm-error "CONTRACT" "Missing argument to dir_exists?")]
+           [v1 (racket-to-bool (directory-exists? v1))])]
         ['make_hash 
          (match v
            ['() (CmHash (hash) "immutable" '())]
-           ["mutable" (CmHash (make-hash) "mutable" '())]
-           ["immutable" (CmHash (hash) "immutable" '())]
+           [(list "mutable") (CmHash (make-hash) "mutable" '())]
+           [(list "immutable") (CmHash (hash) "immutable" '())]
            [(list "immutable" f) #:when (is-fun? f) (CmHash (hash) "immutable" f)]
            [(list "mutable" f) #:when (is-fun? f) (CmHash (make-hash) "mutable" f)]
            [(CmHash _ "immutable" _) v]
@@ -286,6 +286,7 @@
         ['write_string (interp-write-string v)]
         ['write_string_raw (interp-write-string-raw v)]
         ['gensym (interp-gensym v)]
+        ['regex (interp-regex v)]
         ['var
          (trace-interp-expr (Var (check-var-string-name v))
                             context module-id debug)]
@@ -796,22 +797,63 @@
 
 ;; reads until i chars or eof
 (define (interp-read-string v1)
-  (if (is-int? v1)
-    (read-string v1)
-    (cm-error "CONTRACT" "Invalid arg(s) to read_string")))
+  (assert-contract (list "int") v1 "read_string")
+  (read-string v1))
 
 (define (interp-peek-string v1 v2)
-  (if (and (is-int? v1) (is-int? v2))
-    (peek-string v1 v2)
-    (cm-error "CONTRACT" "Invalid arg(s) to peek_string")))
+  (assert-contract (list "int") v1 "peek_string")
+  (assert-contract (list "int") v2 "peek_string")
+  (peek-string v1 v2))
+
+(define (interp-cp v1 v2)
+  (assert-contract (list "string") v1 "cp")
+  (assert-contract (list "string") v2 "cp")
+  (match (cons v1 v2) 
+       [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
+                     (cm-error "CONTRACT" "Missing argument to cp.")]
+       [(cons v1 v2)
+        (with-handlers* 
+         ([exn:fail? (lambda (exn) 
+          (cm-error "SYSTEM" (format "Could not copy \"~a\" to \"~a\"" v1 v2)))])
+         (copy-directory/files v1 v2))
+        (Prim0 'void)]))
+
+(define (interp-appendstrf v1 v2)
+  (assert-contract (list "string") v1 "appendstrf")
+  (assert-contract (list "string") v2 "appendstrf")
+  (match (cons v1 v2) 
+    [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
+                  (cm-error "CONTRACT" "Missing argument to appendstrf.")]
+    [(cons v1 v2)
+     (with-handlers* 
+       ([exn:fail? (lambda (exn) 
+         (cm-error "SYSTEM" (format "Could not append to file \"~a\"" v2)))])
+       (display-to-file (value->displayable-string v1) v2 #:exists 'append))
+     (Prim0 'void)]))
+
+(define (interp-writestrf v1 v2)
+  (assert-contract (list "string") v1 "writestrf")
+  (assert-contract (list "string") v2 "writestrf")
+  (match (cons v1 v2) 
+   [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
+                 (cm-error "CONTRACT" "Missing argument to writestrf.")]
+   [(cons v1 v2)
+    (with-handlers* 
+      ([exn:fail? (lambda (exn) 
+        (cm-error "SYSTEM" (format "Could not write to file \"~a\"" v2)))])
+      (display-to-file (value->displayable-string v1) v2 #:exists 'replace))
+    (Prim0 'void)]))
 
 (define (interp-read-line) (read-line))
 
 (define (interp-write-string v1)
+  (assert-contract (list "string") v1 "write_string")
   (display (value->displayable-string v1)) (Prim0 'void))
 
+;; not sure what to do with this, not in standard documentation for now
 (define (interp-write-string-raw v1)
-  (display (string-coerce v1)) (Prim0 'void))
+  (assert-contract (list "string") v1 "write_string_raw")
+  (display v1) (Prim0 'void))
 
 (define last-gensym-id 0)
 (define (interp-gensym v1)
@@ -834,3 +876,16 @@
             (or
               (get-local-var-data label context)
               (get-global-var-data label current-module-id)))]))
+
+(define (interp-regex v1)
+  (assert-contract (list "list") v1 "regex")
+  (match v1
+         [(list "regexp-match" pattern str)
+          (assert-contract (list "string") pattern "regex -> regexp-match")
+          (assert-contract (list "string") str "regex -> regexp-match")
+          (match (regexp-match (pregexp pattern) str)
+                 [(? boolean? res) (racket-to-bool res)]
+                 [res res])
+          ]
+         [_ (cm-error "CONTRACT" "Invalid arguments to regex.")]
+         ))

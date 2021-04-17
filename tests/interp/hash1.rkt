@@ -2,8 +2,8 @@
 (require cm/tests/test-utils cm/core/ast rackunit)
 
 (run-silent "def h1 := make_hash ()")
-(run-silent "def h1_2 := make_hash \"immutable\"")
-(run-silent "def h2 := make_hash \"mutable\"")
+(run-silent "def h1_2 := make_hash (\"immutable\";)")
+(run-silent "def h2 := make_hash (\"mutable\";)")
 (run-silent "def h3 := make_hash (\"mutable\",(lambda () := \"wazup\");)")
 
 (check-equal? (run "string hash? h1")
@@ -28,10 +28,13 @@
 "false")
 
 (check-exn exn:fail? (lambda ()
+  (run "make_hash \"mutable\"")))
+
+(check-exn exn:fail? (lambda ()
   (run "make_hash 4")))
 
 (check-exn exn:fail? (lambda ()
-  (run "make_hash \"mutabl\"")))
+  (run "make_hash (\"mutabl\";)")))
 
 (check-exn exn:fail? (lambda ()
   (run "make_hash (\"mutable\",4;)")))
@@ -179,12 +182,12 @@
 (check-equal? (run "string ((make_hash ()) == (make_hash ()))")
 "true")
 
-(check-equal? (run "string ((make_hash ()) == (make_hash \"mutable\"))")
+(check-equal? (run "string ((make_hash ()) == (make_hash (\"mutable\";)))")
 "false")
 
-(check-equal? (run "string ((make_hash \"mutable\") == (make_hash \"mutable\"))")
+(check-equal? (run "string ((make_hash (\"mutable\";)) == (make_hash (\"mutable\";)))")
 "true")
 
 ;; lambda does not affect equal
-(check-equal? (run "string ((make_hash (\"mutable\",(lambda () := 3);)) == (make_hash \"mutable\"))")
+(check-equal? (run "string ((make_hash (\"mutable\",(lambda () := 3);)) == (make_hash (\"mutable\";)))")
 "true")

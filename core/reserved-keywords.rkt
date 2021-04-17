@@ -21,7 +21,7 @@
       "file_exists?" "dir_exists?"
       "eof" "eof?" "read_string" "peek_string" "write_string" "write_string_raw" "read_line"
       "make_hash" "hash_ref" "hash_ref_check" "hash_set" "hash?" "mutable_hash?"
-      "hash_has_key?" "hash_keys" "hash_values" "hash_to_list" "gensym"))
+      "hash_has_key?" "hash_keys" "hash_values" "hash_to_list" "gensym" "regex"))
 
 
 (define (is-keyword? v)

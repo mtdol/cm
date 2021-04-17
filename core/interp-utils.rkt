@@ -1,6 +1,7 @@
 #lang racket
 (require cm/core/ast cm/core/types cm/core/error)
 (provide fix-string ast-cons-to-racket apply-if-type
+         assert-contract
          apply-if-type-1 assign-type-check check-types-list
          check-var-string-name valid-against-schema?
          interp-def-list interp-lambda-list struct-schema->string)
@@ -31,17 +32,17 @@
     (cm-error "CONTRACT" 
         (format "Attempted to apply ~a onto ~a." op-name (get-type arg)))))
 
-;; tells if the guard type matches for the given value
+;; tells if the type matches for the given value
 ;; string, value, string -> bool
-(define (assign-types-match? type value var)
+(define (types-match? type value)
   (if (string=? type "dynamic") #t 
   (let ([v-type (get-type value)]) 
     (or (string=? type v-type)
-            ;; exceptions
-            ;; a null is a list
-            (and (string=? type "list") (string=? v-type "null"))
-            ;; a non-null list is a pair
-            (and (string=? type "pair") (string=? v-type "list"))))))
+        ;; special case for pair value, since a list is technicaly a pair
+        (and (string=? type "pair")
+             (not (is-null? value))
+             (string=? v-type "list")))
+            )))
 
 
 ;; throws an exception if the given type and the type of the value do not match
@@ -49,14 +50,26 @@
 ;;
 ;; string list, value, string -> void | exception
 (define (assign-type-check types value id)
-   (if (ormap (lambda (type) (assign-types-match? type value id)) types)
+   (if (ormap (lambda (type) (types-match? type value)) types)
      (void)
      (cm-error "CONTRACT" 
        (if (= 1 (length types))
-         (format "Recieved type ~a for var ~a but expected ~a." 
+         (format "Received type \"~a\" for var ~a but expected ~a." 
                (get-type value) id (string-coerce (car types)))
-         (format "Recieved type ~a for var ~a but expected one of ~a." 
+         (format "Received type \"~a\" for var ~a but expected one of ~a." 
                (get-type value) id (string-coerce types))))))
+
+(define (assert-contract types value label)
+   (if (ormap (lambda (type) (types-match? type value)) types)
+     (void)
+     (cm-error "CONTRACT" 
+       (if (= 1 (length types))
+         (format "Received type \"~a\" for ~a but expected ~a.\nReceived: ~a" 
+               (get-type value) label 
+               (string-coerce (car types)) (string-coerce value))
+         (format "Received type \"~a\" for ~a but expected one of ~a.\nReceived: ~a" 
+               (get-type value) label 
+               (string-coerce types) (string-coerce value))))))
 
 ;; checks that the types list is formated correctly and then yields it, else
 ;; throws an exception

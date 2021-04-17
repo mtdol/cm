@@ -37,7 +37,3 @@
 
 (check-equal? (run "{: format | \"\" | {list \"1\"}}")
 "")
-
-;; args must be strings, not ints
-(check-exn exn:fail? (lambda ()
-  (run "{: format | \"ab~1cd~2ef\" | {list 1|32}}")))
