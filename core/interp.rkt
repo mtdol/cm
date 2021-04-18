@@ -879,13 +879,50 @@
 
 (define (interp-regex v1)
   (assert-contract (list "list") v1 "regex")
+  (let ([pattern 
+          (match v1 
+             [(list type pattern args ...)
+              (assert-contract (list "string") pattern 
+                        (format "regex -> ~a" type))
+              (with-handlers* 
+                ([exn:fail?
+                 (lambda (e) 
+                    (match e
+                      [(exn:fail msg _)
+                         (cm-error "GENERAL" msg)])
+                    )])
+                (pregexp pattern))])])
   (match v1
-         [(list "regexp-match" pattern str)
-          (assert-contract (list "string") pattern "regex -> regexp-match")
+         [(list "regexp-match" _ str)
           (assert-contract (list "string") str "regex -> regexp-match")
-          (match (regexp-match (pregexp pattern) str)
+          (match (regexp-match pattern str)
                  [(? boolean? res) (racket-to-bool res)]
                  [res res])
           ]
+         [(list "regexp-match*" _ str)
+          (assert-contract (list "string") str "regex -> regexp-match*")
+          (match (regexp-match* pattern str #:match-select values)
+                 [res res])
+          ]
+         [(list "regexp-match?" _ str)
+          (assert-contract (list "string") str "regex -> regexp-match?")
+          (racket-to-bool (regexp-match? pattern str))]
+         [(list "regexp-split" _ str)
+          (assert-contract (list "string") str "regex -> regexp-split")
+          (match (regexp-split pattern str)
+                 [res res])
+          ]
+         [(list "regexp-replace" _ str insert)
+          (assert-contract (list "string") str "regex -> regexp-replace")
+          (assert-contract (list "string") insert "regex -> regexp-replace")
+          (match (regexp-replace pattern str insert)
+                 [res res])
+          ]
+         [(list "regexp-replace*" _ str insert)
+          (assert-contract (list "string") str "regex -> regexp-replace")
+          (assert-contract (list "string") insert "regex -> regexp-replace")
+          (match (regexp-replace* pattern str insert)
+                 [res res])
+          ]
          [_ (cm-error "CONTRACT" "Invalid arguments to regex.")]
-         ))
+         )))

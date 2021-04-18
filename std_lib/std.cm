@@ -410,6 +410,27 @@ defun format (string str, list vs) :=
     in
         {: aux | str | vs | 1}//
 
+--
+-- regex funcs
+--
+defun regex_match (string pattern, string input) :=
+    regex {list "regexp-match" | pattern | input}//
+
+defun regex_match_all (string pattern, string input) :=
+    regex {list "regexp-match*" | pattern | input}//
+
+defun regex_match? (string pattern, string input) :=
+    regex {list "regexp-match?" | pattern | input}//
+
+defun regex_split (string pattern, string input) :=
+    regex {list "regexp-split" | pattern | input}//
+
+defun regex_replace (string pattern, string input, string insert) :=
+    regex {list "regexp-replace" | pattern | input | insert}//
+
+defun regex_replace_all (string pattern, string input, string insert) :=
+    regex {list "regexp-replace*" | pattern | input | insert}//
+
 
 --- Hashmap
 --------------------------------
