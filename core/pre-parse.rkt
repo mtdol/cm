@@ -34,7 +34,7 @@
 
 ;; once inside a macro body, parses its contents into an arguments list
 ;;
-;; string list, string, string list list, int, int -> string list
+;; token list, string, token list list, string, int, int -> token list
 (define (parse-macro-contents tokens label args module-id bcount depth)
   (match tokens 
          ['() (cm-error-linenum 
@@ -45,16 +45,25 @@
          [(cons (? (tok=? "case")) t) #:when (zero? bcount) (parse-macro-contents t label 
                             (cons '() (cons (reverse (car args)) (cdr args)))
                             module-id bcount depth)]
-         [(cons (? (tok=? "}")) t) 
+         [(cons (? (tok=? "}")) t)
           #:when (= 0 bcount)
-          (append 
-            ;; re-parse after we apply the macro
-            (parse-macro-tokens 
-              (apply-macro label 
-                (reverse (cons (reverse (car args)) (cdr args))) module-id)
-              module-id
-              (add1 depth))
-            (parse-macro-tokens t module-id depth))]
+          (let 
+            ([args 
+                 (if (equal? args '(()))
+                   '(())
+                     ;; eager evaluate args
+                     (foldl (lambda (arg acc) 
+                              (cons 
+                                (parse-macro-tokens arg module-id (add1 depth))
+                                acc))
+                            '()
+                            (cons (reverse (car args)) (cdr args))))])
+          (let-values 
+            ([(res/tokens res/module-id)
+              (apply-macro label args module-id)])
+                ;; re-parse after we apply the macro
+              (append (parse-macro-tokens res/tokens res/module-id (add1 depth))
+                      (parse-macro-tokens t module-id depth))))]
          [(cons (? (tok=? "}") h1) t) (parse-macro-contents t label 
                             (cons (cons h1 (car args)) (cdr args))
                             module-id (sub1 bcount) depth)]

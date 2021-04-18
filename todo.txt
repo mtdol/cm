@@ -4,10 +4,6 @@
 . std.cm
     - tests for io/system
 
-<critical>
-- private macros don't seem to be referencable outside of their module
-<critical/>
-
 - line number re-reform:
     -- change trace to show only function names
 

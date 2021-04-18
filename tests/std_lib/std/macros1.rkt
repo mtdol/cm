@@ -52,7 +52,7 @@
 (check-exn exn:fail? (lambda ()
   (run-stat "{-- must close braces { }.")))
 
-(check-equal? (run-stat "1 + {-- cool {} comment that you got! th~er\\{ } 2.")
+(check-equal? (run-stat "1 + {-- cool \\{\\} comment that you got! th~er\\{ } 2.")
 '(3))
 
 

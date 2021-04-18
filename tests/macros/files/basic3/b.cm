@@ -1,0 +1,4 @@
+#:def:b{} {_b}
+#:def:_b{} 3
+
+#:def:gimme{a} a

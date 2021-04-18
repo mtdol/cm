@@ -76,15 +76,18 @@
          [vs (cm-error "SYNTAX" (format "Invalid Macro vars: ~a" vs))]))
 
 
-;; token, token list list, string -> token list
+;; returns the applied token list and the module-id to evaluate the
+;; resulting list
+;;
+;; token, token list list, string -> token list, module-id
 (define (apply-macro label args module-id) 
   (macros:set-current-module-id! module-id)
   (match (tok label)
     ;; first check if a preloaded macro
-    ["string" (apply-string-macro args)]
-    ["ifdef" (apply-ifdef-macro args module-id)]
-    ["current_module" (apply-current-module-macro args module-id)]
-    ["->module_id" (apply-to-module-id-macro args)]
+    ["string" (values (apply-string-macro args) module-id)]
+    ["ifdef" (values (apply-ifdef-macro args module-id) module-id)]
+    ["current_module" (values (apply-current-module-macro args module-id) module-id)]
+    ["->module_id" (values (apply-to-module-id-macro args) module-id)]
     ;; then run user defined macros
     [_ 
      (let aux ([entry (get-macro-defs (tok label) module-id)])
@@ -95,7 +98,7 @@
              ['() (invalid-args-error (tok label) args)]
              [(cons (MacroRule vars body module-id) t) 
               #:when (args-match-macro-entry? args vars)
-              (apply-macro-args vars args body)]
+              (values (apply-macro-args vars args body) module-id)]
              [(cons _ t) (aux t)]
              ))]))
 
