@@ -687,6 +687,10 @@
 
 (define (interp-struct? e1 e2 context module-id debug)
   (match e1
+         ;; wildcard accepts any struct
+         [(Var "_") (racket-to-bool 
+                      (is-struct? 
+                        (trace-interp-expr e2 context module-id debug)))]
          [(Var label1) (racket-to-bool 
                          (is-struct-type? 
                            label1

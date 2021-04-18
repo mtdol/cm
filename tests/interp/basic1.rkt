@@ -37,32 +37,32 @@
 (check-equal? (run "4 + 2")
 6)
 
-(check-equal? (run "string (true and false)")
-"false")
+(check-equal? (run "(true and false)")
+val-false)
 
-(check-equal? (run "string (true xor false)")
-"true")
+(check-equal? (run "(true xor false)")
+val-true)
 
-(check-equal? (run "string (true or false)")
-"true")
+(check-equal? (run "(true or false)")
+val-true)
 
-(check-equal? (run "string (true xor true)")
-"false")
+(check-equal? (run "(true xor true)")
+val-false)
 
-(check-equal? (run "string (true or true)")
-"true")
+(check-equal? (run "(true or true)")
+val-true)
 
-(check-equal? (run "string (true and true)")
-"true")
+(check-equal? (run "(true and true)")
+val-true)
 
-(check-equal? (run "string not (true and true)")
-"false")
+(check-equal? (run "not (true and true)")
+val-false)
 
-(check-equal? (run "string not true")
-"false")
+(check-equal? (run "not true")
+val-false)
 
-(check-equal? (run "string not false")
-"true")
+(check-equal? (run "not false")
+val-true)
 
 (check-equal? (run "int 3.2")
 3)
@@ -100,41 +100,41 @@
 (check-equal? (run "(3 + 2) * 2")
 10)
 
-(check-equal? (run "string null? ()")
-"true")
+(check-equal? (run "null? ()")
+val-true)
 
-(check-equal? (run "string null? null")
-"true")
+(check-equal? (run "null? null")
+val-true)
 
-(check-equal? (run "string null? 3")
-"false")
+(check-equal? (run "null? 3")
+val-false)
 
-(check-equal? (run "string int? 7")
-"true")
+(check-equal? (run "int? 7")
+val-true)
 
-(check-equal? (run "string int? \"7\"")
-"false")
+(check-equal? (run "int? \"7\"")
+val-false)
 
-(check-equal? (run "string int? 7.0")
-"false")
+(check-equal? (run "int? 7.0")
+val-false)
 
-(check-equal? (run "string bool? int? 7.0")
-"true")
+(check-equal? (run "bool? int? 7.0")
+val-true)
 
-(check-equal? (run "string bool? int 7.0")
-"false")
+(check-equal? (run "bool? int 7.0")
+val-false)
 
-(check-equal? (run "string string? \"int 9.0\"")
-"true")
+(check-equal? (run "string? \"int 9.0\"")
+val-true)
 
-(check-equal? (run "string string? int 9.0")
-"false")
+(check-equal? (run "string? int 9.0")
+val-false)
 
-(check-equal? (run "string list? int 9.0")
-"false")
+(check-equal? (run "list? int 9.0")
+val-false)
 
-(check-equal? (run "string list? (int 9.0;)")
-"true")
+(check-equal? (run "list? (int 9.0;)")
+val-true)
 
 (check-equal? (run "string (list? int 9.0;)")
 "(false;)")
