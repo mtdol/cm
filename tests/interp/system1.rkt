@@ -1,6 +1,11 @@
 #lang racket
 (require cm/tests/test-utils rackunit)
 
+;; ensure that directory exists
+(run-racket-silent 
+  (unless (directory-exists? "files/system1")
+    (make-directory "files/system1")))
+
 ;; clear out the directory
 (run-racket-silent 
   (map delete-directory/files (directory-list "files/system1" #:build? #t)))

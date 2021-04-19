@@ -497,6 +497,10 @@ defun catf string f :=
 defun ls_build string arg :=
   {: map
     | lambda elem :=
-      build_path:{list arg | elem}
+        let arg := if system_type = "windows" then
+          string_replace:arg:"/":"\\" 
+          else arg 
+        in
+          build_path:{list arg | elem}
     | ls arg
   }//
