@@ -46,7 +46,6 @@
                             "`#parse` parse mode\n"
                             "`#parsexp` parse expression mode\n"
                             "`#prefix` tokens to prefix form mode\n"
-                            "`#tostring` tokens to ast to string mode\n"
                             "`#token` tokenize mode\n"
                             "\n"))
 
@@ -79,10 +78,6 @@
          ["#prefix" (begin (displayln "prefix expression mode")
                          (set! mode (compose display-output run-prefix-form))
                          (add-history "#prefix")
-                         (repl))]
-         ["#tostring" (begin (displayln "ast to string mode")
-                         (set! mode (compose displayln run-ast-to-string))
-                         (add-history "#tostring")
                          (repl))]
          ["#help" (begin (display help) (add-history "#help") (repl))]
          [s (begin (add-history s)

@@ -6,7 +6,6 @@
          )
 (provide run run-file run-expr run-tokenize-string
          run-parse run-parse-expr run-prefix-form
-         run-ast-to-string 
          display-output display-expr-output silent
          set-verbose-error-level!
          current-module-id get-current-module-id set-current-module-id!)
@@ -82,7 +81,3 @@
   (map tok 
        (half-parse-expr 
          (tokenize-string input current-module-id) current-module-id)))
-
-(define (run-ast-to-string input) 
-  (ast-to-string 
-    (parse-stat (tokenize-string input current-module-id) current-module-id)))
