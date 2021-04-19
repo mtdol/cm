@@ -208,7 +208,7 @@
         ['evalxp #:when (string? v) (run-expr v)] 
         ['evalxp (cm-error "CONTRACT" "evalxp requires a string argument.")] 
         ['ls 
-         (assert-contract (list "string") v "ls")
+         (assert-contract (list "string" "list") v "ls")
          (match v
            ["" (map path->string 
                      (try-with-error "GENERIC" "ls: Could not load directory \".\"." 
@@ -230,14 +230,14 @@
          (match v
                ["" (cm-error "CONTRACT" "Missing argument to mkdir.")]
                [v1 
-                 (try-with-error "SYSTEM" (format "cd: Could not make directory \"~a\"." v1)
+                 (try-with-error "SYSTEM" (format "mkdir: Could not make directory \"~a\"." v1)
                                     make-directory (list v1)) (Prim0 'void)])]
         ['rm 
          (assert-contract (list "string") v "rm")
          (match v
            ["" (cm-error "CONTRACT" "Missing argument to rm")]
            [v1 
-             (try-with-error "SYSTEM" (format "cd: Could not delete file or directory \"~a\"." v1)
+             (try-with-error "SYSTEM" (format "rm: Could not delete file or directory \"~a\"." v1)
                                  delete-directory/files (list v1)) (Prim0 'void)])]
         ['getlinesf 
          (assert-contract (list "string") v "getlinesf")

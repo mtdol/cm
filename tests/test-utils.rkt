@@ -3,6 +3,9 @@
          cm/core/ast)
 (provide (all-defined-out))
 
+(define (run-racket-silent expr)
+  expr (void))
+
 (define (run str) 
   (main:run-expr str))
 (define (run-silent str)
@@ -20,3 +23,4 @@
 
 (define val-true (Bool 1))
 (define val-false (Bool 0))
+(define val-void (Prim0 'void))

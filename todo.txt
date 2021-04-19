@@ -1,5 +1,5 @@
-. std.cm
-    - tests for io/system
+- testing
+    -- test io
 
 - line number re-reform:
     -- change trace to show only function names

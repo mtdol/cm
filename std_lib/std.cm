@@ -52,17 +52,17 @@ if defined? {string var} then void else def guard var
 -- checks that the types of items in REST equal
 #:<def:assert_types={op|types|REST}
 if not ({_assert_types=_aux types | REST}) 
-    then error 
-        {list "CONTRACT"
-            | {: format
-                | "Types for ~2 must be one of ~1:\n~3"
-                | {list string (types) | op | string {list REST}}}}
-    else
-    -- user code after this
+  then error 
+      {list "CONTRACT"
+          | {: format
+              | "Types for ~2 must be one of ~1:\n~3"
+              | {list string (types) | op | string {list REST}}}}
+  else
+  -- user code after this
 >:#
 #:<def:_assert_types=_aux{types|a|REST}
 {: ormap | lambda typ := typ = type (a) | types} and
-    {_assert_types=_aux types|REST} 
+  {_assert_types=_aux types|REST} 
 >:#
 #:<def+:_assert_types=_aux{types|a}
 {: ormap | lambda typ := typ = type (a) | types}
@@ -78,11 +78,11 @@ defun print2 v := print v//
 defun sprint v := (print v) comma void// 
 -- pretty print
 defun pprint vs :=
-    match vs 
-    | () -> void 
-    | v, t -> (@ v) comma (pprint:t)
-    | v -> (@ v) comma void
-    end//
+  match vs 
+  | () -> void 
+  | v, t -> (@ v) comma (pprint:t)
+  | v -> (@ v) comma void
+  end//
 
 
 --- Math, lists
@@ -93,46 +93,46 @@ defun pprint vs :=
 
 
 defun number? v :=
-    let t := type v in
-        t = "int" or t = "float"//
+  let t := type v in
+      t = "int" or t = "float"//
 
 defun add (types {number} n1, types {number} n2) :=
-    {assert_types= "add"|{list type n1}|n1|n2} 
-    n1 + n2//
+  {assert_types= "add"|{list type n1}|n1|n2} 
+  n1 + n2//
 defun sub (types {number} n1, types {number} n2) :=
-    {assert_types= "sub"|{list type n1}|n1|n2} 
-    n1 - n2//
+  {assert_types= "sub"|{list type n1}|n1|n2} 
+  n1 - n2//
 defun mult (types {number} n1, types {number} n2) :=
-    {assert_types= "mult"|{list type n1}|n1|n2} 
-    n1 * n2//
+  {assert_types= "mult"|{list type n1}|n1|n2} 
+  n1 * n2//
 defun div (float n1, float n2) :=
-    n1 / n2//
+  n1 / n2//
 defun exp (types {number} n1, types {number} n2) :=
-    n1 ^ n2//
+  n1 ^ n2//
 
 
 defun add1 types {number} n :=
-    if type n = "int" then n + 1 else n + 1.0.
+  if type n = "int" then n + 1 else n + 1.0.
 defun sub1 types {number} n :=
-    if type n = "int" then n - 1 else n - 1.0.
+  if type n = "int" then n - 1 else n - 1.0.
 defun zero? types {number} n :=
-    if type n = "int" then n = 0 else n = 0.0.
+  if type n = "int" then n = 0 else n = 0.0.
 defun pos? types {number} n :=
-    if type n = "int" then n > 0 else n > 0.0.
+  if type n = "int" then n > 0 else n > 0.0.
 defun neg? types {number} n :=
-    if type n = "int" then n < 0 else n < 0.0.
+  if type n = "int" then n < 0 else n < 0.0.
 defun one? types {number} n :=
-    if type n = "int" then n = 1 else n = 1.0.
+  if type n = "int" then n = 1 else n = 1.0.
 defun even? int n :=
-    n % 2 = 0.
+  n % 2 = 0.
 defun odd? int n :=
-    n % 2 = 1.
+  n % 2 = 1.
 
 -- spits back what you give it
 defun value dynamic v := v.
 
 defun abs types {number} n :=
-    if neg?:n then -n else n.
+  if neg?:n then -n else n.
 
 defun to_int v := int v.
 defun to_float v := float v.
@@ -144,146 +144,146 @@ defun cdr pair v := tail v.
 
 -- maps f onto all members of list lst
 defun map (fun f, list vs) := 
-    | null? vs -> null 
-    else (f:`vs), {: map | f | ~vs}//
+  | null? vs -> null 
+  else (f:`vs), {: map | f | ~vs}//
 
 -- returns a list with only the elements that are true according to f
 defun filter (fun f, list vs) := 
-    | null? vs -> null 
-    | f:`vs -> `vs, {: filter | f | ~vs}
-    else {: filter | f | ~vs}//
+  | null? vs -> null 
+  | f:`vs -> `vs, {: filter | f | ~vs}
+  else {: filter | f | ~vs}//
 
 -- int | float -> int | float
 defun max (types {number} n1, types {number} n2) :=
-    {assert_types= "max"|{list type n1}|n1|n2} 
-    if n1 > n2 then n1 else n2//
+  {assert_types= "max"|{list type n1}|n1|n2} 
+  if n1 > n2 then n1 else n2//
 
 -- int | float -> int | float
 defun min (types {number} n1, types {number} n2) :=
-    {assert_types= "min"|{list type n1}|n1|n2} 
-    if n1 < n2 then n1 else n2//
+  {assert_types= "min"|{list type n1}|n1|n2} 
+  if n1 < n2 then n1 else n2//
 
 -- generalized max func
 --
 -- (any -> int | float) -> any
 defun maxf (fun f, dynamic v1, dynamic v2) :=
-    if f:v1 < f:v2 then
-        v2
-    else
-        v1//
+  if f:v1 < f:v2 then
+      v2
+  else
+      v1//
 
 defun minf (fun f, dynamic v1, dynamic v2) :=
-    if f:v1 > f:v2 then
-        v2
-    else
-        v1//
+  if f:v1 > f:v2 then
+      v2
+  else
+      v1//
 
 defun reverse list xs :=
-    let aux := defun _aux_ (xs, acc) :=
-        match xs
-        | () -> acc
-        | x, t -> {: _aux_ | t | x, acc}
-        end
-    in
-        {: aux | xs | ()}//
+  let aux := defun _aux_ (xs, acc) :=
+      match xs
+      | () -> acc
+      | x, t -> {: _aux_ | t | x, acc}
+      end
+  in
+      {: aux | xs | ()}//
 
 defun append list lsts :=
-    let f := lambda lst, acc :=
-        {assert_types= "append"|{list "list"}|lst}
-        {: foldl
-            | lambda elem, acc :=
-                elem, acc
-            | acc
-            | lst}
-    in
-        reverse : {: foldl | f | () | lsts}//
+  let f := lambda lst, acc :=
+      {assert_types= "append"|{list "list"}|lst}
+      {: foldl
+          | lambda elem, acc :=
+              elem, acc
+          | acc
+          | lst}
+  in
+      reverse : {: foldl | f | () | lsts}//
 
 defun flatten list lsts :=
-    match lsts
-    | () -> ()
-    | list lst, lsts -> {: append | {list (flatten:lst) | (flatten:lsts)}}
-    | elem, lsts -> elem, (flatten:lsts)
-    end//
+  match lsts
+  | () -> ()
+  | list lst, lsts -> {: append | {list (flatten:lst) | (flatten:lsts)}}
+  | elem, lsts -> elem, (flatten:lsts)
+  end//
 
 -- simple range, no iterator, just returns a list
 defun range (int n1, int n2) :=
-    let aux := defun _aux_ (n1, n2) :=
-        {% 
-          def _v_ := ()
-          | while {iter {: iter_range|n2|n1}} 
-                do set _v_ := (:>iter_get, _v_) 
-        } comma _v_
-    in
-        | n1 > n2 -> {: aux|n1+1|n2+1}
-        else {: aux|n1-1|n2-1}//
+  let aux := defun _aux_ (n1, n2) :=
+      {% 
+        def _v_ := ()
+        | while {iter {: iter_range|n2|n1}} 
+              do set _v_ := (:>iter_get, _v_) 
+      } comma _v_
+  in
+      | n1 > n2 -> {: aux|n1+1|n2+1}
+      else {: aux|n1-1|n2-1}//
 
 defun foldl (fun f, dynamic acc, list vs) :=
-    match vs
-    | () -> acc
-    | v, t -> 
-        let acc2 := {: f | v | acc} in
-            {: foldl | f | acc2 | t}
-    end//
+  match vs
+  | () -> acc
+  | v, t -> 
+      let acc2 := {: f | v | acc} in
+          {: foldl | f | acc2 | t}
+  end//
 
 defun foldr (fun f, dynamic acc, list vs) :=
-    {: foldl | f | acc | reverse:vs}//
+  {: foldl | f | acc | reverse:vs}//
 
 defun ormap (fun f, list vs) :=
-    match vs
-    | () -> false
-    | v, vs when bool (f:v) -> true
-    | _, vs -> {: ormap|f|vs}
-    end//
+  match vs
+  | () -> false
+  | v, vs when bool (f:v) -> true
+  | _, vs -> {: ormap|f|vs}
+  end//
 
 defun andmap (fun f, list vs) :=
-    match vs
-    | () -> true
-    | v, vs when not bool (f:v) -> false
-    | _, vs -> {: andmap | f | vs}
-    end//
+  match vs
+  | () -> true
+  | v, vs when not bool (f:v) -> false
+  | _, vs -> {: andmap | f | vs}
+  end//
 
 -- ?, list -> bool | list
 defun member (dynamic elem, list vs) :=
-    match vs
-    | () -> false
-    | v, vs when v == elem -> vs 
-    | _, vs -> {: member | elem | vs}
-    end//
+  match vs
+  | () -> false
+  | v, vs when v == elem -> vs 
+  | _, vs -> {: member | elem | vs}
+  end//
 
 -- ?, list -> bool
 defun member? (dynamic elem, list vs) :=
-    list? {: member | elem | vs}//
+  list? {: member | elem | vs}//
 
 -- removes the item elem from the list vs
 defun remove (dynamic elem, list vs) :=
-    match vs
-    | () -> ()
-    | v, vs when elem == v -> {: remove | elem | vs}
-    | v, vs -> v, {: remove | elem | vs}
-    end//
+  match vs
+  | () -> ()
+  | v, vs when elem == v -> {: remove | elem | vs}
+  | v, vs -> v, {: remove | elem | vs}
+  end//
 
 -- applies f to each integer in [n1 n2)
 defun build_list_range (int n1, int n2, fun f) :=
-    {: foldl 
-        | lambda elem, acc :=
-            (f:elem), acc
-        | ()
-        | 
-            -- so we don't have to reverse the resulting list,
-            -- just alter the indices
-            \| n1 >= n2 ->
-                {: range | n2 + 1 | n1 + 1}
-            else 
-                {: range | n2 - 1 | n1 - 1}
-    }// 
+  {: foldl 
+      | lambda elem, acc :=
+          (f:elem), acc
+      | ()
+      | 
+          -- so we don't have to reverse the resulting list,
+          -- just alter the indices
+          \| n1 >= n2 ->
+              {: range | n2 + 1 | n1 + 1}
+          else 
+              {: range | n2 - 1 | n1 - 1}
+  }// 
 
 -- applies f to each integer [0 n)
 defun build_list (int n, fun f) :=
-    | neg?:n ->
-        error {list "CONTRACT" 
-            | "Arg `n` to `build_list` must be non-negative."}
-    else
-        {: build_list_range | 0 | n | f}//
+  | neg?:n ->
+      error {list "CONTRACT" 
+          | "Arg `n` to `build_list` must be non-negative."}
+  else
+      {: build_list_range | 0 | n | f}//
 
 
 --- Iterators, Generators
@@ -291,11 +291,11 @@ defun build_list (int n, fun f) :=
 
 -- generates a string that is undefined when treated as a variable
 defun gen_undefined (string prefix, string module) := 
-    {%
-      def _v_ := 0
-    | while defined? {list set _v_ := gensym prefix | module} do void
-    } comma _v_
-    //
+  {%
+    def _v_ := 0
+  | while defined? {list set _v_ := gensym prefix | module} do void
+  } comma _v_
+  //
 
 -- eof will signal the end of the iteration
 #:def:iter{a} (not eof? (a))
@@ -305,41 +305,41 @@ def _active? := false//
 
 -- if the iter is active then iters with delta, else returns eof
 defun iter (fun delta) :=
-    if _active? then
-        set _seed := delta : _seed
-    else
-        eof//
+  if _active? then
+      set _seed := delta : _seed
+  else
+      eof//
 
 defun iter_init (dynamic val) :=
-    {% set _active? := true | set _seed := val} comma val//
+  {% set _active? := true | set _seed := val} comma val//
 
 defun iter_open? () :=
-    _active?//
+  _active?//
 
 defun iter_get () :=
-    _seed//
+  _seed//
 
 defun iter_set (dynamic val) :=
-    set _seed := val//
+  set _seed := val//
 
 -- closes the iterator and returns eof
 defun iter_term () :=
-    {% set _active? := false} comma eof//
+  {% set _active? := false} comma eof//
 
 -- iterative range function
 defun iter_range (int n1, int n2) :=
-    -- readjust indexes and open iter
-    | not :>iter_open? -> 
-        -- iter stays closed
-        | n1 = n2 -> eof
-        else iter_init:n1
-    | n1 < n2 -> 
-        | :>iter_get = n2 - 1 -> :>iter_term
-        else iter:add1
-    -- n1 > n2
-    else
-        | :>iter_get = n2 + 1 -> :>iter_term
-        else iter:sub1//
+  -- readjust indexes and open iter
+  | not :>iter_open? -> 
+      -- iter stays closed
+      | n1 = n2 -> eof
+      else iter_init:n1
+  | n1 < n2 -> 
+      | :>iter_get = n2 - 1 -> :>iter_term
+      else iter:add1
+  -- n1 > n2
+  else
+      | :>iter_get = n2 + 1 -> :>iter_term
+      else iter:sub1//
 
 
 --- String funcs
@@ -347,131 +347,156 @@ defun iter_range (int n1, int n2) :=
 
 -- function form of the substring functionality of the index keyword
 defun substring (string s, int i1, int i2) :=
-    index s (i1,i2;)//
+  index s (i1,i2;)//
 
 defun string_ref (string s, int i) :=
-    index s i//
+  index s i//
 
 defun concatenate (string s1, string s2) :=
-    s1 $ s2//
+  s1 $ s2//
 
 defun string_length string s :=
-    length s//
+  length s//
 
 -- turns the string into a list of length 1 substrings
 defun string_to_list string s :=
-    match s
-    | "" -> ()
-    | _ -> (index s 0), (string_to_list : (index s (1, length s;)))
-    end//
+  match s
+  | "" -> ()
+  | _ -> (index s 0), (string_to_list : (index s (1, length s;)))
+  end//
 
 -- concatenates all of the elems in the list into a single string
 defun list_to_string list ss :=
-    match ss
-    | () -> ""
-    | s, t -> s $ (list_to_string:t)
-    end//
+  match ss
+  | () -> ""
+  | s, t -> s $ (list_to_string:t)
+  end//
 
 -- replaces all instances of target substring with rep
 defun string_replace (string str, string targ, string rep) :=
-    if length str < length targ
-    then str
-    else
-        -- special empty string case
-        | targ = "" ->
-            | str = "" -> rep
-            else
-                rep $ str::0 $ {: string_replace 
-                    | str::(1, length str;) 
-                    | targ 
-                    | rep}
-        -- general cases
-        else if 
-            str::(0, length targ;) = targ
-        then 
-            let str2 := str::(length targ, length str;) in
-               rep $ {: string_replace | str2 | targ | rep} 
-        else
-            -- get first char
-            let c := str::0 in
-            -- get rest of string
-            let str2 := str::(1, length str;) in
-            c $ {: string_replace | str2 | targ | rep}//
+  if length str < length targ then str
+  else
+      -- special empty string case
+      | targ = "" ->
+          | str = "" -> rep
+          else
+              rep $ str::0 $ {: string_replace 
+                  | str::(1, length str;) 
+                  | targ 
+                  | rep}
+      -- general cases
+      else if 
+          str::(0, length targ;) = targ
+      then 
+          let str2 := str::(length targ, length str;) in
+             rep $ {: string_replace | str2 | targ | rep} 
+      else
+          -- get first char
+          let c := str::0 in
+          -- get rest of string
+          let str2 := str::(1, length str;) in
+          c $ {: string_replace | str2 | targ | rep}//
                
 -- takes a string of form "~1 ~2 ~3 ~1" and turns it into "v1 v2 v3 v1"
 defun format (string str, list vs) :=
-    let aux := defun _aux_ (str, vs, i) := 
-        match vs
-        | () -> str
-        | v, t -> 
-            let str2 := {: string_replace | str | "~" $ i | string v} in
-                {: _aux_ | str2 | t | add1:i}
-        end
-    in
-        {: aux | str | vs | 1}//
+  let aux := defun _aux_ (str, vs, i) := 
+      match vs
+      | () -> str
+      | v, t -> 
+          let str2 := {: string_replace | str | "~" $ i | string v} in
+              {: _aux_ | str2 | t | add1:i}
+      end
+  in
+      {: aux | str | vs | 1}//
 
 --
 -- regex funcs
 --
 defun regex_match (string pattern, string input) :=
-    regex {list "regexp-match" | pattern | input}//
+  regex {list "regexp-match" | pattern | input}//
 
 defun regex_match_all (string pattern, string input) :=
-    regex {list "regexp-match*" | pattern | input}//
+  regex {list "regexp-match*" | pattern | input}//
 
 defun regex_match? (string pattern, string input) :=
-    regex {list "regexp-match?" | pattern | input}//
+  regex {list "regexp-match?" | pattern | input}//
 
 defun regex_split (string pattern, string input) :=
-    regex {list "regexp-split" | pattern | input}//
+  regex {list "regexp-split" | pattern | input}//
 
 defun regex_replace (string pattern, string input, string insert) :=
-    regex {list "regexp-replace" | pattern | input | insert}//
+  regex {list "regexp-replace" | pattern | input | insert}//
 
 defun regex_replace_all (string pattern, string input, string insert) :=
-    regex {list "regexp-replace*" | pattern | input | insert}//
+  regex {list "regexp-replace*" | pattern | input | insert}//
 
 
 --- Hashmap
 --------------------------------
 
 defun list_to_hash list ms :=
-    {: foldl 
-        | lam m,h := hash_set h (`m) (~m)
-        | make_hash ()
-        | ms}//
+  {: foldl 
+      | lam m,h := hash_set h (`m) (~m)
+      | make_hash ()
+      | ms}//
 
 defun list_to_mutable_hash list ms :=
-    {: foldl 
-        | lam m,h := (hash_set h (`m) (~m)) comma h
-        | make_hash {list "mutable"}
-        | ms}//
+  {: foldl 
+      | lam m,h := (hash_set h (`m) (~m)) comma h
+      | make_hash {list "mutable"}
+      | ms}//
 
 
 --- System
 --------------------------------
 
 match system_type
-| "windows" -> (eval "#:def:win{} true") comma void
-| "macosx" -> (eval "#:def:mac{} true") comma void
+| "windows" -> (eval "#:def:windows{} true") comma void
+| "macosx" -> (eval "#:def:macosx{} true") comma void
 | "unix" -> (eval "#:def:unix{} true") comma void
 | _ -> void
 end//
 
+def path_separator := 
+  match system_type
+  | "windows" -> "\\" 
+  | _ -> "/" 
+  end//
+
+-- takes the list of elems and returns a string representing a connected
+-- path between them
+defun build_path list elems :=
+  {: foldl
+    | lambda elem, acc := 
+      \| elem = "" -> acc
+      \| acc = "" -> elem
+      else acc $ path_separator $ elem
+    | ""
+    | elems
+  }//
+
 -- cds only if the directory exists
 defun cd2 string s :=
-    if dir_exists? s 
-    then 
-        cd s 
-    else 
-        error ("SYSTEM", ("Dir "$s$" does not exist.");)//
+  if dir_exists? s 
+  then 
+      cd s 
+  else 
+      error ("SYSTEM", ("Dir "$s$" does not exist.");)//
 
 -- pretty print ls of current dir
 defun lsc () :=
-    pprint:(ls ".").
+  pprint:(ls ".").
 defun cdc () :=
-    (cd "")//
+  (cd "")//
 
 -- display contents of file
 defun catf string f :=
-    pprint:(getlinesf f)//
+  pprint:(getlinesf f)//
+
+-- gives the arguments to ls with the prefix appended onto the results.
+defun ls_build string arg :=
+  {: map
+    | lambda elem :=
+      build_path:{list arg | elem}
+    | ls arg
+  }//
