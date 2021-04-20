@@ -3,7 +3,7 @@
          cm/core/ast cm/core/error cm/core/types cm/core/context
          cm/core/parse-stat cm/core/lex cm/core/interp-utils cm/core/modules)
 (lazy-require [cm/core/main (run run-expr)])
-(provide interp)
+(provide interp trace-interp-expr)
 
 ;; Matthew Dolinka
 ;; cm interpreter
@@ -44,102 +44,104 @@
 
 (define (interp-expr ast context module-id debug)
   (match ast
-        [(Prefix2 'struct e1 e2) (interp-struct e1 e2 context module-id debug)]
-        [(Prefix2 'struct? e1 e2) (interp-struct? e1 e2 context module-id debug)]
-        [(Prefix2 'appl e1 e2) (interp-appl e1 e2 context module-id debug)]
-        [(Prefix2 'index e1 e2) (interp-index e1 e2 context module-id debug)]
-        [(Prim2 'appindex e1 e2) (interp-index e1 e2 context module-id debug)]
-        [(Prefix2 'writestrf e1 e2) 
-         (interp-writestrf 
-           (trace-interp-expr e1 context module-id debug)
-           (trace-interp-expr e2 context module-id debug))]
-        [(Prefix2 'appendstrf e1 e2) 
-         (interp-appendstrf 
-           (trace-interp-expr e1 context module-id debug)
-           (trace-interp-expr e2 context module-id debug))]
-        [(Prefix2 'cp e1 e2) 
-         (interp-cp 
-           (trace-interp-expr e1 context module-id debug)
-           (trace-interp-expr e2 context module-id debug))]
-        [(Prefix2 'mv e1 e2) 
-         (trace-interp-expr (Prefix2 'cp e1 e2) context module-id debug)
-         (trace-interp-expr (Prim1 'rm e1) context module-id debug)]
-        [(Prefix2 'hash_ref e1 e2) 
-         (interp-hash-ref 
-           (trace-interp-expr e1 context module-id debug)
-           (trace-interp-expr e2 context module-id debug))]
-        [(Prefix2 'hash_has_key? e1 e2) 
-         (interp-hash-has-key? 
-           (trace-interp-expr e1 context module-id debug)
-           (trace-interp-expr e2 context module-id debug))]
-        [(Prefix2 'peek_string e1 e2) 
-         (interp-peek-string 
-           (trace-interp-expr e1 context module-id debug)
-           (trace-interp-expr e2 context module-id debug))]
-        [(Prefix3 'hash_set e1 e2 e3) 
-         (interp-hash-set 
-           (trace-interp-expr e1 context module-id debug)
-           (trace-interp-expr e2 context module-id debug)
-           (trace-interp-expr e3 context module-id debug)
-           )]
-        [(Prefix3 'hash_ref_check e1 e2 e3) 
-         (interp-hash-ref-check 
-           (trace-interp-expr e1 context module-id debug)
-           (trace-interp-expr e2 context module-id debug)
-           (trace-interp-expr e3 context module-id debug)
-           )]
-        ;; general prim cases
-        [(Prim2 op e1 e2) (interp-prim2 
-                            op 
-                            (trace-interp-expr e1 context module-id debug) 
-                            (trace-interp-expr e2 context module-id debug)
-                            module-id debug)]
-        [(Prim1 op e) (interp-prim1 
-                        op (trace-interp-expr e context module-id debug) 
-                        context module-id debug)]
-        [(Prim0 op) (interp-prim0 op)]
-        [(If e1 e2) (interp-if e1 e2 context module-id debug)]
-        [(Cond e) 
-         (match e
-                [(Case e1 e2 e3) (interp-case e1 e2 e3 context module-id debug)]
-                [_ (cm-error "SYNTAX" "Cond is missing a case.")])]
-        [(Case e1 e2 e3) (interp-case e1 e2 e3 context module-id debug)]
-        [(While e1 (Do e2)) (interp-while e1 e2 context module-id debug)]
-        [(While _ _) (cm-error "SYNTAX" "While is missing a do.")]
-        [(Foreach e1 (In e2) (Do e3))
-         (let ([vs (trace-interp-expr e2 context module-id debug)])
-           (if (is-list? vs)
-               (interp-foreach e1 vs e3 context module-id debug)
-               (cm-error "CONTRACT" "Argument to foreach guard must be a list.")))]
-        [(Foreach _ _ _) (cm-error "SYNTAX" "Foreach is improperly formed.")]
-        [(Try e1 e2) (interp-try-catch e1 e2 context module-id debug)]
-        [(Match e1 e2) (interp-match 
-                         (trace-interp-expr e1 context module-id debug)
-                         e2 context context module-id debug)]
-        [(Def e1 (Assign e2)) 
-          (match (interp-def-list e1 e2)
-                 [(Def e1-2 e2-2) (interp-def e1-2 e2-2 context module-id #f debug)])]
-        [(Def _ _) (cm-error "SYNTAX" "Def is missing an assignment.")]
-        [(Set e1 e2) (interp-def e1 e2 context module-id #t debug)]
-        [(Set _ _) (cm-error "SYNTAX" "Set is missing an assignment.")]
-        [(Defun (Var id) e1 (Assign e2))
-          (trace-interp-expr 
-            (Def (Var id) (Assign (Lambda e1 (Assign e2))))
-            context module-id debug)]
-        [(Defun _ _ _) (cm-error "SYNTAX" "Improperly formed defun.")]
-        [(Let e1 e2 e3) (interp-let e1 e2 e3 context module-id debug)]
-        [(Lambda e1 (Assign e2)) 
-          (match (interp-lambda-list e1 e2)
-                 [(Lambda e1-2 e2-2) (interp-lambda e1-2 e2-2 context module-id debug)])]
-        [(Lambda _ _) (cm-error "SYNTAX" "Lambda is missing an assignment.")]
-        [(Typedef e1 e2) (interp-typedef e1 e2 context module-id debug)]
-        [(Var v) (interp-var v context module-id)]
-        [(Int i) i]
-        [(Float f) f]
-        [(Bool i) (Bool i)]
-        [(Null) null]
-        [(String s) (fix-string s)]
-        [e (cm-error "SYNTAX" (format "Unknown expression: ~a." e))]))
+    [(? var-container? var) 
+     (interp-var (get-var-label var context module-id debug) context module-id)]
+    [(Prim1 'schemaof e1) (interp-schemaof e1 context module-id debug)]
+    [(Prefix2 'struct e1 e2) (interp-struct e1 e2 context module-id debug)]
+    [(Prefix2 'struct? e1 e2) (interp-struct? e1 e2 context module-id debug)]
+    [(Prefix2 'appl e1 e2) (interp-appl e1 e2 context module-id debug)]
+    [(Prefix2 'index e1 e2) (interp-index e1 e2 context module-id debug)]
+    [(Prim2 'appindex e1 e2) (interp-index e1 e2 context module-id debug)]
+    [(Prefix2 'writestrf e1 e2) 
+     (interp-writestrf 
+       (trace-interp-expr e1 context module-id debug)
+       (trace-interp-expr e2 context module-id debug))]
+    [(Prefix2 'appendstrf e1 e2) 
+     (interp-appendstrf 
+       (trace-interp-expr e1 context module-id debug)
+       (trace-interp-expr e2 context module-id debug))]
+    [(Prefix2 'cp e1 e2) 
+     (interp-cp 
+       (trace-interp-expr e1 context module-id debug)
+       (trace-interp-expr e2 context module-id debug))]
+    [(Prefix2 'mv e1 e2) 
+     (trace-interp-expr (Prefix2 'cp e1 e2) context module-id debug)
+     (trace-interp-expr (Prim1 'rm e1) context module-id debug)]
+    [(Prefix2 'hash_ref e1 e2) 
+     (interp-hash-ref 
+       (trace-interp-expr e1 context module-id debug)
+       (trace-interp-expr e2 context module-id debug))]
+    [(Prefix2 'hash_has_key? e1 e2) 
+     (interp-hash-has-key? 
+       (trace-interp-expr e1 context module-id debug)
+       (trace-interp-expr e2 context module-id debug))]
+    [(Prefix2 'peek_string e1 e2) 
+     (interp-peek-string 
+       (trace-interp-expr e1 context module-id debug)
+       (trace-interp-expr e2 context module-id debug))]
+    [(Prefix3 'hash_set e1 e2 e3) 
+     (interp-hash-set 
+       (trace-interp-expr e1 context module-id debug)
+       (trace-interp-expr e2 context module-id debug)
+       (trace-interp-expr e3 context module-id debug)
+       )]
+    [(Prefix3 'hash_ref_check e1 e2 e3) 
+     (interp-hash-ref-check 
+       (trace-interp-expr e1 context module-id debug)
+       (trace-interp-expr e2 context module-id debug)
+       (trace-interp-expr e3 context module-id debug)
+       )]
+    ;; general prim cases
+    [(Prim2 op e1 e2) (interp-prim2 
+                        op 
+                        (trace-interp-expr e1 context module-id debug) 
+                        (trace-interp-expr e2 context module-id debug)
+                        module-id debug)]
+    [(Prim1 op e) (interp-prim1 
+                    op (trace-interp-expr e context module-id debug) 
+                    context module-id debug)]
+    [(Prim0 op) (interp-prim0 op)]
+    [(If e1 e2) (interp-if e1 e2 context module-id debug)]
+    [(Cond e) 
+     (match e
+            [(Case e1 e2 e3) (interp-case e1 e2 e3 context module-id debug)]
+            [_ (cm-error "SYNTAX" "`cond` is missing a case.")])]
+    [(Case e1 e2 e3) (interp-case e1 e2 e3 context module-id debug)]
+    [(While e1 (Do e2)) (interp-while e1 e2 context module-id debug)]
+    [(While _ _) (cm-error "SYNTAX" "`while` is missing a do.")]
+    [(Foreach e1 (In e2) (Do e3))
+     (let ([vs (trace-interp-expr e2 context module-id debug)])
+       (if (is-list? vs)
+           (interp-foreach e1 vs e3 context module-id debug)
+           (cm-error "CONTRACT" "Argument to `foreach` guard must be a list.")))]
+    [(Foreach _ _ _) (cm-error "SYNTAX" "`foreach` is improperly formed.")]
+    [(Try e1 e2) (interp-try-catch e1 e2 context module-id debug)]
+    [(Match e1 e2) (interp-match 
+                     (trace-interp-expr e1 context module-id debug)
+                     e2 context context module-id debug)]
+    [(Def e1 (Assign e2)) 
+      (match (interp-def-list e1 e2)
+             [(Def e1-2 e2-2) (interp-def e1-2 e2-2 context module-id #f debug)])]
+    [(Def _ _) (cm-error "SYNTAX" "`def` is missing an assignment.")]
+    [(Set e1 e2) (interp-def e1 e2 context module-id #t debug)]
+    [(Set _ _) (cm-error "SYNTAX" "`set` is missing an assignment.")]
+    [(Defun (? var-container? var) e1 (Assign e2))
+      (trace-interp-expr 
+        (Def var (Assign (Lambda e1 (Assign e2))))
+        context module-id debug)]
+    [(Defun _ _ _) (cm-error "SYNTAX" "Improperly formed `defun`.")]
+    [(Let e1 e2 e3) (interp-let e1 e2 e3 context module-id debug)]
+    [(Lambda e1 (Assign e2)) 
+      (match (interp-lambda-list e1 e2)
+             [(Lambda e1-2 e2-2) (interp-lambda e1-2 e2-2 context module-id debug)])]
+    [(Lambda _ _) (cm-error "SYNTAX" "`lambda` is missing an assignment.")]
+    [(Typedef e1 e2) (interp-typedef e1 e2 context module-id debug)]
+    [(Int i) i]
+    [(Float f) f]
+    [(Bool i) (Bool i)]
+    [(Null) null]
+    [(String s) (fix-string s)]
+    [e (cm-error "SYNTAX" (format "Unknown expression: ~a." e))]))
 
 (define (and-op arg1 arg2) (and (bool-to-racket arg1) (bool-to-racket arg2)))
 (define (or-op arg1 arg2) (or (bool-to-racket arg1) (bool-to-racket arg2)))
@@ -187,7 +189,7 @@
         ['mult (apply-if-type '("int" "float") * "mult" v1 v2)]
         ['div (if (zero? v2) (cm-error "CONTRACT" "Divide by zero.")
          (apply-if-type '("float") / "div" v1 v2))]
-        ['mod (if (zero? v2) (cm-error "CONTRACT" "Mod by zero undefined.")
+        ['mod (if (zero? v2) (cm-error "CONTRACT" "`mod` by zero undefined.")
          (apply-if-type '("int") modulo "mod" v1 v2))
          ]
         ['exp (apply-if-type '("int" "float") expt "exp" v1 v2)]))
@@ -204,9 +206,9 @@
                 [msg #:when (string? msg) (cm-error "GENERIC" msg)]
                 [_ (cm-error "CONTRACT" "Invalid argument(s) to error.")])]
         ['eval #:when (string? v) (run v)] 
-        ['eval (cm-error "CONTRACT" "eval requires a string argument.")] 
+        ['eval (cm-error "CONTRACT" "`eval` requires a string argument.")] 
         ['evalxp #:when (string? v) (run-expr v)] 
-        ['evalxp (cm-error "CONTRACT" "evalxp requires a string argument.")] 
+        ['evalxp (cm-error "CONTRACT" "`evalxp` requires a string argument.")] 
         ['ls 
          (assert-contract (list "string" "list") v "ls")
          (match v
@@ -228,7 +230,7 @@
         ['mkdir 
          (assert-contract (list "string") v "mkdir")
          (match v
-               ["" (cm-error "CONTRACT" "Missing argument to mkdir.")]
+               ["" (cm-error "CONTRACT" "Missing argument to `mkdir`.")]
                [v1 
                  (try-with-error "SYSTEM" (format "mkdir: Could not make directory \"~a\"." v1)
                                     make-directory (list v1)) (Prim0 'void)])]
@@ -242,7 +244,7 @@
         ['getlinesf 
          (assert-contract (list "string") v "getlinesf")
          (match v
-           ["" (cm-error "CONTRACT" "Missing argument to getlinesf.")]
+           ["" (cm-error "CONTRACT" "Missing argument to `getlinesf`.")]
            [v1 (try-with-error "SYSTEM" (format "getlinesf: Could not load file \"~a\"." v1)
                                    file->lines (list v1))])]
         ['system 
@@ -256,12 +258,12 @@
         ['file_exists? 
          (assert-contract (list "string") v "file_exists?")
          (match v
-           ["" (cm-error "CONTRACT" "Missing argument to file_exists?")]
+           ["" (cm-error "CONTRACT" "Missing argument to `file_exists?`")]
            [v1 (racket-to-bool (file-exists? v1))])]
         ['dir_exists? 
          (assert-contract (list "string") v "dir_exists?")
          (match v
-           ["" (cm-error "CONTRACT" "Missing argument to dir_exists?")]
+           ["" (cm-error "CONTRACT" "Missing argument to `dir_exists?`")]
            [v1 (racket-to-bool (directory-exists? v1))])]
         ['make_hash 
          (match v
@@ -273,7 +275,7 @@
            [(CmHash _ "immutable" _) v]
            ;; deep copy of mutable hash
            [(CmHash h "mutable" handler) (CmHash (hash-copy h) "mutable" handler)]
-           [_ (cm-error "CONTRACT" "Invalid arg(s) to make_hash.")]
+           [_ (cm-error "CONTRACT" "Invalid arg(s) to `make_hash`.")]
            )]
         ['hash? (racket-to-bool (is-hash? v))]
         ['mutable_hash? (racket-to-bool (is-mutable-hash? v))]
@@ -287,9 +289,6 @@
         ['write_string_raw (interp-write-string-raw v)]
         ['gensym (interp-gensym v)]
         ['regex (interp-regex v)]
-        ['var
-         (trace-interp-expr (Var (check-var-string-name v))
-                            context module-id debug)]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]
@@ -304,17 +303,17 @@
             (get-type v) "."))]
         ['head  #:when (or (string=? (get-type v) "list" ) 
                         (string=? (get-type v) "pair"))
-        (when (null? v) (cm-error "CONTRACT" "Cannot head deref null."))
+        (when (null? v) (cm-error "CONTRACT" "Cannot `head` deref null."))
         (car v)]
         ['head (cm-error "CONTRACT" (string-append 
             "Applied head to non list or pair. Given type "
             (get-type v) "."))]
         ['tail  #:when (or (string=? (get-type v) "list" ) 
                         (string=? (get-type v) "pair"))
-        (when (null? v) (cm-error "CONTRACT" "Cannot tail deref null."))
+        (when (null? v) (cm-error "CONTRACT" "Cannot `tail` deref null."))
         (cdr v)]
         ['tail (cm-error "CONTRACT" (string-append 
-            "Applied tail to non list or pair. Given type "
+            "Applied `tail` to non list or pair. Given type "
             (get-type v) "."))]
         ['length  #:when (or (string=? (get-type v) "list")
                            (string=? (get-type v) "null")) 
@@ -322,7 +321,7 @@
         ['length  #:when (string=? (get-type v) "string" ) 
         (string-length v)]
         ['length (cm-error "CONTRACT" (string-append 
-            "Applied length to non list or string. Given type "
+            "Applied `length` to non list or string. Given type "
             (get-type v) "."))]
         ['type (get-type v)] 
         ['string (string-coerce v)] 
@@ -363,8 +362,8 @@
                      (if (bool-to-racket (trace-interp-expr e1 context module-id debug))
                        (trace-interp-expr e3 context module-id debug)
                        (trace-interp-expr e5 context module-id debug))]
-                 [_ (cm-error "SYNTAX" "Then clause is missing an else.")])]
-         [_ (cm-error "SYNTAX" "If clause is missing a then.")]))
+                 [_ (cm-error "SYNTAX" "`then` clause is missing an `else`.")])]
+         [_ (cm-error "SYNTAX" "`if` clause is missing a `then`.")]))
 
 (define (interp-while e1 e2 context module-id debug) 
   (cond
@@ -378,7 +377,7 @@
     ['() (Prim0 'void)]
     [(cons v t)
       (match (match-expr e1 v context context module-id debug)
-            [#f (cm-error "MATCH" "Could not match foreach guard expr.")]
+            [#f (cm-error "MATCH" "Could not match `foreach` guard expr.")]
             [c2 (trace-interp-expr e2 c2 module-id debug)
                 (interp-foreach e1 t e2 context module-id debug)]
             )]
@@ -386,18 +385,20 @@
 
 (define (interp-try-catch e1 e2 context module-id debug)
   (match e2
-         [(Catch (Var id) (With e3)) 
+         [(Catch (? var-container? var) (With e3)) 
             (with-handlers* ([exn:fail? (lambda err 
                 (match err [(list (exn:fail err-msg _))
                     (let ([err-struct 
                         (CmStruct "Error" (list (get-id-from-message err-msg) err-msg))])
-               (trace-interp-expr e3 (set-local-var id err-struct context) module-id debug))
-                                        ])
-                                                    )])
+               (trace-interp-expr 
+                 e3 
+                 (set-local-var 
+                   (get-var-label var context module-id debug) err-struct context)
+                 module-id debug))]))])
                             (trace-interp-expr e1 context module-id debug))
 
           ]
-         [_ (cm-error "SYNTAX" "Improperly formed try-catch.")]
+         [_ (cm-error "SYNTAX" "Improperly formed `try-catch`.")]
 
          ))
 
@@ -453,21 +454,37 @@
          [(Null) (if (null? v) match-context #f)]
          [(Prim0 'void) (match v [(Prim0 'void) match-context] [_ #f])]
          [(String s) (if (string=? s v) match-context #f)]
-         ;; wildcard, always match
-         [(Var "_") match-context]
-         [(Prim1 op (Var "_")) (cm-error "SYNTAX" "Cannot type-guard wildcard.")]
          ;; implied dynamic var
-         [(Var id) (match-var id (list "dynamic") v match-context)]
-         [(Prim1 op (Var id)) #:when (member op guard-types)
-                        (match-var id (list (symbol->string op)) v match-context)]
-         [(Prefix2 'types types-expr (Var id)) 
-          (match-var id (check-types-list (trace-interp-expr types-expr context module-id debug))
-                     v match-context)]
-         [(Prefix2 'struct (Var label) lst) #:when (expr-is-list? lst)
-          (match v
-            [(CmStruct label2 lst2) #:when (equal? label label2)
-                    (match-expr lst lst2 match-context context module-id debug)]
-            [_ #f])]
+         [(? var-container? var) 
+          (match (get-var-label var context module-id debug)
+            ;; wildcard, always match
+            ["_" match-context]
+            [label (match-var label (list "dynamic") v match-context)])]
+         [(Prim1 op (? var-container? var))
+          #:when (member op guard-types)
+          (match (get-var-label var context module-id debug)
+            ["_" (cm-error "CONTRACT" "Only plain wildcard is acceptable in match expr.")]
+            [label 
+              (match-var label (list (symbol->string op)) v match-context)])]
+         [(Prefix2 'types types-expr (? var-container? var)) 
+          (match (get-var-label var context module-id debug)
+            ["_" (cm-error "CONTRACT" "Only plain wildcard is acceptable in match expr.")]
+            [label 
+              (match-var
+                label
+                (check-types-list (trace-interp-expr types-expr context module-id debug))
+                v match-context)])]
+         [(Prefix2 'struct (? var-container? var) lst) 
+          #:when (expr-is-list? lst)
+          (match (get-var-label var context module-id debug)
+            ["_" (cm-error "CONTRACT" "Only plain wildcard is acceptable in match expr.")]
+            [label 
+              (match v
+                [(CmStruct label2 lst2) 
+                 #:when (equal? label label2)
+                 (match-expr lst lst2 match-context context module-id debug)]
+                [_ #f]
+            )])]
          [(Prim2 'cons e1 e2)
           (match v
                  [(cons v1 v2)
@@ -476,7 +493,7 @@
                           (match-expr e2 v2 mc2 context module-id debug) #f))]
                  [_ #f])]
 
-         [_ (cm-error "SYNTAX" "Invalid syntax for match.")]))
+         [_ (cm-error "SYNTAX" "Invalid syntax for `match`.")]))
 
 ;; Checks that types of var and value match (if they don't returns false).
 ;; If types match then returns modified context with itself included
@@ -537,32 +554,21 @@
 (define (interp-left-hand-expr e context module-id debug)
   (match e
       [(Null) (values '() '())]
-      [(Prim1 op (Var label)) #:when (member op guard-types)
-       (values (list (symbol->string op)) label)]
-      [(Prim1 op (Prim1 'var var-expr))
-       (interp-left-hand-expr 
-         (Prim1 
-           op 
-           (Var (check-var-string-name (trace-interp-expr var-expr context module-id debug))))
-         context module-id debug)]
-      [(Prefix2 'types types-expr (Var label))
+      [(Prim1 op (? var-container? var)) #:when (member op guard-types)
+       (values (list (symbol->string op)) 
+               (get-var-label var context module-id debug))]
+      [(Prefix2 'types types-expr (? var-container? var))
        (let ([types-list 
                (check-types-list (trace-interp-expr types-expr context module-id debug))]) 
-           (values types-list label))]
-      [(Prefix2 op expr (Prim1 'var var-expr))
-       (interp-left-hand-expr 
-         (Prefix2 op expr 
-            (Var (check-var-string-name (trace-interp-expr var-expr context module-id debug))))
-         context module-id debug)]
-      [(Prefix2 'struct (Var s-label) (Var label))
-       (let ([guard-type (get-struct-type-string s-label)])
-           (values (list guard-type) label))]
+           (values types-list (get-var-label var context module-id debug)))]
+      [(Prefix2 'struct (? var-container? s-var) (? var-container? var))
+       (let ([guard-type 
+               (get-struct-type-string (get-var-label s-var context module-id debug))])
+           (values (list guard-type) (get-var-label var context module-id debug)))]
       ;; implied dynamic case
-      [(Var label) (values (list "dynamic") label)]
-      [(Prim1 'var var-expr)
-       (interp-left-hand-expr 
-         (Var (check-var-string-name (trace-interp-expr var-expr context module-id debug)))
-         context module-id debug)]
+      [(? var-container? var) 
+       (values (list "dynamic") 
+         (get-var-label var context module-id debug))]
       [_ (values #f #f)]))
 
 (define (interp-def e1 e2 context module-id update? debug)
@@ -573,9 +579,9 @@
                          (interp-left-hand-expr e1 context module-id debug)])
               (match label
                    [#f #:when update? 
-                     (cm-error "SYNTAX" "Unknown Item on left hand of set.")] 
-                   [#f (cm-error "SYNTAX" "Unknown Item on left hand of def.")]
-                   ['() (cm-error "SYNTAX" "Def is missing a variable.")]
+                     (cm-error "SYNTAX" "Unknown Item on left hand of `set`.")] 
+                   [#f (cm-error "SYNTAX" "Unknown Item on left hand of `def`.")]
+                   ['() (cm-error "SYNTAX" "`def` is missing a variable.")]
                    ;; sets var in global context hash and returns value to caller
                    [_
                      (assign-type-check guard-types v3 label)
@@ -583,7 +589,7 @@
                       (update-global-var! label v3 module-id)
                       (set-global-var! label v3 (var-name-private? label) module-id))
                     v3]))]
-         [_ (cm-error "SYNTAX" "Def is missing an assignment.")]))
+         [_ (cm-error "SYNTAX" "`def` is missing an assignment.")]))
 
 (define (interp-let e1 e2 e3 context module-id debug)
   (match (cons e2 e3)
@@ -639,63 +645,76 @@
 (define (interp-typedef e1 e2 context module-id debug)
   (match e2 
     [(Assign e2-2)
-      (let ([lst2 (ast-cons-to-racket e2-2)])
-      (match e1
-         [(Var v) #:when (list? lst2)
-          (let verify-schema ([lst lst2] [acc '()] [acc/labels '()])
-           (match lst
-              ;; set schema if no errors were found
-              ['() (set-type! v (reverse acc) (var-name-private? v) module-id) (Prim0 'void)]
-              [(cons h t)
-               (let-values 
-                 ([(guard-types label) (interp-left-hand-expr h context module-id debug)])
-                 (match label
-                  [#f (cm-error "SYNTAX" 
-                   (format "Unknown element ~a inside typedef schema." h))]
-                  [_
-                    (when (member label acc/labels) 
-                      (cm-error 
-                        "CONTRACT" 
-                        (format 
-                          (string-append "struct ~a: Cannot have duplicate "
-                                         "identifier within typedef: ~a") 
-                          v label)))
-                    (verify-schema t 
-                      (cons (SchemaElem guard-types label) acc)
-                      (cons label acc/labels))]))]))]
-           [(Var v) (cm-error "SYNTAX" "Invalid schema for typedef. Schema must be a list.")]
-           [_ (cm-error "SYNTAX" "Missing Label for typedef.")]))]
-  [_ (cm-error "SYNTAX" "Improperly formed typedef.")]))
+      (let ([lst2 
+              (match (ast-cons-to-racket e2-2)
+                [(? list? res) res] 
+                [_ (cm-error 
+                     "SYNTAX" 
+                     "Invalid schema for `typedef`. Schema must be a list.")])]
+            [id 
+              (match e1
+                [(? var-container? var)
+                 (get-var-label var context module-id debug)]
+                [_ (cm-error "SYNTAX" "Missing Label for `typedef`.")]
+                )])
+       (let verify-schema ([lst lst2] [acc '()] [acc/labels '()])
+        (match lst
+           ;; set schema if no errors were found
+           ['() (set-type! id (reverse acc) (var-name-private? id) module-id) (Prim0 'void)]
+           [(cons h t)
+            (let-values 
+              ([(guard-types label) (interp-left-hand-expr h context module-id debug)])
+              (match label
+               [#f (cm-error "SYNTAX" 
+                (format "Unknown element ~a inside `typedef` schema." h))]
+               [_
+                 (when (member label acc/labels) 
+                   (cm-error 
+                     "CONTRACT" 
+                     (format 
+                       (string-append "struct ~a: Cannot have duplicate "
+                                      "identifier within `typedef`: ~a") 
+                       id label)))
+                 (verify-schema t 
+                   (cons (SchemaElem guard-types label) acc)
+                   (cons label acc/labels))]))]))
+        )]
+  [_ (cm-error "SYNTAX" "Improperly formed `typedef`.")]))
 
 (define (interp-struct e1 e2 context module-id debug)
   (match e1
-         [(Var v)
+         [(? var-container? var)
+          (let ([label (get-var-label var context module-id debug)])
           (match (trace-interp-expr e2 context module-id debug)
                  ;; struct args must be a list (null for no args, still technically a list)
                  [res #:when (list? res) 
-                      (match (get-type-data v module-id)
-                             [#f (cm-error "UNDEFINED" (format "Type ~a has not been declared." v))]
+                      (match (get-type-data label module-id)
+                             [#f (cm-error "UNDEFINED" (format "Type ~a has not been declared." label))]
                              [schema
-                            (match (valid-against-schema? v schema res)
-                                   [#t (CmStruct v res)]
+                            (match (valid-against-schema? label schema res)
+                                   [#t (CmStruct label res)]
                                    [#f (cm-error "CONTRACT" 
                 (format (string-append "Could not validate struct against type schema:"
                                        "\nstruct:\n~a ~a\nschema:\n~a")
-                        v (string-coerce res) (struct-schema->string (get-type-data v module-id))))])])]
-                 [_ (cm-error "SYNTAX" "Arguments to struct must be a list or null.")])]
-         [_ (cm-error "SYNTAX" "Missing label for struct.")]))
+                        label (string-coerce res) (struct-schema->string (get-type-data label module-id))))])])]
+                 [_ (cm-error "SYNTAX" "Arguments to `struct` must be a list or null.")]))]
+         [_ (cm-error "SYNTAX" "Missing label for `struct`.")]))
 
 (define (interp-struct? e1 e2 context module-id debug)
   (match e1
-         ;; wildcard accepts any struct
-         [(Var "_") (racket-to-bool 
-                      (is-struct? 
-                        (trace-interp-expr e2 context module-id debug)))]
-         [(Var label1) (racket-to-bool 
-                         (is-struct-type? 
-                           label1
-                           (trace-interp-expr e2 context module-id debug)))]
-         [_ (cm-error "SYNTAX" "Missing label for struct question.")]))
+   [(? var-container? var) 
+    (let ([label (get-var-label var context module-id debug)])
+      (match label
+        ;; wildcard accepts any struct
+        ["_" 
+         (racket-to-bool 
+           (is-struct? (trace-interp-expr e2 context module-id debug)))]
+        [_ 
+           (racket-to-bool 
+             (is-struct-type? 
+               label
+               (trace-interp-expr e2 context module-id debug)))]))]
+   [_ (cm-error "SYNTAX" "Missing label for struct question.")]))
 
 (define (interp-index e1 e2 context module-id debug)
   (match (trace-interp-expr e1 context module-id debug)
@@ -747,6 +766,19 @@
                     )]
          [h #:when (is-hash? h) 
             (interp-hash-ref h (trace-interp-expr e2 context module-id debug))]
+         [(CmStruct label lst)
+            (let ([index
+                    (match e2 
+                      [(? var-container? var)
+                       (get-var-label var context module-id debug)]
+                      [_
+                       (cm-error "SYNTAX" 
+                        (format "Index for struct ~a must be a variable." label))])]
+                  [elems (get-struct-schema-labels label module-id)])
+              (match (index-of elems index)
+                [#f (cm-error "CONTRACT" 
+                        (format "Invalid index ~a for struct ~a" index label))]
+                [int-index (list-ref lst int-index)]))]
          [s (cm-error "CONTRACT" (format "Invalid operand for index: ~a" (string-coerce s)))]
          ))
 
@@ -754,7 +786,7 @@
   (match v1
         [(CmHash h "immutable" handler) (CmHash (hash-set h v2 v3) "immutable" handler)]
         [(CmHash h "mutable" handler) (hash-set! h v2 v3) (Prim0 'void)]
-        [_ (cm-error "CONTRACT" "First argument to hash_set must be a hash.")]
+        [_ (cm-error "CONTRACT" "First argument to `hash_set` must be a hash.")]
         ))
 
 (define (interp-hash-ref v1 v2)
@@ -764,27 +796,27 @@
                         (format "Could not find key ~a in hash." (string-coerce v2)))))]
          [(CmHash h _ handler) (hash-ref h v2
                     (lambda () (interp-apply handler v2)))]
-         [_ (cm-error "CONTRACT" "Missing hash for hash_ref.")]))
+         [_ (cm-error "CONTRACT" "Missing hash for `hash_ref`.")]))
 
 (define (interp-hash-has-key? v1 v2)
   (match v1
          [(CmHash h _ _) (racket-to-bool (hash-has-key? h v2))]
-         [_ (cm-error "CONTRACT" "Missing hash for hash_has_key?.")]))
+         [_ (cm-error "CONTRACT" "Missing hash for `hash_has_key?`.")]))
 
 (define (interp-hash-keys v1)
   (match v1
          [(CmHash h _ _) (hash-keys h)]
-         [_ (cm-error "CONTRACT" "Missing hash for hash_keys.")]))
+         [_ (cm-error "CONTRACT" "Missing hash for `hash_keys`.")]))
 
 (define (interp-hash-values v1)
   (match v1
          [(CmHash h _ _) (hash-values h)]
-         [_ (cm-error "CONTRACT" "Missing hash for hash_values.")]))
+         [_ (cm-error "CONTRACT" "Missing hash for `hash_values`.")]))
 
 (define (interp-hash-to-list v1)
   (match v1
          [(CmHash h _ _) (hash->list h)]
-         [_ (cm-error "CONTRACT" "Missing hash for hash_to_list.")]))
+         [_ (cm-error "CONTRACT" "Missing hash for `hash_to_list`.")]))
 
 (define (interp-hash-ref-check v1 v2 v3)
   (match v1
@@ -792,8 +824,8 @@
             (if (is-fun? v3)
                 (hash-ref h v2
                     (lambda () (interp-apply v3 v2)))
-                (cm-error "CONTRACT" "Third arg to hash_ref_check must be a function."))]
-         [_ (cm-error "CONTRACT" "Missing hash for hash_ref_check.")]))
+                (cm-error "CONTRACT" "Third arg to `hash_ref_check` must be a function."))]
+         [_ (cm-error "CONTRACT" "Missing hash for `hash_ref_check`.")]))
 
 (define (interp-print v)
  (begin (displayln (value->displayable-string v)) 
@@ -814,7 +846,7 @@
   (assert-contract (list "string") v2 "cp")
   (match (cons v1 v2) 
        [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
-                     (cm-error "CONTRACT" "Missing argument to cp.")]
+                     (cm-error "CONTRACT" "Missing argument to `cp`.")]
        [(cons v1 v2)
         (with-handlers* 
          ([exn:fail? (lambda (exn) 
@@ -827,7 +859,7 @@
   (assert-contract (list "string") v2 "appendstrf")
   (match (cons v1 v2) 
     [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
-                  (cm-error "CONTRACT" "Missing argument to appendstrf.")]
+                  (cm-error "CONTRACT" "Missing argument to `appendstrf`.")]
     [(cons v1 v2)
      (with-handlers* 
        ([exn:fail? (lambda (exn) 
@@ -840,7 +872,7 @@
   (assert-contract (list "string") v2 "writestrf")
   (match (cons v1 v2) 
    [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
-                 (cm-error "CONTRACT" "Missing argument to writestrf.")]
+                 (cm-error "CONTRACT" "Missing argument to `writestrf`.")]
    [(cons v1 v2)
     (with-handlers* 
       ([exn:fail? (lambda (exn) 
@@ -862,7 +894,7 @@
 (define last-gensym-id 0)
 (define (interp-gensym v1)
   (unless (is-string? v1) 
-    (cm-error "CONTRACT" "The prefix for gensym must be a string."))
+    (cm-error "CONTRACT" "The prefix for `gensym` must be a string."))
   (let ([id last-gensym-id])
     (set! last-gensym-id (add1 id))
     (string-append v1 (number->string id))
@@ -880,6 +912,14 @@
             (or
               (get-local-var-data label context)
               (get-global-var-data label current-module-id)))]))
+
+(define (interp-schemaof e1 context module-id debug)
+  (match e1
+    [(? var-container? var)
+     (get-struct-schema-labels
+       (get-var-label var context module-id debug) module-id)]
+    [_ (cm-error "CONTRACT" "Argument to `schemaof` must be a variable.")]
+    ))
 
 (define (interp-regex v1)
   (assert-contract (list "list") v1 "regex")
@@ -928,5 +968,5 @@
           (match (regexp-replace* pattern str insert)
                  [res res])
           ]
-         [_ (cm-error "CONTRACT" "Invalid arguments to regex.")]
+         [_ (cm-error "CONTRACT" "Invalid arguments to `regex`.")]
          )))

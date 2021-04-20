@@ -1,9 +1,12 @@
 #lang racket
-(require cm/core/ast cm/core/types cm/core/error)
+(require racket/lazy-require
+         cm/core/ast cm/core/types cm/core/error)
+(lazy-require [cm/core/interp (trace-interp-expr)])
 (provide fix-string ast-cons-to-racket apply-if-type
          assert-contract
+         var-container? get-var-label check-var-string-name
          apply-if-type-1 assign-type-check check-types-list
-         check-var-string-name valid-against-schema?
+         valid-against-schema?
          interp-def-list interp-lambda-list struct-schema->string)
 
 ;;
@@ -84,6 +87,23 @@
                     types-lst]
          [_ (cm-error "CONTRACT" "Type arguments to types must be a list of strings.")]))
 
+(define (var-container? expr)
+  (match expr
+    [(Var _) #t]
+    [(Prim1 'var _) #t]
+    [_ #f]))
+
+;; gets the label of a var
+(define (get-var-label expr context module-id debug)
+  (match expr
+    [(Var label) label]
+    [(Prim1 'var var) 
+     (check-var-string-name 
+       (trace-interp-expr var context module-id debug))]
+    [_ #f]
+    ))
+
+;; checks that the argument to `var` is valid
 (define (check-var-string-name v)
   (when (not (string? v))
     (cm-error "CONTRACT" "Argument to var must be a string."))

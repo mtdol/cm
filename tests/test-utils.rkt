@@ -1,5 +1,6 @@
 #lang racket
 (require (prefix-in main: cm/core/main) (prefix-in tokens: cm/core/tokens)
+         rackunit
          cm/core/ast)
 (provide (all-defined-out))
 
@@ -20,6 +21,10 @@
   (main:run-parse-expr str))
 (define (tokenize str) 
   (main:run-tokenize-string str))
+
+(define (check-failure f v) 
+  (check-exn exn:fail? (lambda ()
+    (f v))))
 
 (define val-true (Bool 1))
 (define val-false (Bool 0))

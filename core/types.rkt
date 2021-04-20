@@ -52,6 +52,19 @@
 (define (get-struct-type-string label)
     (format "struct ~a" label))
 
+;; turns a stored schema into a list of labels
+;;
+;; string -> string list
+(define (get-struct-schema-labels label module-id) 
+  (match (get-type-data label module-id)
+    [#f (cm-error "CONTRACT" (format "Could not find type: ~a" label))]
+    [schema 
+      (let aux ([elems schema])
+        (match elems
+          ['() '()]
+          [(cons (SchemaElem _ label) elems) (cons label (aux elems))]
+          ))]))
+
 
 ;; true if the expr is a list, false otherwise
 ;; ast -> bool
@@ -208,4 +221,4 @@
 (define (is-bool-token? v)
          (or (string=? "true") (string=? "false")))
 (define (is-var-token? v) 
-  (and (not (is-keyword? v)) (regexp-match? #rx"^[a-zA-Z_][a-zA-Z1-9_]*[?!]?$" v)))
+  (and (not (is-keyword? v)) (regexp-match? #rx"^[a-zA-Z_][a-zA-Z0-9_]*[?!]?$" v)))
