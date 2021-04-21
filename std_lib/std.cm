@@ -138,6 +138,8 @@ defun is_bool? dynamic v :=
   bool? v.
 defun is_list? dynamic v :=
   list? v.
+defun is_pair? dynamic v :=
+  pair? v.
 defun is_void? dynamic v :=
   void? v.
 defun is_eof? dynamic v :=
@@ -161,14 +163,18 @@ defun cdr pair v := tail v.
 
 -- maps f onto all members of list lst
 defun map (fun f, list vs) := 
-  | null? vs -> null 
-  else (f:`vs), {: map | f | ~vs}//
+  match vs
+  | () -> ()
+  | v, vs -> (f:v), {: map | f | vs}
+  end//
 
 -- returns a list with only the elements that are true according to f
 defun filter (fun f, list vs) := 
-  | null? vs -> null 
-  | f:`vs -> `vs, {: filter | f | ~vs}
-  else {: filter | f | ~vs}//
+  match vs
+  | () -> ()
+  | (? v f), vs -> v, {: filter | f | vs}
+  | _, vs -> {: filter | f | vs}
+  end//
 
 -- int | float -> int | float
 defun max (types {number} n1, types {number} n2) :=

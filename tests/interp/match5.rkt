@@ -16,6 +16,13 @@
 (check-failure run "match 3 | ? (a,b) (lambda x := float? x) -> a + 1.0
                             | ? a (lambda x := int? x) -> a + 1 end")
 
+;; function must return a bool
+(check-failure run "match 3 | ? a (lambda x := 4) -> a + 1.0
+                            | ? a (lambda x := int? x) -> a + 1 end")
+
+(check-failure run "match 3 | ? a (lambda x,y := 4) -> a + 1.0
+                            | ? a (lambda x := int? x) -> a + 1 end")
+
 
 (check-equal? (run "match struct S (1,2;)   
                     | struct S (? a (lambda x := x % 2 = 0), b;) -> a + b

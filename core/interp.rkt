@@ -44,6 +44,8 @@
 
 (define (interp-expr ast context module-id debug)
   (match ast
+    [(Prim2 'when _ _) (cm-error "SYNTAX" "Cannot use `when` outside of match-expr.")]
+    [(Prefix2 '? _ _) (cm-error "SYNTAX" "Cannot use `?` outside of match-expr.")]
     [(? var-container? var) 
      (interp-var (get-var-label var context module-id debug) context module-id)]
     [(Prim1 'schemaof e1) (interp-schemaof e1 context module-id debug)]
@@ -141,8 +143,6 @@
     [(Bool i) (Bool i)]
     [(Null) null]
     [(String s) (fix-string s)]
-    [(Prim2 'when _ _) (cm-error "SYNTAX" "Cannot use `when` outside of match-expr.")]
-    [(Prefix2 '? _ _) (cm-error "SYNTAX" "Cannot use `?` outside of match-expr.")]
     [e (cm-error "SYNTAX" (format "Unknown expression: ~a." e))]))
 
 (define (and-op arg1 arg2) (and (bool-to-racket arg1) (bool-to-racket arg2)))
@@ -459,6 +459,10 @@
          [(Prefix2 '? (? var-container? var) expr) 
           (let* ([func (trace-interp-expr expr context module-id debug)]
                  [res (interp-apply func v)])
+            (unless (is-bool? res) 
+              (cm-error "CONTRACT"
+                (format "`?`: Function must return a bool value,\ngot: ~a" 
+                  (string-coerce res))))
             (if (bool-to-racket res) 
               (match-expr var v match-context context module-id debug)
               #f)

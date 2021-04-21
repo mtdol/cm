@@ -214,6 +214,12 @@ val-true)
 (check-equal? (run "is_list?:3")
 val-false)
 
+(check-equal? (run "is_pair?:(1,2)")
+val-true)
+
+(check-equal? (run "is_pair?:3")
+val-false)
+
 (check-equal? (run "is_void?:void")
 val-true)
 
