@@ -13,14 +13,11 @@
 (check-equal? (run "match 3,4 | a, a -> a | a,b -> a + b end")
 7)
 
-(check-exn exn:fail? (lambda ()
-  (run "match 3,4 | a,a -> a end")))
+(check-failure run "match 3,4 | a,a -> a end")
 
-(check-exn exn:fail? (lambda ()
-  (run "match 3,4 | a, int a -> a end")))
+(check-failure run "match 3,4 | a, int a -> a end")
 
-(check-exn exn:fail? (lambda ()
-  (run "match 3,4 | int a, a -> a end")))
+(check-failure run "match 3,4 | int a, a -> a end")
 
 
 (check-equal? (run "match 3,3 | a,b -> a + b end")

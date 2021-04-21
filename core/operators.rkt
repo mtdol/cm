@@ -120,6 +120,7 @@
         (cons "mv"              (OpData 2 "prefix"  7   'Prefix2 'mv))
         (cons "hash_ref"        (OpData 2 "prefix"  7   'Prefix2 'hash_ref))
         (cons "hash_has_key?"   (OpData 2 "prefix"  7   'Prefix2 'hash_has_key?))
+        (cons "?"               (OpData 2 "prefix"  7   'Prefix2 '?))
         (cons "peek_string"     (OpData 2 "prefix"  7   'Prefix2 'peek_string))
         (cons "hash_set"        (OpData 3 "prefix"  7   'Prefix3 'hash_set))
         (cons "hash_ref_check"  (OpData 3 "prefix"  7   'Prefix3 'hash_ref_check))
