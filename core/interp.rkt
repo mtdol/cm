@@ -3,7 +3,7 @@
          cm/core/ast cm/core/error cm/core/types cm/core/context
          cm/core/parse-stat cm/core/lex cm/core/interp-utils cm/core/modules)
 (lazy-require [cm/core/main (run run-expr)])
-(provide interp trace-interp-expr)
+(provide interp trace-interp-expr interp-apply)
 
 ;; Matthew Dolinka
 ;; cm interpreter
@@ -123,19 +123,35 @@
                      e2 context context module-id debug)]
     [(Def e1 (Assign e2)) 
       (match (interp-def-list e1 e2)
-             [(Def e1-2 e2-2) (interp-def e1-2 e2-2 context module-id #f debug)])]
-    [(Def _ _) (cm-error "SYNTAX" "`def` is missing an assignment.")]
-    [(Set e1 e2) (interp-def e1 e2 context module-id #t debug)]
-    [(Set _ _) (cm-error "SYNTAX" "`set` is missing an assignment.")]
+             [(Def e1-2 (Assign e2-2)) 
+              (let ([v2 (trace-interp-expr e2-2 context module-id debug)])
+              (let-values ([(guard-types label)
+                            (interp-left-hand-expr e1-2 context module-id debug)])
+                (interp-def guard-types label v2 context module-id #f debug)))])]
+    [(Def _ _) (cm-error "SYNTAX" "Improperly formed `def`.")]
+    [(Set e1 (Assign e2)) 
+     (let-values ([(guard-types label) 
+                   (interp-left-hand-expr e1 context module-id debug)])
+     (interp-def 
+       guard-types label
+       (trace-interp-expr e2 context module-id debug)
+       context module-id #t debug))]
+    [(Set _ _) (cm-error "SYNTAX" "Improperly formed `set`.")]
     [(Defun (? var-container? var) e1 (Assign e2))
-      (trace-interp-expr 
-        (Def var (Assign (Lambda e1 (Assign e2))))
-        context module-id debug)]
+     (let ([name (get-var-label var context module-id debug)])
+     (match (interp-lambda-list e1 e2)
+       [(Lambda e1-2 (Assign e2-2))
+        (interp-def '("dynamic") name
+          (interp-lambda e1-2 e2-2 name context module-id debug)
+          context module-id #f debug)
+        ])
+      )]
     [(Defun _ _ _) (cm-error "SYNTAX" "Improperly formed `defun`.")]
     [(Let e1 e2 e3) (interp-let e1 e2 e3 context module-id debug)]
     [(Lambda e1 (Assign e2)) 
       (match (interp-lambda-list e1 e2)
-             [(Lambda e1-2 e2-2) (interp-lambda e1-2 e2-2 context module-id debug)])]
+             [(Lambda e1-2 (Assign e2-2)) 
+              (interp-lambda e1-2 e2-2 '() context module-id debug)])]
     [(Lambda _ _) (cm-error "SYNTAX" "`lambda` is missing an assignment.")]
     [(Typedef e1 e2) (interp-typedef e1 e2 context module-id debug)]
     [(Int i) i]
@@ -562,11 +578,19 @@
 ;;
 ;; If the guard is a null expr then (values '() '()) is returned
 ;;
-;; guard-expr, context ->
-;;      (values string list, string | null) | (values bool, bool)
+;; guard-expr, context, string, debug ->
+;;      (values (string | fun) list, (string | null)) | (values bool, bool)
 (define (interp-left-hand-expr e context module-id debug)
   (match e
       [(Null) (values '() '())]
+      ;; function guard
+      [(Prefix2 '? (? var-container? var) expr) 
+       (let ([func (trace-interp-expr expr context module-id debug)]
+             [label (get-var-label var context module-id debug)])
+         (unless (is-fun? func) 
+           (cm-error "CONTRACT" 
+             (format "Var `~a`: Argument to `?` must be a function." label)))
+         (values (list func) label))]
       [(Prim1 op (? var-container? var)) #:when (member op guard-types)
        (values (list (symbol->string op)) 
                (get-var-label var context module-id debug))]
@@ -584,25 +608,22 @@
          (get-var-label var context module-id debug))]
       [_ (values #f #f)]))
 
-(define (interp-def e1 e2 context module-id update? debug)
-  (match e2
-         [(Assign e3) 
-          (let*-values ([(v3) (trace-interp-expr e3 context module-id debug)]
-                        [(guard-types label) 
-                         (interp-left-hand-expr e1 context module-id debug)])
-              (match label
-                   [#f #:when update? 
-                     (cm-error "SYNTAX" "Unknown Item on left hand of `set`.")] 
-                   [#f (cm-error "SYNTAX" "Unknown Item on left hand of `def`.")]
-                   ['() (cm-error "SYNTAX" "`def` is missing a variable.")]
-                   ;; sets var in global context hash and returns value to caller
-                   [_
-                     (assign-type-check guard-types v3 label)
-                     (if update? 
-                      (update-global-var! label v3 module-id)
-                      (set-global-var! label v3 (var-name-private? label) module-id))
-                    v3]))]
-         [_ (cm-error "SYNTAX" "`def` is missing an assignment.")]))
+(define (interp-def guard-types label v context module-id update? debug)
+  ;(let-values ([(guard-types label) 
+                  ;(interp-left-hand-expr e1 context module-id debug)])
+ (match label
+      [#f #:when update? 
+        (cm-error "SYNTAX" "Unknown Item on left hand of `set`.")] 
+      [#f (cm-error "SYNTAX" "Unknown Item on left hand of `def`.")]
+      ['() (cm-error "SYNTAX" "`def` is missing a variable.")]
+      ;; sets var in global context hash and returns value to caller
+      [_
+        (assign-type-check guard-types v label)
+        (if update? 
+         (update-global-var! label v module-id)
+         (set-global-var! label v (var-name-private? label) module-id))
+       v]))
+         
 
 (define (interp-let e1 e2 e3 context module-id debug)
   (match (cons e2 e3)
@@ -618,24 +639,23 @@
                       e3-2 (set-local-var label v2 context) module-id debug)]))]
          [_ (cm-error "SYNTAX" "Let is missing an assignment or in.")]))
 
-(define (interp-lambda e1 e2 context module-id debug)
-  (match e2
-         [(Assign e3) 
-          (let*-values ([(guard-types label) 
-                         (interp-left-hand-expr e1 context module-id debug)])
-            (match label
-                   [#f (cm-error "SYNTAX" "Unknown Item on left hand of lambda")]
-                   ['() (Fun '() '() context e3 module-id debug)]
-                   [_ (Fun label guard-types context e3 module-id debug)]
-            ))]
-         [_ (cm-error "SYNTAX" "Lambda is missing an assignment.")]))
+;; name is the name of the function and is either a string 
+;; or '() for anonymous functions
+(define (interp-lambda e1 e2 name context module-id debug)
+  (let*-values ([(guard-types label) 
+                 (interp-left-hand-expr e1 context module-id debug)])
+    (match label
+           [#f (cm-error "SYNTAX" "Unknown Item on left hand of `lambda`")]
+           ['() (Fun name '() '() context e2 module-id debug)]
+           [_ (Fun name label guard-types context e2 module-id debug)]
+    )))
 
 (define (interp-apply v1 v2)
   (match v1
          ;; no arg lambda
-         [(Fun '() '() fcontext fexpr fmodule-id fdebug)
+         [(Fun _ '() '() fcontext fexpr fmodule-id fdebug)
           (trace-interp-expr fexpr fcontext fmodule-id fdebug)]
-         [(Fun var types fcontext fexpr fmodule-id fdebug)
+         [(Fun _ var types fcontext fexpr fmodule-id fdebug)
           ;; check val against guards
           (assign-type-check types v2 var)
           (trace-interp-expr fexpr (set-local-var var v2 fcontext) fmodule-id fdebug)]

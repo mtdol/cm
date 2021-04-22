@@ -1,7 +1,7 @@
 #lang racket
 (require racket/lazy-require
          cm/core/ast cm/core/types cm/core/error)
-(lazy-require [cm/core/interp (trace-interp-expr)])
+(lazy-require [cm/core/interp (trace-interp-expr interp-apply)])
 (provide fix-string ast-cons-to-racket apply-if-type
          assert-contract
          var-container? get-var-label check-var-string-name
@@ -36,43 +36,59 @@
         (format "Attempted to apply ~a onto ~a." op-name (get-type arg)))))
 
 ;; tells if the type matches for the given value
-;; string, value, string -> bool
-(define (types-match? type value)
-  (if (string=? type "dynamic") #t 
-  (let ([v-type (get-type value)]) 
-    (or (string=? type v-type)
+;; (string | fun), value -> bool
+(define (guard-type-matches? type value)
+  (match type
+    ;; type is a function guard
+    [(? is-fun?) 
+     (let ([res (interp-apply type value)])
+     (unless (is-bool? res)
+       (cm-error 
+         "CONTRACT" 
+         (format "Value returned by guard must be bool,\ngot: ~a" res)))
+     (bool-to-racket res))]
+    ["dynamic" #t]
+    [_
+     (let ([v-type (get-type value)]) 
+        (or (string=? type v-type)
         ;; special case for pair value, since a list is technicaly a pair
-        (and (string=? type "pair")
+          (and (string=? type "pair")
              (not (is-null? value))
              (string=? v-type "list")))
-            )))
+            )
+      ])
 
+  )
+(define (guard-types-match? types value)
+  (ormap (lambda (type) (guard-type-matches? type value)) types))
+
+
+
+(define (assign-type-check types value label) 
+  (assert-contract types value (string-append "var " label)))
 
 ;; throws an exception if the given type and the type of the value do not match
-;; returns true if types match
 ;;
 ;; string list, value, string -> void | exception
-(define (assign-type-check types value id)
-   (if (ormap (lambda (type) (types-match? type value)) types)
-     (void)
-     (cm-error "CONTRACT" 
-       (if (= 1 (length types))
-         (format "Received type \"~a\" for var ~a but expected ~a." 
-               (get-type value) id (string-coerce (car types)))
-         (format "Received type \"~a\" for var ~a but expected one of ~a." 
-               (get-type value) id (string-coerce types))))))
-
 (define (assert-contract types value label)
-   (if (ormap (lambda (type) (types-match? type value)) types)
+   (if (guard-types-match? types value)
      (void)
      (cm-error "CONTRACT" 
-       (if (= 1 (length types))
+      (match types
+        [(list (? is-fun?))
+         (format "Received type \"~a\" for ~a but expected a value matching ~a.\nReceived: ~a" 
+               (get-type value) label 
+               (string-coerce (car types)) (string-coerce value))]
+        [_ 
+         #:when (= 1 (length types))
          (format "Received type \"~a\" for ~a but expected ~a.\nReceived: ~a" 
                (get-type value) label 
-               (string-coerce (car types)) (string-coerce value))
+               (string-coerce (car types)) (string-coerce value))]
+        [_ 
          (format "Received type \"~a\" for ~a but expected one of ~a.\nReceived: ~a" 
                (get-type value) label 
-               (string-coerce types) (string-coerce value))))))
+               (string-coerce types) (string-coerce value))])
+         )))
 
 ;; checks that the types list is formated correctly and then yields it, else
 ;; throws an exception
@@ -125,7 +141,7 @@
       (match schemas
         ['() #f]
         [(cons (SchemaElem types _) schemas)
-         (if (is-types? types v) (aux vs schemas) #f)]
+         (if (guard-types-match? types v) (aux vs schemas) #f)]
         ;; the schema should have been validated, so we will
         ;; only end up here if something is wrong
         [_ 

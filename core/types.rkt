@@ -9,7 +9,7 @@
 (struct SchemaElem (types label))
 
 ;; what a lambda expr yields
-(struct Fun (var type context expr module-id debug-data))
+(struct Fun (name var type context expr module-id debug-data))
 
 
 ;; all types used in guards minus structs
@@ -26,12 +26,17 @@
 (define (is-list? v) (list? v))
 (define (is-pair? v) (pair? v))
 (define (is-null? v) (null? v))
-(define (is-fun? v) (match v [(Fun _ _ _ _ _ _) #t] [_ #f]))
+(define (is-fun? v) (match v [(Fun _ _ _ _ _ _ _) #t] [_ #f]))
 (define (is-struct? v) (match v [(CmStruct _ _) #t] [_ #f]))
 (define (is-hash? v) (match v [(CmHash _ _ _) #t] [_ #f]))
 (define (is-mutable-hash? v) (match v [(CmHash _ "mutable" _) #t] [_ #f]))
 (define (is-void? v) (match v [(Prim0 'void) #t] [_ #f]))
 (define (is-eof? v) (match v [(Prim0 'eof) #t] [_ #f]))
+
+(define (get-function-name func)
+  (match func 
+    [(Fun name _ _ _ _ _ _) name]
+    [_ #f]))
 
 ;; yields true if v is a struct with the same label as label1
 ;; string, value -> bool
@@ -145,8 +150,11 @@
          ["eof" "eof"]
          ["mutable hash" "mutable hash"]
          ["immutable hash" "immutable hash"]
-         ["fun" (match v [(Fun var type context expr _ _)
-                          (format "Fun ~a ~a" type var)])]
+         ["fun" 
+          (match (get-function-name v)
+            ['() "lambda"]
+            [name (format "function ~a" name)]
+            )]
          [_ (cm-error "GENERIC" (format "String coersion error for ~a." v))])]))
 (define (int-coerce v) 
   (cond [(is-struct? v) (cm-error "CONTRACT" "Cannot coerce a struct to an int.")]

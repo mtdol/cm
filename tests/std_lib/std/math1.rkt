@@ -238,6 +238,14 @@ val-true)
 (check-equal? (run "is_fun?:3")
 val-false)
 
+(run-silent "typedef S := a,b;")
+
+(check-equal? (run "is_struct?:\"S\":(struct S (1,2;))")
+val-true)
+
+(check-equal? (run "is_struct?:\"S\":3")
+val-false)
+
 
 (check-equal? (run "value:\"s\"")
 "s")

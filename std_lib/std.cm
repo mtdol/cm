@@ -146,6 +146,8 @@ defun is_eof? dynamic v :=
   eof? v.
 defun is_fun? dynamic v :=
   fun? v.
+defun is_struct? (string label, dynamic v) :=
+  struct? (var label) v.
 
 -- spits back what you give it
 defun value dynamic v := v.
