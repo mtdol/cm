@@ -1,7 +1,7 @@
 #lang racket
 (require cm/core/lex cm/core/ast cm/core/parse-expr 
-         cm/core/parse-stat cm/core/interp cm/core/ast-to-string
-         cm/core/types cm/core/context cm/core/modules cm/core/error
+         cm/core/parse-stat cm/core/interp cm/core/types
+         cm/core/context cm/core/modules cm/core/error
          cm/core/pre-parse cm/core/tokens
          )
 (provide run run-file run-expr run-tokenize-string

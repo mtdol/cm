@@ -154,6 +154,11 @@
 (define (struct-schema->string schema)
   (match schema
     ['() "()"]
+    [(cons (SchemaElem (list (? is-fun? func)) label) '()) 
+     (format "? ~a ~a;" label (string-coerce func))]
+    [(cons (SchemaElem (list (? is-fun? func)) label) t) 
+     (string-append (format "? ~a ~a, " label (string-coerce func)) 
+                    (struct-schema->string t))]
     [(cons (SchemaElem types label) '()) 
      (format "types ~a ~a;" types label)]
     [(cons (SchemaElem types label) t) 

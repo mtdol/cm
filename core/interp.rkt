@@ -103,7 +103,8 @@
                     op (trace-interp-expr e context module-id debug) 
                     context module-id debug)]
     [(Prim0 op) (interp-prim0 op)]
-    [(If e1 e2) (interp-if e1 e2 context module-id debug)]
+    [(If e1 (Then e2) (Else e3)) (interp-if e1 e2 e3 context module-id debug)]
+    [(If _ _ _) (cm-error "SYNTAX" "Improperly formed `if`.")]
     [(Cond e) 
      (match e
             [(Case e1 e2 e3) (interp-case e1 e2 e3 context module-id debug)]
@@ -117,7 +118,9 @@
            (interp-foreach e1 vs e3 context module-id debug)
            (cm-error "CONTRACT" "Argument to `foreach` guard must be a list.")))]
     [(Foreach _ _ _) (cm-error "SYNTAX" "`foreach` is improperly formed.")]
-    [(Try e1 e2) (interp-try-catch e1 e2 context module-id debug)]
+    [(Try e1 (Catch e2) (With e3))
+     (interp-try-catch e1 e2 e3 context module-id debug)]
+    [(Try _ _ _) (cm-error "SYNTAX" "Improperly formed `try`.")]
     [(Match e1 e2) (interp-match 
                      (trace-interp-expr e1 context module-id debug)
                      e2 context context module-id debug)]
@@ -147,13 +150,15 @@
         ])
       )]
     [(Defun _ _ _) (cm-error "SYNTAX" "Improperly formed `defun`.")]
-    [(Let e1 e2 e3) (interp-let e1 e2 e3 context module-id debug)]
+    [(Let e1 (Assign e2) (In e3)) (interp-let e1 e2 e3 context module-id debug)]
+    [(Let _ _ _) (cm-error "SYNTAX" "Improperly formed `let`.")]
     [(Lambda e1 (Assign e2)) 
       (match (interp-lambda-list e1 e2)
              [(Lambda e1-2 (Assign e2-2)) 
               (interp-lambda e1-2 e2-2 '() context module-id debug)])]
     [(Lambda _ _) (cm-error "SYNTAX" "`lambda` is missing an assignment.")]
-    [(Typedef e1 e2) (interp-typedef e1 e2 context module-id debug)]
+    [(Typedef e1 (Assign e2)) (interp-typedef e1 e2 context module-id debug)]
+    [(Let _ _ _) (cm-error "SYNTAX" "Improperly formed `typedef`.")]
     [(Int i) i]
     [(Float f) f]
     [(Bool i) (Bool i)]
@@ -372,16 +377,10 @@
 ;; non-standard interp cases
 ;;
 
-(define (interp-if e1 e2 context module-id debug)
-  (match e2
-         [(Then e3 e4) 
-          (match e4
-                 [(Else e5)
-                     (if (bool-to-racket (trace-interp-expr e1 context module-id debug))
-                       (trace-interp-expr e3 context module-id debug)
-                       (trace-interp-expr e5 context module-id debug))]
-                 [_ (cm-error "SYNTAX" "`then` clause is missing an `else`.")])]
-         [_ (cm-error "SYNTAX" "`if` clause is missing a `then`.")]))
+(define (interp-if e1 e2 e3 context module-id debug)
+  (if (bool-to-racket (trace-interp-expr e1 context module-id debug))
+    (trace-interp-expr e2 context module-id debug)
+    (trace-interp-expr e3 context module-id debug)))
 
 (define (interp-while e1 e2 context module-id debug) 
   (cond
@@ -401,24 +400,20 @@
             )]
     ))
 
-(define (interp-try-catch e1 e2 context module-id debug)
+(define (interp-try-catch e1 e2 e3 context module-id debug)
   (match e2
-         [(Catch (? var-container? var) (With e3)) 
-            (with-handlers* ([exn:fail? (lambda err 
-                (match err [(list (exn:fail err-msg _))
-                    (let ([err-struct 
-                        (CmStruct "Error" (list (get-id-from-message err-msg) err-msg))])
-               (trace-interp-expr 
-                 e3 
-                 (set-local-var 
-                   (get-var-label var context module-id debug) err-struct context)
-                 module-id debug))]))])
-                            (trace-interp-expr e1 context module-id debug))
-
-          ]
-         [_ (cm-error "SYNTAX" "Improperly formed `try-catch`.")]
-
-         ))
+    [(? var-container? var) 
+       (with-handlers* ([exn:fail? (lambda err 
+           (match err [(list (exn:fail err-msg _))
+               (let ([err-struct 
+                   (CmStruct "Error" (list (get-id-from-message err-msg) err-msg))])
+          (trace-interp-expr 
+            e3 
+            (set-local-var 
+              (get-var-label var context module-id debug) err-struct context)
+            module-id debug))]))])
+                       (trace-interp-expr e1 context module-id debug))]
+    [_ (cm-error "SYNTAX" "Missing var for `try-catch`.")]))
 
 ;; match context is the internal context used inside the match, context is just the usual
 ;; local context
@@ -626,23 +621,21 @@
          
 
 (define (interp-let e1 e2 e3 context module-id debug)
-  (match (cons e2 e3)
-         [(cons (Assign e2-2) (In e3-2)) 
-          (let*-values ([(v2) (trace-interp-expr e2-2 context module-id debug)] 
-                        [(guard-types label) (interp-left-hand-expr e1 context module-id debug)])
-            (match label
-                 [#f (cm-error "SYNTAX" "Unknown Item on left hand of let.")]
-                 ['() (cm-error "SYNTAX" "Let is missing a variable.")]
-                 [_ 
-                    (assign-type-check guard-types v2 label)
-                    (trace-interp-expr 
-                      e3-2 (set-local-var label v2 context) module-id debug)]))]
-         [_ (cm-error "SYNTAX" "Let is missing an assignment or in.")]))
+  (let-values ([(v2) (trace-interp-expr e2 context module-id debug)] 
+               [(guard-types label)
+                (interp-left-hand-expr e1 context module-id debug)])
+    (match label
+         [#f (cm-error "SYNTAX" "Unknown Item on left hand of let.")]
+         ['() (cm-error "SYNTAX" "Let is missing a variable.")]
+         [_ 
+            (assign-type-check guard-types v2 label)
+            (trace-interp-expr 
+              e3 (set-local-var label v2 context) module-id debug)])))
 
 ;; name is the name of the function and is either a string 
 ;; or '() for anonymous functions
 (define (interp-lambda e1 e2 name context module-id debug)
-  (let*-values ([(guard-types label) 
+  (let-values ([(guard-types label) 
                  (interp-left-hand-expr e1 context module-id debug)])
     (match label
            [#f (cm-error "SYNTAX" "Unknown Item on left hand of `lambda`")]
@@ -676,43 +669,39 @@
           ))
 
 (define (interp-typedef e1 e2 context module-id debug)
-  (match e2 
-    [(Assign e2-2)
-      (let ([lst2 
-              (match (ast-cons-to-racket e2-2)
-                [(? list? res) res] 
-                [_ (cm-error 
-                     "SYNTAX" 
-                     "Invalid schema for `typedef`. Schema must be a list.")])]
-            [id 
-              (match e1
-                [(? var-container? var)
-                 (get-var-label var context module-id debug)]
-                [_ (cm-error "SYNTAX" "Missing Label for `typedef`.")]
-                )])
-       (let verify-schema ([lst lst2] [acc '()] [acc/labels '()])
-        (match lst
-           ;; set schema if no errors were found
-           ['() (set-type! id (reverse acc) (var-name-private? id) module-id) (Prim0 'void)]
-           [(cons h t)
-            (let-values 
-              ([(guard-types label) (interp-left-hand-expr h context module-id debug)])
-              (match label
-               [#f (cm-error "SYNTAX" 
-                (format "Unknown element ~a inside `typedef` schema." h))]
-               [_
-                 (when (member label acc/labels) 
-                   (cm-error 
-                     "CONTRACT" 
-                     (format 
-                       (string-append "struct ~a: Cannot have duplicate "
-                                      "identifier within `typedef`: ~a") 
-                       id label)))
-                 (verify-schema t 
-                   (cons (SchemaElem guard-types label) acc)
-                   (cons label acc/labels))]))]))
-        )]
-  [_ (cm-error "SYNTAX" "Improperly formed `typedef`.")]))
+ (let ([lst2 
+         (match (ast-cons-to-racket e2)
+           [(? list? res) res] 
+           [_ (cm-error 
+                "SYNTAX" 
+                "Invalid schema for `typedef`. Schema must be a list.")])]
+       [id 
+         (match e1
+           [(? var-container? var)
+            (get-var-label var context module-id debug)]
+           [_ (cm-error "SYNTAX" "Missing Label for `typedef`.")]
+           )])
+  (let verify-schema ([lst lst2] [acc '()] [acc/labels '()])
+   (match lst
+      ;; set schema if no errors were found
+      ['() (set-type! id (reverse acc) (var-name-private? id) module-id) (Prim0 'void)]
+      [(cons h t)
+       (let-values 
+         ([(guard-types label) (interp-left-hand-expr h context module-id debug)])
+         (match label
+          [#f (cm-error "SYNTAX" 
+           (format "Unknown element ~a inside `typedef` schema." h))]
+          [_
+            (when (member label acc/labels) 
+              (cm-error 
+                "CONTRACT" 
+                (format 
+                  (string-append "struct ~a: Cannot have duplicate "
+                                 "identifier within `typedef`: ~a") 
+                  id label)))
+            (verify-schema t 
+              (cons (SchemaElem guard-types label) acc)
+              (cons label acc/labels))]))]))))
 
 (define (interp-struct e1 e2 context module-id debug)
   (match e1
