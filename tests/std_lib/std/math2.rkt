@@ -382,3 +382,111 @@ val-false)
 
 (check-equal? (run "{: index_of | {list \"a\"|2|4.3} | 4.3}")
 2)
+
+;;
+;; last
+;;
+
+(check-equal? (run "{: last | {list 0|1|2}}")
+2)
+
+(check-equal? (run "{: last | {list 0}}")
+0)
+
+(check-failure run "{: last | {list}}")
+
+;;
+;; list_update, list_set
+;;
+
+(check-equal? (run "{: list_update | {list 1|2|3} | {list 1} | add1}")
+'(1 3 3))
+
+(check-equal? (run "{: list_update | {list 1|2|3} | {list 0|1} | add1}")
+'(2 3 3))
+
+(check-equal? (run "{: list_update | {list 1|2|3} | {list} | add1}")
+'(1 2 3))
+
+(check-equal? (run "{: list_update | {list 1|2|3} | {list 4} | add1}")
+'(1 2 3))
+
+(check-equal? (run "{: list_update | {list} | {list 0} | add1}")
+'())
+
+(check-equal? (run "{: list_set | {list 1|2|3} | {list 1} | 0}")
+'(1 0 3))
+
+(check-equal? (run "{: list_set | {list 1|2|3} | {list 0|1} | 0}")
+'(0 0 3))
+
+(check-equal? (run "{: list_set | {list 1|2|3} | {list} | 0}")
+'(1 2 3))
+
+(check-equal? (run "{: list_set | {list 1|2|3} | {list 4} | 0}")
+'(1 2 3))
+
+(check-equal? (run "{: list_set | {list} | {list 0} | 0}")
+'())
+
+(check-equal? (run "{: list_set | {list 1|2|3} | {list 1} | \"a\"}")
+'(1 "a" 3))
+
+;;
+;; count
+;;
+
+(check-equal? (run "{: count | {list 1|2} | odd?}")
+1)
+
+(check-equal? (run "{: count | {list 1|3} | odd?}")
+2)
+
+(check-equal? (run "{: count | {list 2|4} | odd?}")
+0)
+
+(check-equal? (run "{: count | {list} | odd?}")
+0)
+
+;;
+;; duplicates?, remove_duplicates
+;;
+
+(check-equal? (run "{: duplicates? | {list 1}}")
+val-false)
+
+(check-equal? (run "{: duplicates? | {list 1|2}}")
+val-false)
+
+(check-equal? (run "{: duplicates? | {list}}")
+val-false)
+
+(check-equal? (run "{: duplicates? | {list 1|1}}")
+val-true)
+
+(check-equal? (run "{: duplicates? | {list 1|2|3|2|4}}")
+val-true)
+
+(check-equal? (run "{: duplicates? | {list 1|\"a\"|3|\"b\"|\"a\"}}")
+val-true)
+
+(check-equal? (run "{: remove_duplicates | {list 1}}")
+'(1))
+
+(check-equal? (run "{: remove_duplicates | {list 1|2}}")
+'(1 2))
+
+(check-equal? (run "{: remove_duplicates | {list}}")
+'())
+
+(check-equal? (run "{: remove_duplicates | {list 1|1}}")
+'(1))
+
+(check-equal? (run "{: remove_duplicates | {list 1|2|3|2|4}}")
+'(1 2 3 4))
+
+(check-equal? (run "{: remove_duplicates | {list 1|\"a\"|3|\"b\"|\"a\"}}")
+'(1 "a" 3 "b"))
+
+(check-equal? (run "{: remove_duplicates | {list 1|\"a\"|3|\"b\"|3|\"a\"}}")
+'(1 "a" 3 "b"))

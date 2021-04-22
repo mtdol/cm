@@ -163,6 +163,45 @@ defun to_bool v := bool v.
 defun car pair v := head v.
 defun cdr pair v := tail v.
 
+
+-- list questions
+--
+
+-- asks if vs is a list and all elements in vs are of the same type
+defun homogeneous_list? (dynamic vs) :=
+  | list? vs ->
+    | null? vs -> true
+    else 
+      let typ := type `vs in
+        {: andmap | lambda elem := type elem = typ | vs}
+  else false//
+
+defun list_of_type? (dynamic vs, string typ) :=
+  | homogeneous_list?:vs ->
+    | null? vs -> true
+    else 
+      type `vs = typ
+  else false//
+
+defun int_list? (dynamic vs) :=
+  {: list_of_type? | vs | "int"}//
+
+defun float_list? (dynamic vs) :=
+  {: list_of_type? | vs | "float"}//
+
+defun string_list? (dynamic vs) :=
+  {: list_of_type? | vs | "string"}//
+
+defun bool_list? (dynamic vs) :=
+  {: list_of_type? | vs | "bool"}//
+
+defun fun_list? (dynamic vs) :=
+  {: list_of_type? | vs | "fun"}//
+
+
+-- functions and math
+--
+
 -- maps f onto all members of list lst
 defun map (fun f, list vs) := 
   match vs
@@ -326,6 +365,62 @@ defun index_where (list vs, fun f) :=
 defun index_of (list vs, dynamic elem) :=
   {: index_where | vs | lambda x := x == elem}//
 
+-- gets the last element of `vs`
+defun last (list vs) :=
+  match vs
+  | () -> error {list "CONTRACT"|"List must be non-empty."}
+  | v, () -> v
+  | v, vs -> last:vs
+  end//
+
+-- updates the element at positions `is` with `updater`
+defun list_update (list vs, ? is int_list?, fun updater) :=
+  let aux := defun _aux_ (vs, is, updater, curr) :=
+    match vs
+    | () -> ()
+    | v, vs when member?:curr:is -> 
+      updater:v, {: _aux_ | vs | is | updater | add1:curr}
+    | v, vs -> 
+      v, {: _aux_ | vs | is | updater | add1:curr}
+    end
+  in
+    {: aux | vs | is | updater | 0}//
+
+defun list_set (list vs, ? is int_list?, dynamic elem) :=
+  {: list_update | vs | is | lambda _ := elem}//
+
+-- returns the number of elements for which `f` yields true.
+defun count (list vs, fun f) :=
+  let aux := defun _aux_ (vs, f, n) :=
+    match vs
+    | () -> n
+    | v, vs when f:v -> {: _aux_ | vs | f | add1:n}
+    | v, vs -> {: _aux_ | vs | f | n}
+    end
+  in
+    {: aux | vs | f | 0}//
+
+-- returns true if there are duplicate elements in `vs`
+defun duplicates? (list vs) :=
+  let h := make_hash {list "mutable"} in
+    {: ormap 
+      | lambda elem :=
+          if hash_has_key? h elem
+          then
+            true
+          else (hash_set h elem void) comma false
+      | vs}//
+
+-- returns true if there are duplicate elements in `vs`
+defun remove_duplicates (list vs) :=
+  let h := make_hash {list "mutable"} in
+    {: filter 
+      | lambda elem :=
+          if hash_has_key? h elem
+          then
+            false
+          else (hash_set h elem void) comma true
+      | vs}//
 
 --- Iterators, Generators
 --------------------------------
