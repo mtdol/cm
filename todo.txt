@@ -1,10 +1,7 @@
 - testing
     -- test io
-    -- test built in macros
 
-- std.cm
-    -- index_where
-    -- index_of
+- random number generator
 
 - `...` match-expr operator
   -- yields ((2, 3;), 1, 4)

@@ -108,6 +108,11 @@
                  (format "  {Repeats ~a time(s)...}" last-count))]
               [_ #:when (= until i) "  ..."]
               ['() ""]
+              [(cons (TraceElem "statement" label module-id linenum) t)
+               (string-append 
+                 (format "  Statement:: Module: \"~a\":~a\n"
+                                module-id linenum)
+                 (aux t (add1 i) (car elems) 0))]
               [(cons (TraceElem type label module-id linenum) t)
                (string-append 
                  (if (string=? "" type)
@@ -116,11 +121,7 @@
                    (format "  Module: \"~a\":~a ~a ~a\n"
                                   module-id linenum type label))
                    (aux t (add1 i) (car elems) 0))]
-              [(cons (TraceElem "statement" label module-id linenum) t)
-               (string-append 
-                 (format "  Statement:: Module: \"~a\":~a\n"
-                                module-id linenum)
-                 (aux t (add1 i) (car elems) 0))]))))
+              ))))
 
 (define (get-trace-message)
   (match trace-stack

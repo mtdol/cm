@@ -22,8 +22,7 @@
 (check-equal? (run "let fs := {: map | add | {list 1|2|3}} in {: map | (lambda x := x:2) | fs}")
 '(3 4 5))
 
-(check-exn exn:fail? (lambda ()
-  (run "{: map | value | 3}")))
+(check-failure run "{: map | value | 3}")
 
 ;;
 ;; filter
@@ -63,11 +62,9 @@
 (check-equal? (run "{: max | 4.0 | 3.0}")
 4.0)
 
-(check-exn exn:fail? (lambda ()
-  (run "{: min | 3.2| 3}")))
+(check-failure run "{: min | 3.2| 3}")
 
-(check-exn exn:fail? (lambda ()
-  (run "{: max | 3.2| 3}")))
+(check-failure run "{: max | 3.2| 3}")
 
 ;;
 ;; minf, maxf
@@ -125,8 +122,7 @@
 (check-equal? (run "{: reverse | {list \"a\"|4}}")
 '(4 "a"))
 
-(check-exn exn:fail? (lambda ()
-  (run "{: reverse | 3}")))
+(check-failure run "{: reverse | 3}")
 
 ;;
 ;; append
@@ -141,11 +137,9 @@
 (check-equal? (run "{: append | {list {list 1|2} | {list 3|\"4\"}}}")
 '(1 2 3 "4"))
 
-(check-exn exn:fail? (lambda ()
-  (run "{: append | 3}")))
+(check-failure run "{: append | 3}")
 
-(check-exn exn:fail? (lambda ()
-  (run "{: append | {list {list 3} | 4}}")))
+(check-failure run "{: append | {list {list 3} | 4}}")
 
 ;;
 ;; flatten
@@ -197,8 +191,7 @@
 (check-equal? (run "{: range | 3 | -2}")
 '(3 2 1 0 -1))
 
-(check-exn exn:fail? (lambda ()
-  (run "{: range | 3 | -2.2}")))
+(check-failure run "{: range | 3 | -2.2}")
 
 ;;
 ;; foldl, foldr
@@ -219,8 +212,7 @@
 (check-equal? (run "{: foldr | lambda elem, acc := elem - acc | 0 | {list 1|2|3}}")
 (- 1 (- 2 (- 3 0))))
 
-(check-exn exn:fail? (lambda ()
-  (run "{: foldl | lambda elem := elem | () | {list 1|2|3}}")))
+(check-failure run "{: foldl | lambda elem := elem | () | {list 1|2|3}}")
 
 ;;
 ;; ormap, andmap
@@ -235,11 +227,9 @@
 (check-equal? (run "string {: ormap | odd? | {list}}")
 "false")
 
-(check-exn exn:fail? (lambda ()
-  (run "{: ormap | odd? | 1}")))
+(check-failure run "{: ormap | odd? | 1}")
 
-(check-exn exn:fail? (lambda ()
-  (run "{: ormap | lambda x, y := true | {list 1|2|3}}")))
+(check-failure run "{: ormap | lambda x, y := true | {list 1|2|3}}")
 
 (check-equal? (run "string {: andmap | odd? | {list 1|2|3}}")
 "false")
@@ -250,11 +240,9 @@
 (check-equal? (run "string {: andmap | odd? | {list}}")
 "true")
 
-(check-exn exn:fail? (lambda ()
-  (run "{: andmap | odd? | 1}")))
+(check-failure run "{: andmap | odd? | 1}")
 
-(check-exn exn:fail? (lambda ()
-  (run "{: andmap | lambda x, y := true | {list 1|2|3}}")))
+(check-failure run "{: andmap | lambda x, y := true | {list 1|2|3}}")
 
 ;;
 ;; member, member?
@@ -296,8 +284,7 @@
 (check-equal? (run "string {: member? | {list 1|2} | {list 1|{list 1|2}|3}}")
 "true")
 
-(check-exn exn:fail? (lambda ()
-  (run "{: member | 3 | 2}")))
+(check-failure run "{: member | 3 | 2}")
 
 
 ;;
@@ -369,5 +356,29 @@
 (check-equal? (run "{: build_list | 0 | add1}")
 '())
 
-(check-exn exn:fail? (lambda ()
-  (run "{: build_list_range | 3.2 | 2.1 | value}")))
+(check-failure run "{: build_list_range | 3.2 | 2.1 | value}")
+
+;;
+;; index_where, index_of
+;;
+
+(check-equal? (run "{: index_where | {list 0|1|2} | odd?}")
+1)
+
+(check-equal? (run "{: index_where | {list 3|1|2} | even?}")
+2)
+
+(check-equal? (run "{: index_where | {list 3|1|5} | even?}")
+val-false)
+
+(check-equal? (run "{: index_of | {list \"a\"|2|4.3} | 1}")
+val-false)
+
+(check-equal? (run "{: index_of | {list \"a\"|2|4.3} | 2}")
+1)
+
+(check-equal? (run "{: index_of | {list \"a\"|2|4.3} | \"a\"}")
+0)
+
+(check-equal? (run "{: index_of | {list \"a\"|2|4.3} | 4.3}")
+2)

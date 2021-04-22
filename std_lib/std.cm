@@ -310,6 +310,22 @@ defun build_list (int n, fun f) :=
   else
       {: build_list_range | 0 | n | f}//
 
+-- returns the index in `vs` where `f` is true,
+-- returns `false` if no such indexes exist
+defun index_where (list vs, fun f) :=
+  let aux := defun _aux_ (list vs, fun f, i) :=
+    match vs
+    | () -> false
+    | v, vs when f:v -> i
+    | v, vs -> {: _aux_ | vs | f | add1:i}
+    end
+  in
+    {: aux | vs | f | 0}//
+
+-- returns the index in `vs` where `v` == `elem`
+defun index_of (list vs, dynamic elem) :=
+  {: index_where | vs | lambda x := x == elem}//
+
 
 --- Iterators, Generators
 --------------------------------
