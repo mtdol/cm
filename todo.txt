@@ -6,9 +6,6 @@
     -- index_where
     -- index_of
 
-- line number re-reform:
-    -- change trace to show only function names
-
 - `...` match-expr operator
   -- yields ((2, 3;), 1, 4)
   match {list 1|2|3|4}

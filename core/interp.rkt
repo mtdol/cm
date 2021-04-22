@@ -22,8 +22,8 @@
   (match ast
         [(Stat i e st) 
          ;; add to trace-stack for error messages
-         (push-elem-to-trace-stack! 
-           (TraceElem "statement" "" module-id i))
+         ;(push-elem-to-trace-stack! 
+           ;(TraceElem "statement" "" module-id i))
          (match st
                 ;; each statement in a chain of statements is consed together
                 ;; into a list
@@ -39,7 +39,7 @@
 
 ;; interps expr while updating the stack trace
 (define (trace-interp-expr e context module-id debug)
-  (push-elem-to-trace-stack! (ast-node-to-trace-elem e module-id debug))
+  ;(push-elem-to-trace-stack! (ast-node-to-trace-elem e module-id debug))
   (interp-expr e context module-id debug))
 
 (define (interp-expr ast context module-id debug)
@@ -644,15 +644,26 @@
     )))
 
 (define (interp-apply v1 v2)
+  (let ([trace
+          (lambda (name id debug)
+            (push-elem-to-trace-stack! 
+              (TraceElem "fun" (if (null? name) "lambda" name)
+                    id (debug->linenum debug))))])
   (match v1
          ;; no arg lambda
-         [(Fun _ '() '() fcontext fexpr fmodule-id fdebug)
+         [(Fun name '() '() fcontext fexpr fmodule-id fdebug)
+          ;; trace
+          (trace name fmodule-id fdebug)
+
           (trace-interp-expr fexpr fcontext fmodule-id fdebug)]
-         [(Fun _ var types fcontext fexpr fmodule-id fdebug)
+         [(Fun name var types fcontext fexpr fmodule-id fdebug)
+          ;; trace
+          (trace name fmodule-id fdebug)
+
           ;; check val against guards
           (assign-type-check types v2 var)
           (trace-interp-expr fexpr (set-local-var var v2 fcontext) fmodule-id fdebug)]
-         [_ (cm-error "CONTRACT" "Attempted to apply onto a non function.")]))
+         [_ (cm-error "CONTRACT" "Attempted to apply onto a non function.")])))
 
 
 (define (interp-appl e1 e2 context module-id debug)

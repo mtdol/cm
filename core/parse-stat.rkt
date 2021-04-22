@@ -14,7 +14,7 @@
             ;; set linenum for error messages
             (set-current-linenum! 
               (if (null? acc) curr-linenum (line (last acc))))
-            (Stat linenum 
+            (Stat (get-current-linenum) 
                   (parse-expr (reverse acc) module-id)
                   (aux t '() curr-linenum curr-linenum))]
            [(cons h t) 

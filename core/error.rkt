@@ -8,6 +8,7 @@
          trace-stack->string
          TraceElem
          DebugData
+         debug->linenum
          VERBOSE_ERR_LEVEL LIGHT_ERR_LEVEL 
          get-error-level set-error-level!
          get-id-from-message try-with-error)
@@ -42,6 +43,9 @@
 
 ;; object used to hold debug information during interp
 (struct DebugData (linenum))
+(define (debug->linenum debug) 
+  (match debug 
+    [(DebugData linenum) linenum]))
 
 (define trace-stack '())
 (define max-trace-stack-size 100)
