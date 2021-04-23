@@ -4,6 +4,10 @@
          cm/core/ast)
 (provide (all-defined-out))
 
+;; for use in io
+(define o (open-output-string))
+(define (refresh) (close-output-port o) (set! o (open-output-string)))
+
 (define (run-racket-silent expr)
   expr (void))
 
@@ -25,6 +29,23 @@
 (define (check-failure f v) 
   (check-exn exn:fail? (lambda ()
     (f v))))
+
+(define (check-failure-args f vs) 
+  (check-exn exn:fail? (lambda ()
+    (apply f vs))))
+
+
+;; runs `f` while gathering the output.
+(define (output f str)
+  (parameterize ([current-output-port o])
+    (f str) 
+    (let ([res (get-output-string o)])
+      (refresh)
+      res)))
+
+(define (input f str input/str)
+  (parameterize ([current-input-port (open-input-string input/str)])
+    (f str)))
 
 (define val-true (Bool 1))
 (define val-false (Bool 0))

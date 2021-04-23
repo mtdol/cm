@@ -312,6 +312,7 @@
         ['write_string_raw (interp-write-string-raw v)]
         ['gensym (interp-gensym v)]
         ['regex (interp-regex v)]
+        ['random (interp-random v)]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]
@@ -867,6 +868,9 @@
 ;; reads until i chars or eof
 (define (interp-read-string v1)
   (assert-contract (list "int") v1 "read_string")
+  (unless (>= v1 0) 
+    (cm-error "CONTRACT" 
+        (format "Argument to `read_string` must be greater than zero.\nGot: ~a" v1)))
   (read-string v1))
 
 (define (interp-peek-string v1 v2)
@@ -1003,3 +1007,18 @@
           ]
          [_ (cm-error "CONTRACT" "Invalid arguments to `regex`.")]
          )))
+
+(define (interp-random v)
+  (match v
+    ['() (random)]
+    [(list (? integer? k))
+     #:when (> k 0)
+     (random k)]
+    [(list (? integer? n1) (? integer? n2))
+     #:when (> n2 n1)
+     (random n1 n2)]
+    [(list "seed" (? integer? k))
+     #:when (and (> k 0) (< k (sub1 (expt 2 31))))
+     (random-seed k) (Prim0 'void)]
+    [_ (cm-error "CONTRACT" 
+        (format "Invalid arguments to `random`: ~a" (string-coerce v)))]))

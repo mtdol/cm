@@ -108,6 +108,7 @@
         (cons "write_string_raw"(OpData 1 "prefix"  7   'Prim1   'write_string_raw))
         (cons "gensym"          (OpData 1 "prefix"  7   'Prim1   'gensym))
         (cons "regex"           (OpData 1 "prefix"  7   'Prim1   'regex))
+        (cons "random"          (OpData 1 "prefix"  7   'Prim1   'random))
         (cons "schemaof"        (OpData 1 "prefix"  7   'Prim1   'schemaof))
         (cons "struct"          (OpData 2 "prefix"  7   'Prefix2 'struct))
         (cons "struct?"         (OpData 2 "prefix"  7   'Prefix2 'struct?))
