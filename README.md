@@ -63,7 +63,7 @@ There are example files in the `examples` directory to test and explore `cm.rkt`
 
 ## Modules
 There is a file under config/ called `modules.txt`.
-This file is used by cm to determine the absolute paths of modules that can be imported with the `load` keyword.
+This file is used by cm to determine the absolute paths of modules that can be imported with the `import` keyword.
 
 The file has this form:
 ```
