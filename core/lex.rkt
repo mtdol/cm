@@ -91,7 +91,7 @@
         (make-position-token 
           (string-trim (substring lexeme 1 (sub1 (string-length lexeme))))
           start-pos end-pos)))]
-   [(:or "(" ")" "{" "}" "#") lexeme]
+   [(:or "(" ")" "{" "}" "#" "...") lexeme]
    ["." "dot"]
    ["//" "dot"]
    ["`" "head"]

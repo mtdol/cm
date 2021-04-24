@@ -7,6 +7,7 @@
          var-container? get-var-label check-var-string-name
          apply-if-type-1 assign-type-check check-types-list
          valid-against-schema?
+         value->list value-length
          interp-def-list interp-lambda-list struct-schema->string)
 
 ;;
@@ -166,12 +167,18 @@
                     (struct-schema->string t))]
     ))
 
-;; converts a pair to a list if it wasn't already
-(define (pair-to-list p)
-  (match p
-        ['() '()] ;; already a list
-        [(cons h t) (cons h (pair-to-list t))]
-        [h (cons h '())]))
+;; follows down a set of pairs and appends a null at the tail
+(define (value->list vs)
+  (match vs
+        [(cons v vs) (cons v (value->list vs))]
+        [v (cons v '())]))
+
+;; returns the length of a incomplete list
+(define (value-length vs)
+  (let aux ([vs vs] [num 1])
+    (match vs
+          [(cons v vs) (aux vs (add1 num))]
+          [v num])))
 
 ;; repackages def x,y = 5 as def x = def y = 5
 ;; es = "x,y", rexpr = "5"

@@ -510,6 +510,38 @@
                  (match-expr lst lst2 match-context context module-id debug)]
                 [_ #f]
             )])]
+
+         ;; a, ...
+         [(Prim2 'cons (? var-container? var) (Prim0 '...))
+          ;; just return everything
+          (match-var 
+            (get-var-label var context module-id debug) 
+            (list "dynamic") (value->list v) match-context
+            )]
+         [(Prim2 'cons _ (Prim0 '...))
+          (cm-error "SYNTAX" "Improperly formed ellipsis in match expr.")]
+         ;; a, ..., b; and such
+         [(Prim2 'cons (? var-container? var) (Prim2 'cons (Prim0 '...) es))
+          ;; get all elems within this range
+          (let ([num (- (value-length v) (count-match-elems es))])
+            (match/values (match-ellipsis v num)
+              ;; might have matched but ran out of values
+              [(#f _) #f]
+              ;; did not match
+              [(_ #f) #f]
+              ;; (items-yet-to-match items-matched)
+              [(remaining res) 
+               (let ([match-context 
+                       (match-var 
+                        (get-var-label var context module-id debug) 
+                        (list "dynamic") res match-context)])
+                 (if (equal? match-context #f) #f
+                   (match-expr 
+                     es remaining match-context
+                     context module-id debug)))]))]
+         [(Prim2 'cons _ (Prim2 'cons (Prim0 '...) _))
+          (cm-error "SYNTAX" "Improperly formed ellipsis in match expr.")]
+
          [(Prim2 'cons e1 e2)
           (match v
                  [(cons v1 v2)
@@ -539,6 +571,37 @@
     ;; false if types don't match
     #f
     ))
+
+;; matches `num` elements from `vs`
+;;
+;; the first arg is the remaining values to match
+;; the second arg is the items matched by the ellipsis
+;;
+;; if there are no more elements to match then the first arg is #f
+;; if there was a match failure then the second arg is #f
+;;
+;; value, integer -> (values value, value)
+(define (match-ellipsis vs num)
+  (let aux ([vs vs] [acc '()] [num num])
+    (cond
+      [(zero? num) (values vs (reverse acc))]
+      [else 
+        (match vs
+          [(cons v vs) (aux vs (cons v acc) (sub1 num))]
+          [v #:when (= 1 num) (values #f (reverse (cons v acc)))]
+          [_ (values #f #f)])])))
+
+;; counts the number of elements in `es`.
+;; Raises an exception if a `...` is found
+(define (count-match-elems es)
+  (let aux ([es es] [count 1])
+    (match es
+      [(Prim2 'cons (Prim0 '...) _)
+       (cm-error "SYNTAX" "Cannot have duplicate ellipsis in match-expr.")]
+      [(Prim0 '...)
+       (cm-error "SYNTAX" "Cannot have duplicate ellipsis in match-expr.")]
+      [(Prim2 'cons _ es) (aux es (add1 count))]
+      [_ count])))
 
 (define (interp-case e1 e2 e3 context module-id debug)
   (match e2

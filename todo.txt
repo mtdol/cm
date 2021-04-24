@@ -1,5 +1,0 @@
-- `...` match-expr operator
-  -- yields ((2, 3;), 1, 4)
-  match {list 1|2|3|4}
-  | a, b, ..., c; -> b, a, c
-  end
