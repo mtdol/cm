@@ -4,7 +4,7 @@
                 [get-macro-defs print-macro-context]) 
               (cm/core/types [is-string-token?])
               (cm/core/pre-lex [unwrap-string])
-              (cm/core/modules [get-filename file-name->module-id]))
+              (cm/core/modules [module-string->filename file-name->module-id]))
 (provide (all-defined-out))
 
 ;; Matthew Dolinka
@@ -56,7 +56,7 @@
       "MACRO" "->module_id requires a non-empty argument."))
   (list (Token (string-append 
     "\"" (file-name->module-id 
-           (get-filename (unwrap-string (tok (caar args)))))
+           (module-string->filename (unwrap-string (tok (caar args)))))
     "\""))))
 
 
