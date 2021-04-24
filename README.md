@@ -26,54 +26,40 @@ racket cm.rkt args
 ```
 
 ## Repl
-When build is stable, use:
+Use
 ```
-racket ./repl.rkt
+cm.rkt
 ```
-in language directory (core) to test language expressions.
-
-Also you can simply run `cm.rkt` to load the repl.
-```
-cd "path to cm directory"
-./cm.rkt
-```
+in language directory to load the REPL and test language expressions.  
 
 ## Running Files
-The main.rkt file in the core directory contains racket functions to interpret/parse/tokenize  
-cm files/expressions and statements.
-
-`display-output` is used to print the results of a statement interp.
-`display-expr-output` is used to print the results of a expression interp.
-`silent` will return void after running the given proc
-`displayln` (racket proc) can be used to print any output in its unaltered form
-
-### Examples
+`cm.rkt` can be used to run cm files:  
 ```
-racket -e '(require cm/core/main) (run "language statement")'
-racket -e '(require cm/core/main) (run-file "file here")'
-racket -e '(require cm/core/main) (display-output (run "language statement"))'
-racket -e '(require cm/core/main) (display-expr-output (run-expr "language statement"))'
-racket -e '(require cm/core/main) (silent (run-file "language statement"))'
-racket -e '(require cm/core/main) (displayln (run-parse "statement here"))'
-racket -e '(require cm/core/main) (run-parse-expr "expression here")'
-...
-```
-Aditionally, `cm.rkt` can be used to run cm files:
-```
-./cm.rkt "path to file"
+cm.rkt "path to file"
 ```
 The -f switch is normally implied and indicates a file arg.
 ```
 # -f is not really necessary
-./cm.rkt -f "path to file"
+cm.rkt -f "path to file"
+```
+
+Some files will have a `main` function that takes in a list of strings as an argument.  
+```
+defun main (args) := ...
+```
+
+`cm.rkt` will automatically attempt to call any function called `main` with the arguments  
+given to it on the command line.  
+```
+cm.rkt file args
 ```
 
 To learn further about how to use cm.exe, use the `--help` or `-h` switch to display help text.
 ```
-./cm.rkt --help
+cm.rkt --help
 ```
 
-There are example files in the `examples` directory, although some may not always work as the language changes.
+There are example files in the `examples` directory to test and explore `cm.rkt`.  
 
 ## Modules
 There is a file under config/ called `modules.txt`.
