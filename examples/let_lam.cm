@@ -1,2 +1,0 @@
-@ let add1 := lam x := 1 + x in add1:3.         # prints 4
-@ let add := lam x,y := x + y in add:2:3.       # prints 5

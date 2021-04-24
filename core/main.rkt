@@ -48,6 +48,7 @@
 
 ;; string -> value list
 (define (run-file file) 
+  (let ([file (module-string->filename file)])
   (unless (file-exists? file) 
     (cm-error "GENERAL" (format "File does not exist: \"~a\"" file)))
   (let* ([id (file-name->module-id file)]
@@ -62,7 +63,7 @@
     ;; reset the module-id
     (set-current-module-id! id)
     res
-      ))
+      )))
 
 ;; runs an expr (no dot)
 (define (run-expr input) 

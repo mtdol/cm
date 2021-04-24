@@ -175,4 +175,4 @@
         [else (cm-error-linenum 
                 current-module-id
                 (get-current-linenum) 
-                error-id (format "Invalid variable name: ~a." token))]))
+                error-id (format "Invalid variable name: \"~a\"" token))]))

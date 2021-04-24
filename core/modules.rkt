@@ -2,7 +2,7 @@
 (require racket/lazy-require racket/runtime-path)
 (require cm/core/error cm/core/ast cm/core/context)
 (lazy-require [cm/core/main (run-file silent)])
-(provide process-import process-lazy-import file-name->module-id get-filename
+(provide process-import process-lazy-import file-name->module-id module-string->filename
          show-modules write-modules add-to-modules remove-from-modules
          string->module-path-string)
 
@@ -88,7 +88,7 @@
   )))
 
 ;; module string -> filename string
-(define (get-filename str)
+(define (module-string->filename str)
   ;; check if explicit file path
     (match (regexp-match #rx"^f\\:(.+)$" str)
         [(list _ file) file]
@@ -112,7 +112,7 @@
     (cm-error "IMPORT" "Too many imports detected. Possible import cycle.") 
     (set! num-imports (add1 num-imports)))
   ;; remember the current module id
-  (let ([id (file-name->module-id (get-filename str))])
+  (let ([id (file-name->module-id (module-string->filename str))])
     (unless (not (string=? current-module-id id)) 
       (cm-error "IMPORT" "A module cannot import itself."))
     (do-import! id)
@@ -120,7 +120,7 @@
     (set-refs-from-module-space! id current-module-id prefix #t)))
 
 (define (process-lazy-import file-str type item prefix current-module-id)
-  (let ([module-id (file-name->module-id (get-filename file-str))])
+  (let ([module-id (file-name->module-id (module-string->filename file-str))])
     (when (not (map-reference type item module-id current-module-id prefix #t))
       (cm-error "IMPORT" 
                 (format "Could not lazy require ~a ~a from module ~a"

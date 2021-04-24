@@ -32,12 +32,12 @@
   (if (member (get-type arg1) types)
     (op arg1 arg2)
     (cm-error "CONTRACT" 
-        (format "Attempted to apply ~a onto ~a." op-name (get-type arg1)))))
+        (format "Attempted to apply \"~a\" onto \"~a\"" op-name (get-type arg1)))))
 (define (apply-if-type-1 types op op-name arg)
   (if (member (get-type arg) types)
     (op arg)
     (cm-error "CONTRACT" 
-        (format "Attempted to apply ~a onto ~a." op-name (get-type arg)))))
+        (format "Attempted to apply \"~a\" onto \"~a\"" op-name (get-type arg)))))
 
 ;; tells if the type matches for the given value
 ;; (string | fun), value -> bool

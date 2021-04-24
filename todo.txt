@@ -1,0 +1,9 @@
+- cm.rkt application includes racket stack trace, no es muy bien
+
+- look over equality checking
+    -- perhaps allow custom equality functions
+
+- allow command line args
+    -- main function for a file
+
+- allow testing utility to be run from cm.rkt

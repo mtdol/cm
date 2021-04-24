@@ -1,0 +1,57 @@
+#:lang cm
+
+-- macros for managing test results
+#:def:log{} {% set _num_tests := _num_tests + 1} comma
+#:def:pass{} {% set _num_successful_tests := _num_successful_tests + 1} comma
+#:def:fail{} {% set _num_failed_tests := _num_failed_tests + 1} comma
+
+-- the number of tests that we have run so far
+def _num_tests := 0//
+def _num_successful_tests := 0//
+def _num_failed_tests := 0//
+
+-- prints logging variables
+defun display_results () :=
+  let str := 
+    format
+      : "test results:\n~2/~1\n"
+      : {list _num_tests|_num_successful_tests}
+  in
+    write_string str//
+
+-- resets logging variables
+defun clear_results () :=
+  {%
+    set _num_tests := 0
+  | set _num_successful_tests := 0
+  | set _num_failed_tests := 0
+  }//
+
+-- `true` if `elem1` == `elem2` else `false` 
+defun assert_equal (dynamic elem1, dynamic elem2) :=
+  {log} 
+  | elem1 == elem2 ->
+    {pass}
+    true
+  else 
+    {fail}
+    false//
+
+-- like `assert_equal` except `f` is used as a comparison function
+-- that either returns `false` or `true`.
+defun assert_equalf (fun f, dynamic elem1, dynamic elem2) :=
+  {log} 
+  | f:elem1:elem2 ->
+    {pass}
+    true
+  else 
+    {fail}
+    false//
+
+-- `true` if `:>f` fails, else `false`
+defun assert_failure (fun f) :=
+  {log} 
+  try 
+    :>f comma {fail} false
+  catch _ with 
+    {pass} true//

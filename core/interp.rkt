@@ -46,6 +46,7 @@
   (match ast
     [(Prim2 'when _ _) (cm-error "SYNTAX" "Cannot use `when` outside of match-expr.")]
     [(Prefix2 '? _ _) (cm-error "SYNTAX" "Cannot use `?` outside of match-expr.")]
+    [(Prim0 '...) (cm-error "SYNTAX" "Cannot use `...` outside of match-expr.")]
     [(? var-container? var) 
      (interp-var (get-var-label var context module-id debug) context module-id)]
     [(Prim1 'schemaof e1) (interp-schemaof e1 context module-id debug)]
@@ -772,7 +773,7 @@
                 "CONTRACT" 
                 (format 
                   (string-append "struct ~a: Cannot have duplicate "
-                                 "identifier within `typedef`: ~a") 
+                                 "identifier within `typedef`: \"~a\"") 
                   id label)))
             (verify-schema t 
               (cons (SchemaElem guard-types label) acc)
@@ -786,7 +787,7 @@
                  ;; struct args must be a list (null for no args, still technically a list)
                  [res #:when (list? res) 
                       (match (get-type-data label module-id)
-                             [#f (cm-error "UNDEFINED" (format "Type ~a has not been declared." label))]
+                             [#f (cm-error "UNDEFINED" (format "Type \"~a\" has not been declared." label))]
                              [schema
                             (match (valid-against-schema? label schema res)
                                    [#t (CmStruct label res)]
