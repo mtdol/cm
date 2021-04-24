@@ -5,6 +5,9 @@
 (lazy-require (cm/core/lex [tokenize-string tokenize-import-string]))
 (provide pre-lex unwrap-string unwrap-string-if-necessary)
 
+;; Matthew Dolinka
+;;
+
 (define (pre-lex str module-id) 
   (parse-defs 
     (map string-trim (string-split str #rx"\n")) 

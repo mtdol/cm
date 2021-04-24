@@ -6,6 +6,9 @@
 (provide parse-expr half-parse-expr)
 (define error-id "SYNTAX")
 
+;; Matthew Dolinka
+;;
+
 ;; for use in eval of ast nodes
 (define ns (module->namespace 'cm/core/ast))
 

@@ -7,6 +7,9 @@
               (cm/core/modules [get-filename file-name->module-id]))
 (provide (all-defined-out))
 
+;; Matthew Dolinka
+;;
+
 (struct MacroRule (vars body module-id))
 
 (define (invalid-args-error label args)

@@ -8,6 +8,9 @@
   )
 (define error-id "PARSE")
 
+;; Matthew Dolinka
+;;
+
 ;; given the character after a left paren, returns the tail of the list featuring
 ;; the matching paren
 (define (get-matching-paren lst) (get-matching-paren-aux lst 0))

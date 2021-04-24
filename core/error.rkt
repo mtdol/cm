@@ -13,6 +13,9 @@
          get-error-level set-error-level!
          get-id-from-message try-with-error)
 
+;; Matthew Dolinka
+;;
+
 (define VERBOSE_ERR_LEVEL 1)
 (define LIGHT_ERR_LEVEL 0)
 (define error-level LIGHT_ERR_LEVEL)

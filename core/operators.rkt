@@ -1,6 +1,9 @@
 #lang racket
 (provide (all-defined-out))
 
+;; Matthew Dolinka
+;;
+
 (define max-precedences 8)
 
 ;; arity is op arity, position is "prefix" or "infix", precedence starts from

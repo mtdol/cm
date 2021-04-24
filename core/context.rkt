@@ -2,6 +2,9 @@
 (require cm/core/error cm/core/macros)
 (provide (all-defined-out))
 
+;; Matthew Dolinka
+;;
+
 (struct ContextEntry (value))
 (struct GlobalContextEntry (value private?))
 ;; (GlobalContextKey "var" x "/home/user/dir/f.cm")
