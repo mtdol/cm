@@ -1,0 +1,5 @@
+#:lang cm
+
+-- has main func; just spits out args
+defun main (args) :=
+  @ (format:"arg count: ~1":{list length args}), args//

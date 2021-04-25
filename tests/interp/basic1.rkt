@@ -153,3 +153,16 @@ val-true)
 
 (check-equal? (run "string `~(list? int 9.0, int 7.3, \"t6\")")
 "7")
+
+;; test short-circuiting
+(check-equal? (run "true or 3.0/0.0")
+val-true)
+
+(check-equal? (run "false and 3.0/0.0")
+val-false)
+
+(check-equal? (run "if true then 1 else 3.0/0.0")
+1)
+
+(check-equal? (run "if false then 3.0/0.0 else 1")
+1)

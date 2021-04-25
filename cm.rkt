@@ -52,7 +52,8 @@
   ['() (enter! cm/core/repl)]
   [(list v) #:when (or (string=? v "-h") (string=? v "--help"))
             (displayln help-text)]
-  [(list "-f" f) (main:silent (main:run-file f))]
+  [(list "-f" f) (main:silent (main:run-file/main f '()))]
+  [(list "-f" f args ...) (main:silent (main:run-file/main f args))]
   [(list "-e" v) (main:display-expr-output (main:run-expr v))]
   [(list "-E" v) (main:display-output (main:run v))]
   [(list "--install") (reset-modules-file)]
@@ -67,5 +68,6 @@
   [(list "--pkg" "remove" a1) 
    (modules:remove-from-modules a1)
    (modules:write-modules)]
-  [(list f) (main:silent (main:run-file f))]
+  [(list f) (main:silent (main:run-file/main f '()))]
+  [(list f args ...) (main:silent (main:run-file/main f args))]
   [_ (displayln "Invalid args.")])

@@ -1,0 +1,5 @@
+defun a_load () :=
+  load ("b_", "files/load1/b.cm";)//
+
+defun a () := 
+  2//

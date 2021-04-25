@@ -3,7 +3,10 @@
 - look over equality checking
     -- perhaps allow custom equality functions
 
-- allow command line args
-    -- main function for a file
+- std.cm
+    -- recursive `ls`
 
-- allow testing utility to be run from cm.rkt
+- testing utility
+    -- allow utility to be run from cm.rkt
+    -- implement main function
+        --- runs all arguments given, and recursively runs directories

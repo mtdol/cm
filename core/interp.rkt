@@ -2,8 +2,8 @@
 (require racket/hash racket/lazy-require
          cm/core/ast cm/core/error cm/core/types cm/core/context
          cm/core/parse-stat cm/core/lex cm/core/interp-utils cm/core/modules)
-(lazy-require [cm/core/main (run run-expr)])
-(provide interp trace-interp-expr interp-apply)
+(lazy-require [cm/core/main (run run-expr run-file)])
+(provide interp trace-interp-expr interp-apply interp-expr)
 
 ;; Matthew Dolinka
 ;; cm interpreter
@@ -94,6 +94,25 @@
        (trace-interp-expr e2 context module-id debug)
        (trace-interp-expr e3 context module-id debug)
        )]
+    ;; short circuiting and/or
+    [(Prim2 'and e1 e2) 
+     (let ([v1 (trace-interp-expr e1 context module-id debug)])
+       (assert-contract (list "bool") v1 "and")
+       (if 
+         (bool-to-racket v1)
+         (let ([v2 (trace-interp-expr e2 context module-id debug)])
+           (assert-contract (list "bool") v2 "and")
+           v2)
+         (racket-to-bool #f)))]
+    [(Prim2 'or e1 e2) 
+     (let ([v1 (trace-interp-expr e1 context module-id debug)])
+       (assert-contract (list "bool") v1 "or")
+       (if 
+         (bool-to-racket v1)
+         (racket-to-bool #t)
+         (let ([v2 (trace-interp-expr e2 context module-id debug)])
+           (assert-contract (list "bool") v2 "or")
+           v2)))]
     ;; general prim cases
     [(Prim2 op e1 e2) (interp-prim2 
                         op 
@@ -188,10 +207,6 @@
           (cm-error "CONTRACT" (string-append "Operands of " (symbol->string op)
                 " are not of the same type. Given " (get-type v1)
                 ", " (get-type v2) "."))]
-        ['and (racket-to-bool 
-               (apply-if-type '("bool") and-op "and" v1 v2))]
-        ['or (racket-to-bool 
-               (apply-if-type '("bool") or-op "or" v1 v2))]
         ['xor (racket-to-bool 
                (apply-if-type '("bool") xor-op "xor" v1 v2))]
         ['gt (racket-to-bool 
@@ -313,6 +328,12 @@
         ['write_string_raw (interp-write-string-raw v)]
         ['gensym (interp-gensym v)]
         ['regex (interp-regex v)]
+        ['load 
+         (match v
+           [(list (? string? arg1) (? string? arg2))
+            (process-import arg2 arg1 module-id)
+            (Prim0 'void)]
+           [_ (cm-error "CONTRACT" "Invalid arguments to `load`.")])]
         ['random (interp-random v)]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))

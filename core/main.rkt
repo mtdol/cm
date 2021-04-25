@@ -4,7 +4,7 @@
          cm/core/context cm/core/modules cm/core/error
          cm/core/pre-parse cm/core/tokens
          )
-(provide run run-file run-expr run-tokenize-string
+(provide run run-file run-file/main run-expr run-tokenize-string
          run-parse run-parse-expr run-prefix-form
          display-output display-expr-output silent
          set-verbose-error-level!
@@ -51,19 +51,25 @@
   (let ([file (module-string->filename file)])
   (unless (file-exists? file) 
     (cm-error "GENERAL" (format "File does not exist: \"~a\"" file)))
-  (let* ([id (file-name->module-id file)]
-         [res 
-          (begin 
-            (set-current-module-id! id)
-            (interp 
-              (parse-stat 
-                (tokenize-string (file->string id) id)
-                id)
-              id))])
-    ;; reset the module-id
+  (let* ([id (file-name->module-id file)])
     (set-current-module-id! id)
-    res
-      )))
+    (interp 
+      (parse-stat 
+        (tokenize-string (file->string id) id)
+        id)
+      id))))
+
+;; runs the main function if it exists, then returns void
+;;
+;; string, string list
+(define (run-file/main file args)
+  ;; run `file`, discard results
+  (run-file file)
+  ;; run `main` if it exists with `args`
+  (interp-expr 
+    (run-parse-expr "if defined? \"main\" and fun? main then main:args else void")
+    (set-local-var "args" args (hash)) current-module-id '())
+  (void))
 
 ;; runs an expr (no dot)
 (define (run-expr input) 

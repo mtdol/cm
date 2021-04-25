@@ -1,7 +1,7 @@
 #lang racket
 (require racket/lazy-require racket/runtime-path)
 (require cm/core/error cm/core/ast cm/core/context)
-(lazy-require [cm/core/main (run-file silent)])
+(lazy-require [cm/core/main (run-file silent set-current-module-id!)])
 (provide process-import process-lazy-import file-name->module-id module-string->filename
          show-modules write-modules add-to-modules remove-from-modules
          string->module-path-string)
@@ -116,8 +116,10 @@
     (unless (not (string=? current-module-id id)) 
       (cm-error "IMPORT" "A module cannot import itself."))
     (do-import! id)
+    ;; move references
+    (set-refs-from-module-space! id current-module-id prefix #t)
     ;; restore the old module id
-    (set-refs-from-module-space! id current-module-id prefix #t)))
+    (set-current-module-id! current-module-id)))
 
 (define (process-lazy-import file-str type item prefix current-module-id)
   (let ([module-id (file-name->module-id (module-string->filename file-str))])

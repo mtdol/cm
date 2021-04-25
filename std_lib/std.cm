@@ -591,6 +591,11 @@ defun list_to_mutable_hash list ms :=
 --- System
 --------------------------------
 
+-- TODO: test document
+-- get the current module-id dynamicaly
+defun current_module () :=
+  evalxp "{current_module}"//
+
 match system_type
 | "windows" -> (eval "#:def:windows{} true") comma void
 | "macosx" -> (eval "#:def:macosx{} true") comma void
