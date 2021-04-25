@@ -20,9 +20,9 @@ val-true)
 
 (check-equal? (run "ls_rec : \"files/system2\"")
 (if (equal? (system-type) 'windows)
-  '("files\\\\system2\\\\a.txt" "files\\\\system2\\\\d1"
-    "files\\\\system2\\\\d1\\\\a.txt" "files\\\\system2\\\\d1\\\\d1-1"
-    "files\\\\system2\\\\d1\\\\d1-1\\\\b.cm" "files\\\\system2\\\\d1\\\\d1-1\\\\b.txt")
+  '("files\\system2\\a.txt" "files\\system2\\d1"
+    "files\\system2\\d1\\a.txt" "files\\system2\\d1\\d1-1"
+    "files\\system2\\d1\\d1-1\\b.cm" "files\\system2\\d1\\d1-1\\b.txt")
   '("files/system2/a.txt" "files/system2/d1"
     "files/system2/d1/a.txt" "files/system2/d1/d1-1"
     "files/system2/d1/d1-1/b.cm" "files/system2/d1/d1-1/b.txt")))
