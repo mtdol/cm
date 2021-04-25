@@ -335,6 +335,19 @@
             (Prim0 'void)]
            [_ (cm-error "CONTRACT" "Invalid arguments to `load`.")])]
         ['random (interp-random v)]
+        ['char_to_int 
+         (assert-contract (list "string") v "char_to_int")
+         (match (string->list v)
+           [(list c) (char->integer c)]
+           [_ (cm-error "CONTRACT" "Argument to `char_to_int` must be a single char")])]
+        ['int_to_char 
+         (assert-contract (list "int") v "int_to_char")
+         (with-handlers* 
+           ([exn:fail? 
+              (lambda (exn) 
+                (cm-error "CONTRACT"
+                 (format "`int_to_char`: invalid value: ~a" v)))])
+           (string (integer->char v)))]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]

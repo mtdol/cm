@@ -650,3 +650,8 @@ defun ls_build string arg :=
           build_path:{list arg | elem}
     | ls arg
   }//
+
+-- TODO
+-- recursive ls
+defun ls_rec (string f) :=
+  ls f//

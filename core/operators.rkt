@@ -114,6 +114,8 @@
         (cons "load"            (OpData 1 "prefix"  7   'Prim1   'load))
         (cons "random"          (OpData 1 "prefix"  7   'Prim1   'random))
         (cons "schemaof"        (OpData 1 "prefix"  7   'Prim1   'schemaof))
+        (cons "char_to_int"     (OpData 1 "prefix"  7   'Prim1   'char_to_int))
+        (cons "int_to_char"     (OpData 1 "prefix"  7   'Prim1   'int_to_char))
         (cons "struct"          (OpData 2 "prefix"  7   'Prefix2 'struct))
         (cons "struct?"         (OpData 2 "prefix"  7   'Prefix2 'struct?))
         (cons "types"           (OpData 2 "prefix"  7   'Prefix2 'types))
