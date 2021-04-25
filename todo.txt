@@ -3,9 +3,6 @@
 - look over equality checking
     -- perhaps allow custom equality functions
 
-- std.cm
-    -- recursive `ls`
-
 - testing utility
     -- allow utility to be run from cm.rkt
     -- implement main function

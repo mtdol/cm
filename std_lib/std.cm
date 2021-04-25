@@ -591,7 +591,6 @@ defun list_to_mutable_hash list ms :=
 --- System
 --------------------------------
 
--- TODO: test document
 -- get the current module-id dynamicaly
 defun current_module () :=
   evalxp "{current_module}"//
@@ -639,6 +638,13 @@ defun cdc () :=
 defun catf string f :=
   pprint:(getlinesf f)//
 
+-- accesses the file-system and asks if `f` is a directory
+defun directory? (string f) :=
+  dir_exists? f//
+
+defun file? (string f) :=
+  file_exists? f//
+
 -- gives the arguments to ls with the prefix appended onto the results.
 defun ls_build string arg :=
   {: map
@@ -651,7 +657,12 @@ defun ls_build string arg :=
     | ls arg
   }//
 
--- TODO
 -- recursive ls
 defun ls_rec (string f) :=
-  ls f//
+  let res := ls_build : f in
+    flatten:{list res |
+      {: map 
+      | ls_rec 
+      | {: filter | directory? | res}
+      }
+    }//
