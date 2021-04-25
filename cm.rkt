@@ -14,11 +14,14 @@
   (string-append
       "No args: run the repl\n"
       "file: run a file\n"
+      "file args: run a file with arguments\n"
       "-f file: run a file\n"
+      "-f file args: run a file with arguments\n"
       "-e: run an expression\n"
       "-E: run a statement\n"
       "--install: install cm; reset the module system\n"
       "--pkg: package manager\n"
+      "--test files: test the given files\n"
       "--help, -h: show this help text\n"
   ))
 
@@ -68,6 +71,8 @@
   [(list "--pkg" "remove" a1) 
    (modules:remove-from-modules a1)
    (modules:write-modules)]
+  [(list "--test") (displayln "Missing files to test.")]
+  [(list "--test" args ...) (main:run-file/main "std_lib::testing.cm" args)]
   [(list f) (main:silent (main:run-file/main f '()))]
   [(list f args ...) (main:silent (main:run-file/main f args))]
   [_ (displayln "Invalid args.")])

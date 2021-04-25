@@ -27,6 +27,12 @@ defun clear_results () :=
   | set _num_failed_tests := 0
   }//
 
+defun main (args) :=
+  let args := {: filter | file? | {: flatten | {: map | ls_rec | args}}}
+  in
+    @args
+  //
+
 -- `true` if `elem1` == `elem2` else `false` 
 defun assert_equal (dynamic elem1, dynamic elem2) :=
   {log} 

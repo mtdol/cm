@@ -1,6 +1,5 @@
 #lang racket
-(require racket/lazy-require cm/core/ast)
-(lazy-require (cm/core/types [value->displayable-string]))
+(require cm/core/ast)
 (provide cm-error cm-error-linenum 
          get-current-linenum set-current-linenum! set-check-current-linenum!
          get-trace-stack push-elem-to-trace-stack! pop-elem-from-trace-stack!
@@ -141,7 +140,7 @@
     (reset-trace-stack!)
     (error 
       (format "~a: ~a\n\ncontext:\n~a"
-        id (value->displayable-string message) trace-message))))
+        id message trace-message))))
 
 
 ;; simple error function,

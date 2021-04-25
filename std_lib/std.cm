@@ -78,11 +78,11 @@ if not ({_assert_types=_aux types | REST})
 ------------------------------
 
 -- allows print to be used like a function
-defun print2 v := print v// 
+defun print2 (v) := print v// 
 -- prints and yields void
-defun sprint v := (print v) comma void// 
+defun sprint (v) := (print v) comma void// 
 -- pretty print
-defun pprint vs :=
+defun pprint (vs) :=
   match vs 
   | () -> void 
   | v, t -> (@ v) comma (pprint:t)
@@ -97,7 +97,7 @@ defun pprint vs :=
 #:def:number{} ("int", "float";)
 
 
-defun number? v :=
+defun number? (v) :=
   let t := type v in
       t = "int" or t = "float"//
 
@@ -116,57 +116,57 @@ defun exp (types {number} n1, types {number} n2) :=
   n1 ^ n2//
 
 
-defun add1 types {number} n :=
+defun add1 (types {number} n) :=
   if type n = "int" then n + 1 else n + 1.0.
-defun sub1 types {number} n :=
+defun sub1 (types {number} n) :=
   if type n = "int" then n - 1 else n - 1.0.
-defun zero? types {number} n :=
+defun zero? (types {number} n) :=
   if type n = "int" then n = 0 else n = 0.0.
-defun pos? types {number} n :=
+defun pos? (types {number} n) :=
   if type n = "int" then n > 0 else n > 0.0.
-defun neg? types {number} n :=
+defun neg? (types {number} n) :=
   if type n = "int" then n < 0 else n < 0.0.
-defun one? types {number} n :=
+defun one? (types {number} n) :=
   if type n = "int" then n = 1 else n = 1.0.
 defun even? int n :=
   n % 2 = 0.
 defun odd? int n :=
   n % 2 = 1.
 
-defun is_int? dynamic v :=
+defun is_int? (dynamic v) :=
   int? v.
-defun is_float? dynamic v :=
+defun is_float? (dynamic v) :=
   float? v.
-defun is_string? dynamic v :=
+defun is_string? (dynamic v) :=
   string? v.
-defun is_bool? dynamic v :=
+defun is_bool? (dynamic v) :=
   bool? v.
-defun is_list? dynamic v :=
+defun is_list? (dynamic v) :=
   list? v.
-defun is_pair? dynamic v :=
+defun is_pair? (dynamic v) :=
   pair? v.
-defun is_void? dynamic v :=
+defun is_void? (dynamic v) :=
   void? v.
-defun is_eof? dynamic v :=
+defun is_eof? (dynamic v) :=
   eof? v.
-defun is_fun? dynamic v :=
+defun is_fun? (dynamic v) :=
   fun? v.
 defun is_struct? (string label, dynamic v) :=
   struct? (var label) v.
 
 -- spits back what you give it
-defun value dynamic v := v.
+defun value (dynamic v) := v.
 
-defun abs types {number} n :=
+defun abs (types {number} n) :=
   if neg?:n then -n else n.
 
-defun to_int v := int v.
-defun to_float v := float v.
-defun to_string v := string v.
-defun to_bool v := bool v.
+defun to_int (v) := int v.
+defun to_float (v) := float v.
+defun to_string (v) := string v.
+defun to_bool (v) := bool v.
 
-defun car pair v := head v.
-defun cdr pair v := tail v.
+defun car (pair v) := head v.
+defun cdr (pair v) := tail v.
 
 
 -- list questions
@@ -256,7 +256,7 @@ defun reverse list xs :=
   in
       {: aux | xs | ()}//
 
-defun append list lsts :=
+defun append (list lsts) :=
   let f := lambda lst, acc :=
       {assert_types= "append"|{list "list"}|lst}
       {: foldl
@@ -267,7 +267,7 @@ defun append list lsts :=
   in
       reverse : {: foldl | f | () | lsts}//
 
-defun flatten list lsts :=
+defun flatten (list lsts) :=
   match lsts
   | () -> ()
   | list lst, lsts -> {: append | {list (flatten:lst) | (flatten:lsts)}}
@@ -496,18 +496,18 @@ defun string_ref (string s, int i) :=
 defun concatenate (string s1, string s2) :=
   s1 $ s2//
 
-defun string_length string s :=
+defun string_length (string s) :=
   length s//
 
 -- turns the string into a list of length 1 substrings
-defun string_to_list string s :=
+defun string_to_list (string s) :=
   match s
   | "" -> ()
   | _ -> (index s 0), (string_to_list : (index s (1, length s;)))
   end//
 
 -- concatenates all of the elems in the list into a single string
-defun list_to_string list ss :=
+defun list_to_string (list ss) :=
   match ss
   | () -> ""
   | s, t -> s $ (list_to_string:t)
@@ -575,13 +575,13 @@ defun regex_replace_all (string pattern, string input, string insert) :=
 --- Hashmap
 --------------------------------
 
-defun list_to_hash list ms :=
+defun list_to_hash (list ms) :=
   {: foldl 
       | lam m,h := hash_set h (`m) (~m)
       | make_hash ()
       | ms}//
 
-defun list_to_mutable_hash list ms :=
+defun list_to_mutable_hash (list ms) :=
   {: foldl 
       | lam m,h := (hash_set h (`m) (~m)) comma h
       | make_hash {list "mutable"}
@@ -608,20 +608,38 @@ def path_separator :=
   | _ -> "/" 
   end//
 
+-- TODO test
+-- "a/f.txt" -> "txt", "f" -> ""
+defun get_extension (string file) :=
+  match regex_match:"^.*\\.(.+)$":file
+  | {list _ | r} -> r
+  | false -> ""
+  end//
+
+-- if `elem` ends in a path seperator, then clears
+defun _clean_path_elem (string elem) :=
+  match string_to_list : elem
+  | () -> ""
+  | cs, ..., sep; when sep = path_separator -> 
+    -- recursively clean to make sure that all separators are gone
+    _clean_path_elem : (list_to_string : cs)
+  | _ -> elem
+  end//
+
 -- takes the list of elems and returns a string representing a connected
 -- path between them
-defun build_path list elems :=
+defun build_path (list elems) :=
   {: foldl
     | lambda elem, acc := 
       \| elem = "" -> acc
-      \| acc = "" -> elem
-      else acc $ path_separator $ elem
+      \| acc = "" -> (_clean_path_elem : elem)
+      else acc $ path_separator $ (_clean_path_elem : elem)
     | ""
     | elems
   }//
 
 -- cds only if the directory exists
-defun cd2 string s :=
+defun cd2 (string s) :=
   if dir_exists? s 
   then 
       cd s 
@@ -635,7 +653,7 @@ defun cdc () :=
   (cd "")//
 
 -- display contents of file
-defun catf string f :=
+defun catf (string f) :=
   pprint:(getlinesf f)//
 
 -- accesses the file-system and asks if `f` is a directory
@@ -646,7 +664,7 @@ defun file? (string f) :=
   file_exists? f//
 
 -- gives the arguments to ls with the prefix appended onto the results.
-defun ls_build string arg :=
+defun ls_build (string arg) :=
   {: map
     | lambda elem :=
         let arg := if system_type = "windows" then

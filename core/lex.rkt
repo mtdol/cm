@@ -141,7 +141,11 @@
    ["->" "yields"]
    [(:+ digit) lexeme]
    [(:: (:+ digit) #\. (:+ digit)) lexeme]
-   [str lexeme]
+   [str 
+     (match start-pos 
+       [(position _ linenum _)
+        (set-current-linenum! linenum)
+        (process-string lexeme)])]
    [(:: #\" (:* (:~ #\"))) (match start-pos [(position colnum linenum _)
                         (cm-error-linenum current-module-id linenum error-id 
                                 (format "Non-terminated string around column ~a." colnum))])]
@@ -152,6 +156,40 @@
                         (cm-error-linenum current-module-id linenum error-id 
                                 (format "Lexing failure around column ~a." colnum))])]
    ))
+
+
+
+;; Converts \n to newline and so on.
+;; Raises an exception if an invalid escape pattern is found
+;;      (like \{ or something.)
+(define (convert-string-components str)
+  (let 
+    ([str2 
+       (foldl (lambda (elem acc)
+                (string-replace acc (car elem) (cdr elem)))
+              str
+              '(
+                ("\\n" . "\n")
+                ("\\r" . "\r")
+                ("\\t" . "\t")
+                ("\\\"" . "\"")
+                ))])
+    ;; now look for illegal uses of backslash
+    (match (regexp-match #rx"(\\\\.)" str2)
+      [(list _ r1) 
+       (cm-error-linenum 
+          (get-current-linenum) current-module-id "LEX"
+          (format "Illegal escape in string: ~a" r1))]
+      [#f str2])))
+
+;; process lexed string
+(define (process-string str)
+  ;; split by \\ and apply escapes
+  (let ([strs (map convert-string-components (string-split str "\\\\"))])
+    ;; stitch back together with \
+    (foldl (lambda (elem acc)
+             (string-append acc "\\" elem))
+           (car strs) (cdr strs))))
 
 
 (define (tokenize-input ip lex) 

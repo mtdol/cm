@@ -34,6 +34,12 @@ val-true)
   " /a"))
 
 (check-equal? 
+  (run "build_path:{list \"f/\"|\"a\"}")
+(if (equal? (system-type) 'windows)
+  "f\\\\a"
+  "f/a"))
+
+(check-equal? 
   (run "build_path:{list \"a\"|\"bcd\"|\"\"|\"ef\"}")
 (if (equal? (system-type) 'windows)
   "a\\\\bcd\\\\ef"
@@ -41,6 +47,12 @@ val-true)
 
 (check-equal? 
   (run "ls_build:\"files/system1\"")
+(if (equal? (system-type) 'windows)
+  '("files\\\\system1\\\\f.txt")
+  '("files/system1/f.txt")))
+
+(check-equal? 
+  (run "ls_build:\"files/system1/\"")
 (if (equal? (system-type) 'windows)
   '("files\\\\system1\\\\f.txt")
   '("files/system1/f.txt")))

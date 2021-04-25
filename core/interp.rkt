@@ -960,7 +960,7 @@
          [_ (cm-error "CONTRACT" "Missing hash for `hash_ref_check`.")]))
 
 (define (interp-print v)
- (begin (displayln (value->displayable-string v)) 
+ (begin (displayln v) 
         v))
 
 ;; reads until i chars or eof
@@ -999,7 +999,7 @@
      (with-handlers* 
        ([exn:fail? (lambda (exn) 
          (cm-error "SYSTEM" (format "Could not append to file \"~a\"" v2)))])
-       (display-to-file (value->displayable-string v1) v2 #:exists 'append))
+       (display-to-file v1 v2 #:exists 'append))
      (Prim0 'void)]))
 
 (define (interp-writestrf v1 v2)
@@ -1012,14 +1012,14 @@
     (with-handlers* 
       ([exn:fail? (lambda (exn) 
         (cm-error "SYSTEM" (format "Could not write to file \"~a\"" v2)))])
-      (display-to-file (value->displayable-string v1) v2 #:exists 'replace))
+      (display-to-file v1 v2 #:exists 'replace))
     (Prim0 'void)]))
 
 (define (interp-read-line) (read-line))
 
 (define (interp-write-string v1)
   (assert-contract (list "string") v1 "write_string")
-  (display (value->displayable-string v1)) (Prim0 'void))
+  (display v1) (Prim0 'void))
 
 ;; not sure what to do with this, not in standard documentation for now
 (define (interp-write-string-raw v1)

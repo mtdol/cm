@@ -34,7 +34,6 @@ val-false)
 (check-exn exn:fail? (lambda ()
   (run "{: regex_match | \"a(?<f)\" | \"af\"}")))
 
-
 ;;
 ;; regex_match_all
 ;;
@@ -109,7 +108,7 @@ val-true)
 (check-equal? (run "{: regex_split | \"\" | \"ab\"}")
 '("" "a" "b" ""))
 
-(check-equal? (run "{: regex_split | \"\\\\n\" | \"ab\\ncd\\nef\"}")
+(check-equal? (run "{: regex_split | \"\\n\" | \"ab\\ncd\\nef\"}")
 '("ab" "cd" "ef"))
 
 ;; malformed
@@ -121,10 +120,10 @@ val-true)
 ;; regex_replace
 ;;
 
-(check-equal? (run "{: regex_replace | \".(.) \" | \"zab c\" | \"\\1_\"}")
+(check-equal? (run "{: regex_replace | \".(.) \" | \"zab c\" | \"\\\\1_\"}")
 "zb_c")
 
-(check-equal? (run "{: regex_replace | \".(.) \" | \"zab cd fg\" | \"\\1_\"}")
+(check-equal? (run "{: regex_replace | \".(.) \" | \"zab cd fg\" | \"\\\\1_\"}")
 "zb_cd fg")
 
 (check-equal? (run "{: regex_replace | \".(.) \" | \"zab cd fg\" | \"\"}")
@@ -136,17 +135,17 @@ val-true)
 
 ;; malformed
 (check-exn exn:fail? (lambda ()
-  (run "{: regex_replace | \"a(?<f)\" | \"af\" | \"\\1\"}")))
+  (run "{: regex_replace | \"a(?<f)\" | \"af\" | \"\\\\1\"}")))
 
 
 ;;
 ;; regex_replace_all
 ;;
 
-(check-equal? (run "{: regex_replace_all | \".(.) \" | \"zab c\" | \"\\1_\"}")
+(check-equal? (run "{: regex_replace_all | \".(.) \" | \"zab c\" | \"\\\\1_\"}")
 "zb_c")
 
-(check-equal? (run "{: regex_replace_all | \".(.) \" | \"zab cd fg\" | \"\\1_\"}")
+(check-equal? (run "{: regex_replace_all | \".(.) \" | \"zab cd fg\" | \"\\\\1_\"}")
 "zb_d_fg")
 
 (check-equal? (run "{: regex_replace_all | \".(.) \" | \"zab cd fg\" | \"\"}")
@@ -158,4 +157,4 @@ val-true)
 
 ;; malformed
 (check-exn exn:fail? (lambda ()
-  (run "{: regex_replace_all | \"a(?<f)\" | \"af\" | \"\\1\"}")))
+  (run "{: regex_replace_all | \"a(?<f)\" | \"af\" | \"\\\\1\"}")))
