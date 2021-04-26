@@ -550,26 +550,39 @@ defun format (string str, list vs) :=
   in
       {: aux | str | vs | 1}//
 
+-- TODO: test
+-- splits `str` by `sep`
+defun string_split (string str, string sep) :=
+  regex {list "regexp-split" | {list "quote"|sep} | str}//
+
+-- TODO: test
+-- trims whitespace from str
+defun string_trim (string str) :=
+  match regex_match : "^[\\s]*(.*?)[\\s]*$" : str
+  | {list _ | r1} -> r1
+  | false -> str
+  end//
+
 --
 -- regex funcs
 --
 defun regex_match (string pattern, string input) :=
-  regex {list "regexp-match" | pattern | input}//
+  regex {list "regexp-match" | {list "px"|pattern} | input}//
 
 defun regex_match_all (string pattern, string input) :=
-  regex {list "regexp-match*" | pattern | input}//
+  regex {list "regexp-match*" | {list "px"|pattern} | input}//
 
 defun regex_match? (string pattern, string input) :=
-  regex {list "regexp-match?" | pattern | input}//
+  regex {list "regexp-match?" | {list "px"|pattern} | input}//
 
 defun regex_split (string pattern, string input) :=
-  regex {list "regexp-split" | pattern | input}//
+  regex {list "regexp-split" | {list "px"|pattern} | input}//
 
 defun regex_replace (string pattern, string input, string insert) :=
-  regex {list "regexp-replace" | pattern | input | insert}//
+  regex {list "regexp-replace" | {list "px"|pattern} | input | insert}//
 
 defun regex_replace_all (string pattern, string input, string insert) :=
-  regex {list "regexp-replace*" | pattern | input | insert}//
+  regex {list "regexp-replace*" | {list "px"|pattern} | input | insert}//
 
 
 --- Hashmap
@@ -608,13 +621,17 @@ def path_separator :=
   | _ -> "/" 
   end//
 
--- TODO test
 -- "a/f.txt" -> "txt", "f" -> ""
 defun get_extension (string file) :=
   match regex_match:"^.*\\.(.+)$":file
   | {list _ | r} -> r
   | false -> ""
   end//
+
+-- TODO: test
+-- "a/b/f.txt" -> ("a", "b", "f.txt";)
+defun get_path_elements (string path) :=
+  string_split : path : path_separator//
 
 -- if `elem` ends in a path seperator, then clears
 defun _clean_path_elem (string elem) :=

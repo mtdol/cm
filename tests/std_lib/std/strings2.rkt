@@ -37,3 +37,47 @@
 
 (check-equal? (run "{: format | \"\" | {list \"1\"}}")
 "")
+
+;;
+;; string_split
+;;
+
+(check-equal? (run "{: string_split | \"abcd\" | \"b\"}")
+'("a" "cd"))
+
+(check-equal? (run "{: string_split | \"\" | \"b\"}")
+'(""))
+
+(check-equal? (run "{: string_split | \"\" | \"\"}")
+'("" ""))
+
+(check-equal? (run "{: string_split | \"abcd\" | \"e\"}")
+'("abcd"))
+
+(check-equal? (run "{: string_split | \"abcd\" | \"\"}")
+'("" "a" "b" "c" "d" ""))
+
+(check-equal? (run "{: string_split | \"ab\\\\cd\" | \"\\\\\"}")
+'("ab" "cd"))
+
+;;
+;; string_trim
+;;
+
+(check-equal? (run "{: string_trim | \"abcd\"}")
+"abcd")
+
+(check-equal? (run "{: string_trim | \"\"}")
+"")
+
+(check-equal? (run "{: string_trim | \"abcd \"}")
+"abcd")
+
+(check-equal? (run "{: string_trim | \" abcd\"}")
+"abcd")
+
+(check-equal? (run "{: string_trim | \" abcd \"}")
+"abcd")
+
+(check-equal? (run "{: string_trim | \" \\ta b\\tcd \"}")
+"a b\tcd")

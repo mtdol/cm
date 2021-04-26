@@ -348,6 +348,13 @@
                 (cm-error "CONTRACT"
                  (format "`int_to_char`: invalid value: ~a" v)))])
            (string (integer->char v)))]
+        ['exit 
+         ;; exit with 1 if error code is screwy
+         (let ([i (match v
+                    [(? is-int?) #:when (and (>= v 0) (<= v 255)) v]
+                    [_ 1])])
+           (displayln i)
+           (exit i))]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]
@@ -1058,10 +1065,16 @@
 
 (define (interp-regex v1)
   (assert-contract (list "list") v1 "regex")
+   ;; the second argument to `regex` takes a list of the form (type, regex;),
+   ;; where type = "quote" | "px" | "rx",
+   ;; and regex is the actual regex.
+   ;;
+   ;; "quote" means the regex will be formed using `regexp-quote`
+   ;; in racket
   (let ([pattern 
           (match v1 
              [(list type pattern args ...)
-              (assert-contract (list "string") pattern 
+              (assert-contract (list "list") pattern 
                         (format "regex -> ~a" type))
               (with-handlers* 
                 ([exn:fail?
@@ -1070,7 +1083,11 @@
                       [(exn:fail msg _)
                          (cm-error "GENERAL" msg)])
                     )])
-                (pregexp pattern))])])
+                (match pattern
+                  [(list "quote" regex) (regexp-quote regex)]
+                  [(list "rx" regex) (regexp regex)]
+                  [(list "px" regex) (pregexp regex)])
+                )])])
   (match v1
          [(list "regexp-match" _ str)
           (assert-contract (list "string") str "regex -> regexp-match")
