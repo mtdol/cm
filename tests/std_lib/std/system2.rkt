@@ -36,12 +36,12 @@
 '(""))
 
 (check-equal? (run (match (system-type) 
-                          ['windows "get_path_elements:\"a\\b\""]
+                          ['windows "get_path_elements:\"a\\\\b\""]
                           [_ "get_path_elements:\"a/b\""]))
 '("a" "b"))
 
 (check-equal? (run (match (system-type) 
-                          ['windows "get_path_elements:\"a\\b\\f.txt\""]
+                          ['windows "get_path_elements:\"a\\\\b\\\\f.txt\""]
                           [_ "get_path_elements:\"a/b/f.txt\""]))
 '("a" "b" "f.txt"))
 
