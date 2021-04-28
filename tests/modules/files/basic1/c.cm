@@ -1,5 +1,5 @@
 #:def:c_txt{} "c macro"
-typedef C := ().
+typedef C := ()//
 
-def c := 4.
-def _c := "private c".
+def c := 4//
+def _c := "private c"//

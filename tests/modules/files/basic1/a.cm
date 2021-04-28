@@ -1,12 +1,12 @@
 #:import "files/basic1/b.cm"
 #:def:a_txt{} "a macro"
-typedef A := ().
+typedef A := ()//
 
-def a_b := lam () := b.
+def a_b := lam () := b//
 
 def a_c := lam () :=
-    try c catch e with "failure".
+    try c catch e with "failure"//
 
-def _a := "i'm private".
+def _a := "i'm private"//
 
-def b_txt := {b_txt}.
+def b_txt := {b_txt}//

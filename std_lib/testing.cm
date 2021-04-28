@@ -6,9 +6,9 @@
 #:def:fail{} {% set _num_failed_tests := _num_failed_tests + 1} comma
 
 -- the number of tests that we have run so far
-def _num_tests := 0//
-def _num_successful_tests := 0//
-def _num_failed_tests := 0//
+{defcheck | _num_tests} := 0//
+{defcheck | _num_successful_tests} := 0//
+{defcheck | _num_failed_tests} := 0//
 
 -- prints logging variables
 defun display_results () :=
@@ -27,11 +27,40 @@ defun clear_results () :=
   | set _num_failed_tests := 0
   }//
 
-defun main (args) :=
-  let args := {: filter | file? | {: flatten | {: map | ls_rec | args}}}
+defun main (list args) :=
+  -- get all cm files from args
+  let files := 
+    {: filter | lambda elem := file?:elem and (get_extension:elem = "cm") | 
+      {: flatten | {: map 
+        | lambda elem :=
+          if directory?:elem then ls_rec:elem else elem
+        | args}}}
+  in let files :=
+    -- unique sort files
+    remove_duplicates:
+      {: map | expand_path | files}
   in
-    @args
-  //
+    {% 
+      {: map | run_test_file | files}
+    | @ ""
+    | :>display_results
+    }//
+
+defun run_test_file (string file) :=
+  {%
+    @ format:"test: \"~1\"":{list file}
+  -- ensure that we are running the file in its habitat
+  | cd (get_path_to_file:file)
+  | try 
+      load {list ""|file}
+    catch err with
+      @ format
+        : "Failure running file \"~1\"\n\nMessage:\n~2\n"
+        : {list file|err::message}
+  --| @ ""
+  --| :>display_results
+  }//
+
 
 -- `true` if `elem1` == `elem2` else `false` 
 defun assert_equal (dynamic elem1, dynamic elem2) :=

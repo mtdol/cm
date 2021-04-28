@@ -4,17 +4,17 @@
 ;; check if import with prefix works
 (run-file-silent "files/basic3/a.cm")
 
-(check-equal? (run-stat "pref_b.")
+(check-equal? (run-stat "pref_b//")
 '(7))
 
-(check-equal? (run-stat "a.")
+(check-equal? (run-stat "a//")
 '(4))
 
 (check-exn exn:fail? (lambda ()
-  (run-stat "b.")))
+  (run-stat "b//")))
 
 (check-exn exn:fail? (lambda ()
-  (run-stat "pref_a.")))
+  (run-stat "pref_a//")))
 
 
 ;; since c.cm and d.cm have a cycle, we should get a failure

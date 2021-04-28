@@ -9,7 +9,7 @@
  (set "(" ")" "[" "]" "{" "}" "#" "#:" "--" "null" "head" "`"
       "tail" "~" "cons" "," ";" "=" "equal" "equals" "!=" "not_equal" ">" "gt" "<"
       "lt" "<=" "le" ">=" "ge" "+" "plus" "-" "minus" "*" "star"
-      "/" "slash" "^" "caret" "%" "mod" "&" "and" "||" "or" "xor" "not" "!" "true" "false"
+      "/" "slash" "^" "caret" "%" "mod" "&" "and" "||" "or" "xor" "not" "true" "false"
       "@" "print" ":=" "assign" "let" "values" "in" "def" "set" "update" 
       "defined?" "defun" "final" "lam" "lambda" ":"
       "apply" ":>" "appnull" "comma"
@@ -27,7 +27,7 @@
       "eof" "eof?" "read_string" "peek_string" "write_string" "write_string_raw" "read_line"
       "make_hash" "hash_ref" "hash_ref_check" "hash_set" "hash?" "mutable_hash?"
       "hash_has_key?" "hash_keys" "hash_values" "hash_to_list" "gensym" "regex"
-      "random" "char_to_int" "int_to_char" "exit"))
+      "random" "char_to_int" "int_to_char" "exit" "to_complete_path"))
 
 
 (define (is-keyword? v)

@@ -1,0 +1,5 @@
+#:lang cm
+#:import "std_lib::testing.cm", "b.source.cm"
+
+-- should cause an error
+assert_equal:(:>div_by_zero):3//

@@ -1,0 +1,7 @@
+#:lang cm
+#:import "std_lib::testing.cm", "a.source.cm"
+
+-- should get a 2/3 on the test results
+assert_equal:(a_add1:2):3//
+assert_equal:(a_add2:2):4//
+assert_equal:(a_add2:-2):0//

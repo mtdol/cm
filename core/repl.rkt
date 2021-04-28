@@ -29,15 +29,13 @@
 
 ;; adds a dot to the end of the string if not present, and the line is not a
 ;; line macro
-(define (add-dot str)
-  (if (regexp-match? #rx"^.*(\\.|dot) *$" str)
+(define (add-terminator str)
+  (if (regexp-match? #rx"^.*// *$" str)
     str
-    (if (not (regexp-match? #rx"^\\#\\:.*" str))
-        (string-append str ".")
-        str)))
+    (string-append str "//")))
 
 ;; the cm function we will be calling
-(define mode (compose display-output run add-dot))
+(define mode (compose display-output run add-terminator))
 
 
 (define help (string-append "`#exit` exit\n"
@@ -62,7 +60,7 @@
                          (add-history "#token")
                          (repl))]
          ["#run" (begin (displayln "run mode")
-                         (set! mode (compose display-output run add-dot))
+                         (set! mode (compose display-output run add-terminator))
                          (add-history "#run")
                          (repl))]
          ["#runxp" (begin (displayln "run expression mode")

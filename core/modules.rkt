@@ -20,7 +20,9 @@
 ;;
 ;; string -> string
 (define (file-name->module-id name)
-        (path->string (simplify-path (path->complete-path name))))
+        (path->string 
+          (simplify-path
+            (path->complete-path (expand-user-path name)))))
 
 ;; takes in a path to a directory and turns it into a module path
 ;;
@@ -115,6 +117,7 @@
   (let ([id (file-name->module-id (module-string->filename str))])
     (unless (not (string=? current-module-id id)) 
       (cm-error "IMPORT" "A module cannot import itself."))
+    ;; set current directory to file we are importing
     (do-import! id)
     ;; move references
     (set-refs-from-module-space! id current-module-id prefix #t)

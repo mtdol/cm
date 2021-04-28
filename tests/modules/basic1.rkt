@@ -5,86 +5,86 @@
 
 ;; checks that a.cm only has access to the components that it is allowed
 
-(check-equal? (run-stat ":>a_b.")
+(check-equal? (run-stat ":>a_b//")
 '(4))
 
-(check-equal? (run-stat ":>a_c.")
+(check-equal? (run-stat ":>a_c//")
 '("failure"))
 
-(check-equal? (run-stat "b.")
+(check-equal? (run-stat "b//")
 '(4))
 
-(check-equal? (run-stat "_a.")
+(check-equal? (run-stat "_a//")
 '("i'm private"))
 
 (check-exn exn:fail? (lambda ()
-  (run-stat "c.")))
+  (run-stat "c//")))
 
 (check-exn exn:fail? (lambda ()
-  (run-stat "_b.")))
+  (run-stat "_b//")))
 
-(check-equal? (run-stat "string struct B ().")
+(check-equal? (run-stat "string struct B ()//")
 '("(struct B ())"))
 
 (check-exn exn:fail? (lambda ()
-  (run-stat "struct _B ().")))
+  (run-stat "struct _B ()//")))
 
 (check-exn exn:fail? (lambda ()
-  (run-stat "struct C ().")))
+  (run-stat "struct C ()//")))
 
-(check-equal? (run-stat "{b_txt}.")
+(check-equal? (run-stat "{b_txt}//")
 '("b macro"))
 
-(check-equal? (run-stat "b_txt.")
+(check-equal? (run-stat "b_txt//")
 '("b macro"))
 
 (check-exn exn:fail? (lambda ()
-  (run-stat "{_b_txt}.")))
+  (run-stat "{_b_txt}//")))
 
 (check-exn exn:fail? (lambda ()
-  (run-stat "{c_txt}.")))
+  (run-stat "{c_txt}//")))
 
 
 ;; this will rerun b.cm and set the current module id to b's path
 (run-file-silent "files/basic1/b.cm")
 
 (check-exn exn:fail? (lambda ()
-  (run-stat ":>a_b.")))
+  (run-stat ":>a_b//")))
 
 (check-exn exn:fail? (lambda ()
-  (run-stat ":>a_c.")))
+  (run-stat ":>a_c//")))
 
 (check-exn exn:fail? (lambda ()
-  (run-stat "_a.")))
+  (run-stat "_a//")))
 
-(check-equal? (run-stat "b.")
+(check-equal? (run-stat "b//")
 '(4))
 
-(check-equal? (run-stat "c.")
+(check-equal? (run-stat "c//")
 '(4))
 
 (check-exn exn:fail? (lambda ()
-  (run-stat "_c.")))
+  (run-stat "_c//")))
 
 (check-exn exn:fail? (lambda ()
-  (run-stat "struct A ().")))
+  (run-stat "struct A ()//")))
 
-(check-equal? (run-stat "string struct B ().")
+(check-equal? (run-stat "string struct B ()//")
 '("(struct B ())"))
 
-(check-equal? (run-stat "string struct C ().")
+(check-equal? (run-stat "string struct C ()//")
 '("(struct C ())"))
 
 (check-exn exn:fail? (lambda ()
-  (run-stat "{a_txt}.")))
+  (run-stat "{a_txt}//")))
 
-(check-equal? (run-stat "{b_txt}.")
+(check-equal? (run-stat "{b_txt}//")
 '("b macro"))
 
-(check-equal? (run-stat "{_b_txt}.")
+(check-equal? (run-stat "{_b_txt}//")
 '("b macro private"))
 
-(check-equal? (run-stat "{c_txt}.")
+(check-equal? (run-stat "{c_txt}//")
 '("c macro"))
 
 

@@ -1,8 +1,8 @@
 -- guarded definition, to avoid redefining c when the file is reloaded
-if not defined? "c" then def c := 3 else void.
+if not defined? "c" then def c := 3 else void//
 
 defun inc () :=
-    set c := c + 1.
+    set c := c + 1//
 
 defun dec () :=
-    set c := c - 1.
+    set c := c - 1//

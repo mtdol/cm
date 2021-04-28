@@ -3,7 +3,32 @@
 - look over equality checking
     -- perhaps allow custom equality functions
 
+-- `static` keyword
+    -- like `def` except only defines a variable once
+        --- equivalent to `if not defined? "x" then def x := val else void`
+    -- static x := val
+    -- defun will behave in a static manner
+    -- perhaps make it so that each file that imports "a.cm" gets their
+        own bindings; a `def x := 5` in "a.cm" will have a different reference for
+        each file that imports it.
+
+- figure out how to turn operators neatly into functions
+
+- renamings
+    -- remove alternate names for operators
+    -- richer variable names
+    -- switch macros from `#:` to `#`
+
+- std.cm
+    -- append_map
+    -- filter_map
+    -- partition
+    -- shuffle
+    -- sort
+    -- `and`, `or`, `xor`, `not` functions
+
+- function composition
+    -- {: filter | compose not f | vs}
+
 - testing utility
-    -- allow utility to be run from cm.rkt
-    -- implement main function
-        --- runs all arguments given, and recursively runs directories
+    -- work in progress

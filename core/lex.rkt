@@ -30,8 +30,8 @@
   ;; operators that can be placed after digits or variables
   ;; ie. in "3+2", + would count
   [key-token (:or "`" "~" "," ";" "=" ">" "<" "+" "-"
-                   "*" "/" "\\" "^" "%" "&" "|" "!" "@"
-            "(" ")" "[" "]" "{" "}" ":" "$" "#" ".")]
+                   "*" "/" "\\" "^" "%" "&" "|" "@"
+            "(" ")" "[" "]" "{" "}" ":" "$" "#")]
 
   [comment (:: "--" (:* (:~ #\newline)))]
 
@@ -94,9 +94,7 @@
         (make-position-token 
           (string-trim (substring lexeme 1 (sub1 (string-length lexeme))))
           start-pos end-pos)))]
-   [(:or "(" ")" "{" "}" "#" "...") lexeme]
-   ["." "dot"]
-   ["//" "dot"]
+   [(:or "(" ")" "{" "}" "#" "..." "//") lexeme]
    ["`" "head"]
    ["~" "tail"]
    ["," "cons"]
@@ -130,7 +128,6 @@
    ;; escaped bar used in macros
    ["\\|" "\\|"]
    ["|" "case"]
-   ["!" "not"]
    ["$" "cat"]
    ["@" "print"]
    ["lam" "lambda"]

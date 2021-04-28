@@ -62,7 +62,7 @@
             \\| not :>iter_open? -> iter_init:2
         else 
             \\| :>iter_get < 5 -> iter:add1
-            else :>iter_term)} do set x := x + :>iter_get.")
+            else :>iter_term)} do set x := x + :>iter_get//")
 
 (check-equal? (run "x")
 (+ 2 3 4 5))
@@ -78,7 +78,7 @@
 (run-stat-silent 
   "(def x := 0) comma 
   while {iter {: iter_range | 2 | 6}} do
-    set x := x + :>iter_get.")
+    set x := x + :>iter_get//")
 
 (check-equal? (run "x")
 (+ 2 3 4 5))
@@ -86,7 +86,7 @@
 (run-stat-silent 
   "(def x := 0) comma 
   while {iter {: iter_range | -2 | 3}} do
-    set x := x + :>iter_get.")
+    set x := x + :>iter_get//")
 
 (check-equal? (run "x")
 (+ -2 -1 0 1 2))

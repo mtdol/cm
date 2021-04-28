@@ -4,8 +4,8 @@
 ;; check if lambda remembers the module space it was imported from
 (run-file-silent "files/private1/a.cm")
 
-(check-equal? (run-stat "a1.")
+(check-equal? (run-stat "a1//")
 '(3))
 
-(check-equal? (run-stat "a2.")
+(check-equal? (run-stat "a2//")
 '(3))

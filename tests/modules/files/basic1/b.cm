@@ -1,5 +1,5 @@
 #:import "files/basic1/c.cm"
 #:def:b_txt{} "b macro"
 #:def:_b_txt{} "b macro private"
-typedef B := ().
-def b := c.
+typedef B := ()//
+def b := c//

@@ -14,12 +14,12 @@
 
 ;; just long enough
 (run-stat-silent 
-  (format "def s := \"\". def x := 0. while x < ~a do (set s := s $ \"s\") comma set x := x + 1."
+  (format "def s := \"\"// def x := 0// while x < ~a do (set s := s $ \"s\") comma set x := x + 1//"
         (get-max-var-length)))
 
 ;; 1 too long
 (run-stat-silent 
-  "def s_long := s $ \"s\".")
+  "def s_long := s $ \"s\"//")
 
 (check-equal? (run "def var s := 1")
 1)

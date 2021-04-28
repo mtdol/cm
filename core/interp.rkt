@@ -304,6 +304,13 @@
          (match v
            ["" (cm-error "CONTRACT" "Missing argument to `dir_exists?`")]
            [v1 (racket-to-bool (directory-exists? v1))])]
+        ['to_complete_path 
+         (assert-contract (list "string") v "to_complete_path")
+         (match v
+           ["" (cm-error "CONTRACT" "`to_complete_path`: string argument cannot be empty.")]
+           [_ (path->string 
+                (simplify-path 
+                  (path->complete-path (expand-user-path v))))])]
         ['make_hash 
          (match v
            ['() (CmHash (hash) "immutable" '())]
@@ -353,7 +360,6 @@
          (let ([i (match v
                     [(? is-int?) #:when (and (>= v 0) (<= v 255)) v]
                     [_ 1])])
-           (displayln i)
            (exit i))]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))

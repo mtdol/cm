@@ -4,6 +4,22 @@
 (run-stat-silent "#:import \"std_lib::std.cm\"")
 
 ;;
+;; connect_path_elems
+;;
+
+(check-equal? (run "connect_path_elems:{list \"a\"}")
+"a")
+
+(check-equal? (run "connect_path_elems:{list}")
+"")
+
+(check-equal? (run "connect_path_elems:{list \"a\"|\"b\"}")
+"a/b")
+
+(check-equal? (run "connect_path_elems:{list \"a\"|\"b\"|\"f.txt\"}")
+"a/b/f.txt")
+
+;;
 ;; get_extension
 ;;
 
@@ -46,6 +62,19 @@
 '("a" "b" "f.txt"))
 
 ;;
+;; get_path_to_file
+;;
+
+(check-equal? (run "get_path_to_file:\"a/b/f.txt\"")
+"a/b")
+
+(check-equal? (run "get_path_to_file:\"a/f.txt\"")
+"a")
+
+(check-equal? (run "get_path_to_file:\"f.txt\"")
+"")
+
+;;
 ;; file?, directory?
 ;;
 
@@ -73,6 +102,16 @@ val-true)
   '("files/system2/a.txt" "files/system2/d1"
     "files/system2/d1/a.txt" "files/system2/d1/d1-1"
     "files/system2/d1/d1-1/b.cm" "files/system2/d1/d1-1/b.txt")))
+
+;;
+;; expand_path
+;;
+
+(check-equal? (run "(expand_path : \"n.txt\") = (cd \"\" $ \"n.txt\")")
+val-true)
+
+(check-equal? (run "(expand_path : \"./n.txt\") = (cd \"\" $ \"n.txt\")")
+val-true)
 
 ;;
 ;; current_module{}

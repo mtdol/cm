@@ -1,0 +1,2 @@
+-- will cause a divide by zero error
+defun div_by_zero () := 1.0 / 0.0//

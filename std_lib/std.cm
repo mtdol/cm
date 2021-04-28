@@ -73,6 +73,12 @@ if not ({_assert_types=_aux types | REST})
 {: ormap | lambda typ := typ = type (a) | types}
 >:#
 
+--- Errors
+------------------------------
+
+-- allows `Error` struct to be indexed
+typedef Error := id, message;//
+
 
 --- IO
 ------------------------------
@@ -117,56 +123,56 @@ defun exp (types {number} n1, types {number} n2) :=
 
 
 defun add1 (types {number} n) :=
-  if type n = "int" then n + 1 else n + 1.0.
+  if type n = "int" then n + 1 else n + 1.0//
 defun sub1 (types {number} n) :=
-  if type n = "int" then n - 1 else n - 1.0.
+  if type n = "int" then n - 1 else n - 1.0//
 defun zero? (types {number} n) :=
-  if type n = "int" then n = 0 else n = 0.0.
+  if type n = "int" then n = 0 else n = 0.0//
 defun pos? (types {number} n) :=
-  if type n = "int" then n > 0 else n > 0.0.
+  if type n = "int" then n > 0 else n > 0.0//
 defun neg? (types {number} n) :=
-  if type n = "int" then n < 0 else n < 0.0.
+  if type n = "int" then n < 0 else n < 0.0//
 defun one? (types {number} n) :=
-  if type n = "int" then n = 1 else n = 1.0.
+  if type n = "int" then n = 1 else n = 1.0//
 defun even? int n :=
-  n % 2 = 0.
+  n % 2 = 0//
 defun odd? int n :=
-  n % 2 = 1.
+  n % 2 = 1//
 
 defun is_int? (dynamic v) :=
-  int? v.
+  int? v//
 defun is_float? (dynamic v) :=
-  float? v.
+  float? v//
 defun is_string? (dynamic v) :=
-  string? v.
+  string? v//
 defun is_bool? (dynamic v) :=
-  bool? v.
+  bool? v//
 defun is_list? (dynamic v) :=
-  list? v.
+  list? v//
 defun is_pair? (dynamic v) :=
-  pair? v.
+  pair? v//
 defun is_void? (dynamic v) :=
-  void? v.
+  void? v//
 defun is_eof? (dynamic v) :=
-  eof? v.
+  eof? v//
 defun is_fun? (dynamic v) :=
-  fun? v.
+  fun? v//
 defun is_struct? (string label, dynamic v) :=
-  struct? (var label) v.
+  struct? (var label) v//
 
 -- spits back what you give it
-defun value (dynamic v) := v.
+defun value (dynamic v) := v//
 
 defun abs (types {number} n) :=
-  if neg?:n then -n else n.
+  if neg?:n then -n else n//
 
-defun to_int (v) := int v.
-defun to_float (v) := float v.
-defun to_string (v) := string v.
-defun to_bool (v) := bool v.
+defun to_int (v) := int v//
+defun to_float (v) := float v//
+defun to_string (v) := string v//
+defun to_bool (v) := bool v//
 
-defun car (pair v) := head v.
-defun cdr (pair v) := tail v.
+defun car (pair v) := head v//
+defun cdr (pair v) := tail v//
 
 
 -- list questions
@@ -416,7 +422,7 @@ defun duplicates? (list vs) :=
           else (hash_set h elem void) comma false
       | vs}//
 
--- returns true if there are duplicate elements in `vs`
+-- removes duplicate elements from `vs`
 defun remove_duplicates (list vs) :=
   let h := make_hash {list "mutable"} in
     {: filter 
@@ -550,12 +556,10 @@ defun format (string str, list vs) :=
   in
       {: aux | str | vs | 1}//
 
--- TODO: test
 -- splits `str` by `sep`
 defun string_split (string str, string sep) :=
   regex {list "regexp-split" | {list "quote"|sep} | str}//
 
--- TODO: test
 -- trims whitespace from str
 defun string_trim (string str) :=
   match regex_match : "^[\\s]*(.*?)[\\s]*$" : str
@@ -621,6 +625,14 @@ def path_separator :=
   | _ -> "/" 
   end//
 
+-- ("a", "b", "f.txt") -> "a/b/f.txt"
+defun connect_path_elems (list elems) :=
+  match elems
+  | () -> ""
+  | elem; -> elem 
+  | elem, elems -> elem $ path_separator $ (connect_path_elems:elems)
+  end//
+
 -- "a/f.txt" -> "txt", "f" -> ""
 defun get_extension (string file) :=
   match regex_match:"^.*\\.(.+)$":file
@@ -628,10 +640,17 @@ defun get_extension (string file) :=
   | false -> ""
   end//
 
--- TODO: test
 -- "a/b/f.txt" -> ("a", "b", "f.txt";)
 defun get_path_elements (string path) :=
   string_split : path : path_separator//
+
+-- "a/b/f.txt" -> "a/b"
+-- "f.txt" -> ""
+defun get_path_to_file (string file) :=
+  match get_path_elements:file 
+  | elem; -> ""
+  | elems, ..., _; -> connect_path_elems:elems
+  end//
 
 -- if `elem` ends in a path seperator, then clears
 defun _clean_path_elem (string elem) :=
@@ -665,7 +684,7 @@ defun cd2 (string s) :=
 
 -- pretty print ls of current dir
 defun lsc () :=
-  pprint:(ls ".").
+  pprint:(ls ".")//
 defun cdc () :=
   (cd "")//
 
@@ -679,6 +698,10 @@ defun directory? (string f) :=
 
 defun file? (string f) :=
   file_exists? f//
+
+-- converts the given path to its absolute form
+defun expand_path (string path) :=
+  to_complete_path path//
 
 -- gives the arguments to ls with the prefix appended onto the results.
 defun ls_build (string arg) :=

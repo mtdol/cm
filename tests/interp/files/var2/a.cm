@@ -1,3 +1,3 @@
 #:import:% "files/var2/b.cm"
 
-def var "_a" := 3.
+def var "_a" := 3//

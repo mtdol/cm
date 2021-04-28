@@ -2,4 +2,4 @@
 
 -- this macro should be undefined as it is defined in c, and
 -- so we should get an exception when this file is loaded
-{c_text}.
+{c_text}//

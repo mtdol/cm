@@ -2,6 +2,6 @@
 #:def:a_macro{} {_a_macro}
 #:def:_a_macro{} 2
 
-def a1 := {b}.
+def a1 := {b}//
 
-def a2 := {gimme {a_macro}}.
+def a2 := {gimme {a_macro}}//

@@ -13,7 +13,7 @@
 (define (parse-stat tokens module-id)
   (let aux ([tokens (pre-parse tokens module-id)] [acc '()] [linenum 1] [curr-linenum 1])
     (match tokens 
-           [(cons (? (tok=? "dot")) t) 
+           [(cons (? (tok=? "//")) t) 
             ;; set linenum for error messages
             (set-current-linenum! 
               (if (null? acc) curr-linenum (line (last acc))))
