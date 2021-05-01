@@ -49,6 +49,8 @@
     [(Prim0 '...) (cm-error "SYNTAX" "Cannot use `...` outside of match-expr.")]
     [(? var-container? var) 
      (interp-var (get-var-label var context params module-id debug) context params module-id)]
+    [(Prim1 'get_param var) 
+     (interp-get-param var context params module-id debug)]
     [(Prim1 'schemaof e1) (interp-schemaof e1 context params module-id debug)]
     [(Prefix2 'struct e1 e2) (interp-struct e1 e2 context params module-id debug)]
     [(Prefix2 'struct? e1 e2) (interp-struct? e1 e2 context params module-id debug)]
@@ -180,8 +182,11 @@
     [(Let _ _ _) (cm-error "SYNTAX" "Improperly formed `let`.")]
     [(Param e1 (Assign e2) (In e3)) (interp-param e1 e2 e3 context params module-id debug)]
     [(Param _ _ _) (cm-error "SYNTAX" "Improperly formed `param`.")]
-    [(Letrec e1 (Assign e2) (In e3)) (interp-letrec e1 e2 e3 context params module-id debug)]
-    [(Letrec _ _ _) (cm-error "SYNTAX" "Improperly formed `letrec`.")]
+    [(Letrec (? var-container? var) args-e (Assign body-e) (In in-e))
+     (interp-letrec (get-var-label var context params module-id debug)
+                    args-e body-e in-e
+                    context params module-id debug)]
+    [(Letrec _ _ _ _) (cm-error "SYNTAX" "Improperly formed `letrec`.")]
     [(Lambda e1 (Assign e2)) 
       (match (interp-lambda-list e1 e2)
              [(Lambda e1-2 (Assign e2-2)) 
@@ -677,17 +682,35 @@
                  )]
          [_ (cm-error "SYNTAX" "Case is missing yields.")]))
 
-(define (interp-var var context params module-id)
+(define (interp-var label context params module-id)
   (cond
     ;; first local context
-    [(hash-has-key? context var) (get-local-var-data var context)]
-    ;; then params
-    [(hash-has-key? params var) (get-local-var-data var params)]
+    [(hash-has-key? context label) (get-local-var-data label context)]
     ;; then global context
-    [else
-      (match (get-global-var-data var module-id)
-        [#f (cm-error "UNDEFINED" (format "Var ~a has not yet been defined." var))]
-        [res res])]))
+    [else (match (get-global-var-data label module-id)
+      [#f 
+       (cond 
+        ;; then params
+        [(hash-has-key? params label) (get-local-var-data label params)]
+        [else (cm-error "UNDEFINED" 
+                 (format "Var \"~a\" has not yet been defined." label))])]
+      [res res])]))
+
+ 
+(define (interp-get-param var context params module-id debug)
+  (match var
+    [(? var-container?)
+     (let ([label (get-var-label var context params module-id debug)])
+       (match (get-local-var-data label params)
+         [#f 
+          (cm-error 
+            "UNDEFINED"
+            (format "Could not find parameter: \"~a\"" label))]
+         [res res]))]
+    [_ 
+      (cm-error 
+        "CONTRACT" 
+        (format "`get_param` requires a variable argument.\ngot: ~a" var))]))
 
 
 ;; gets the label from a left-side expr (such as `int x` in (def int x := 3)),
@@ -726,6 +749,30 @@
        (values (list "dynamic") 
          (get-var-label var context params module-id debug))]
       [_ (values #f #f)]))
+
+;; turns a improper list expr of left-hand-exprs into guard-types and labels
+;; yields (values #f #f) if the arg-exprs are incorrectly formated
+;;
+;; (Prim2 'cons (Prim1 'int (Var "x")) (Prim1 'float (Var "y"))) -> 
+;;   (values (list (list "float") (list "int")) (list "x" "y"))
+;;
+;; expr -> (values ((string | fun) list list) (string list)) | (values #f #f)
+(define (interp-left-hand-exprs args-e context params module-id debug)
+  (match args-e
+    [(Prim2 'cons e es) 
+     (match/values (interp-left-hand-exprs es context params module-id debug)
+        [(#f #f) (values #f #f)]
+        [(guard-types/lst label/lst)
+         (match/values (interp-left-hand-expr e context params module-id debug)
+           [(guard-types label) 
+            (values (cons guard-types guard-types/lst) (cons label label/lst))]
+        )])]
+    [e 
+      (match/values (interp-left-hand-expr e context params module-id debug)
+        [(#f #f) (values #f #f)]
+        [(guard-types label) (values (cons guard-types '()) (cons label '()))]
+        )]
+    ))
 
 (define (interp-def guard-types label v context params module-id update? debug)
  (match label
@@ -766,18 +813,15 @@
             (trace-interp-expr 
               e3 context (set-local-var label v2 params) module-id debug)])))
 
-(define (interp-letrec e1 e2 e3 context params module-id debug)
-  (let* ([label
-          (match e1
-            [(? var-container?) (get-var-label e1 context params module-id debug)]
-            [_ (cm-error "CONTRACT" "Left side of `letrec` must be a variable.")])]
-        [v2/0 (trace-interp-expr e2 context params module-id debug)]
-        [v2
-          (begin (assert-contract (list "fun") v2/0 params "letrec")
-                 (interp-lambda e1 e2 label
-                        (set-local-var label v2/0 context) module-id debug))])
-    (trace-interp-expr 
-      e3 (set-local-var label v2 context) params module-id debug)))
+(define (interp-letrec label args-e body-e in-e context params module-id debug)
+  (match (interp-lambda-list args-e body-e)
+    [(Lambda args-e2 (Assign body-e2))
+     (let ([f 
+            (interp-lambda args-e2 body-e2
+                           label context params module-id debug)])
+       (trace-interp-expr 
+         in-e context (set-local-var label f params) module-id debug)
+       )]))
 
 ;; name is the name of the function and is either a string 
 ;; or '() for anonymous functions

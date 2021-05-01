@@ -3,20 +3,27 @@
 - look over equality checking
     -- perhaps allow custom equality functions
 
+- more general use macros?
+    #:defop:{a}+={b} set a := a + b
+    c += 2
+
 -- `static` keyword
     -- like `def` except only defines a variable once
-        --- equivalent to `if not defined? "x" then def x := val else void`
+        --- equivalent to 
+          `if not defined? {list "x"|{current_module}} then def x := val else void`
     -- static x := val
     -- defun will behave in a static manner
     -- perhaps make it so that each file that imports "a.cm" gets their
         own bindings; a `def x := 5` in "a.cm" will have a different reference for
         each file that imports it.
 
+    -- perhaps make the static behavior the default and create a `redef`
+      operator if the user wants to redefine.  
+
 - figure out how to turn operators neatly into functions
 
-- more general use macros?
-    #:defop:{a}+={b} set a := a + b
-    c += 2
+- flesh out `defined?` a bit
+    -- add ability to ask `local`, `param`, and `global`
 
 - std.cm
     -- append_map
@@ -28,12 +35,12 @@
 - function composition
     -- {: filter | compose not f | vs}
 
-- `letrec` `var` `args`
-    -- like `defun` but `var` can only be accessed within scope.
-    letrec f (int x, bool b) :=
-      code...
+- `letaux`
+    letaux aux 
+    | x := 3
+    | y := 4
     in
-      f:3//
+      if x = 0 then void else aux:(@ sub1:x):(@ sub1:y)//
 
 - testing utility
     -- work in progress
