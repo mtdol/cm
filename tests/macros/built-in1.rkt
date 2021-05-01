@@ -37,7 +37,7 @@
 "x \"abc\"")
 
 (check-equal? (run "{string x+ \"abc\"}")
-"x plus \"abc\"")
+"x + \"abc\"")
 
 ;;
 ;; current_module{}

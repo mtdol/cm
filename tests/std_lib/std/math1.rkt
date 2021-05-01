@@ -24,35 +24,67 @@ val-false)
 val-false)
 
 
-(check-equal? (run "add:3:4")
+(check-equal? (run "func.add:3:4")
 7)
 
-(check-failure run "add:3:4.2")
+(check-failure run "func.add:3:4.2")
 
-(check-equal? (run "sub:3:4")
+(check-equal? (run "func.sub:3:4")
 -1)
 
-(check-failure run "sub:3:4.2")
+(check-failure run "func.sub:3:4.2")
 
-(check-equal? (run "mult:3:4")
+(check-equal? (run "func.mult:3:4")
 12)
 
-(check-failure run "mult:3:4.2")
+(check-failure run "func.mult:3:4.2")
 
-(check-equal? (run "div:6.0:2.0")
+(check-equal? (run "func.div:6.0:2.0")
 3.0)
 
-(check-failure run "div:3:4.2")
+(check-failure run "func.div:3:4.2")
 
-(check-failure run "div:3:4")
+(check-failure run "func.div:3:4")
 
-(check-equal? (run "exp:2:3")
+(check-equal? (run "func.exp:2:3")
 8)
 
-(check-equal? (run "exp:2.0:3.0")
+(check-equal? (run "func.exp:2.0:3.0")
 8.0)
 
-(check-failure run "exp:3:4.2")
+(check-failure run "func.exp:3:4.2")
+
+(check-equal? (run "func.and:true:false")
+val-false)
+
+(check-equal? (run "func.and:true:true")
+val-true)
+
+(check-failure run "func.and:3:true")
+
+(check-equal? (run "func.or:false:false")
+val-false)
+
+(check-equal? (run "func.or:true:false")
+val-true)
+
+(check-failure run "func.or:3:true")
+
+(check-equal? (run "func.xor:false:false")
+val-false)
+
+(check-equal? (run "func.xor:true:false")
+val-true)
+
+(check-failure run "func.xor:3:true")
+
+(check-equal? (run "func.not:false")
+val-true)
+
+(check-equal? (run "func.not:true")
+val-false)
+
+(check-failure run "func.not:3")
 
 (check-equal? (run "add1:3")
 4)
@@ -168,66 +200,66 @@ val-true)
 (check-failure run "odd?:3.2")
 
 
-(check-equal? (run "is_int?:3")
+(check-equal? (run "func.int?:3")
 val-true)
 
-(check-equal? (run "is_int?:3.2")
+(check-equal? (run "func.int?:3.2")
 val-false)
 
-(check-equal? (run "is_float?:3.2")
+(check-equal? (run "func.float?:3.2")
 val-true)
 
-(check-equal? (run "is_float?:3")
+(check-equal? (run "func.float?:3")
 val-false)
 
-(check-equal? (run "is_string?:\"3.2\"")
+(check-equal? (run "func.string?:\"3.2\"")
 val-true)
 
-(check-equal? (run "is_string?:3")
+(check-equal? (run "func.string?:3")
 val-false)
 
-(check-equal? (run "is_bool?:false")
+(check-equal? (run "func.bool?:false")
 val-true)
 
-(check-equal? (run "is_bool?:3")
+(check-equal? (run "func.bool?:3")
 val-false)
 
-(check-equal? (run "is_list?:()")
+(check-equal? (run "func.list?:()")
 val-true)
 
-(check-equal? (run "is_list?:3")
+(check-equal? (run "func.list?:3")
 val-false)
 
-(check-equal? (run "is_pair?:(1,2)")
+(check-equal? (run "func.pair?:(1,2)")
 val-true)
 
-(check-equal? (run "is_pair?:3")
+(check-equal? (run "func.pair?:3")
 val-false)
 
-(check-equal? (run "is_void?:void")
+(check-equal? (run "func.void?:void")
 val-true)
 
-(check-equal? (run "is_void?:3")
+(check-equal? (run "func.void?:3")
 val-false)
 
-(check-equal? (run "is_eof?:eof")
+(check-equal? (run "func.eof?:eof")
 val-true)
 
-(check-equal? (run "is_eof?:3")
+(check-equal? (run "func.eof?:3")
 val-false)
 
-(check-equal? (run "is_fun?:add1")
+(check-equal? (run "func.fun?:add1")
 val-true)
 
-(check-equal? (run "is_fun?:3")
+(check-equal? (run "func.fun?:3")
 val-false)
 
 (run-silent "typedef S := a,b;")
 
-(check-equal? (run "is_struct?:\"S\":(struct S (1,2;))")
+(check-equal? (run "func.struct?:\"S\":(struct S (1,2;))")
 val-true)
 
-(check-equal? (run "is_struct?:\"S\":3")
+(check-equal? (run "func.struct?:\"S\":3")
 val-false)
 
 
@@ -313,21 +345,27 @@ val-true)
 
 (check-failure run "to_bool:(lambda x := x)")
 
-(check-equal? (run "car:(3,2)")
+(check-equal? (run "func.head:(3,2)")
+3)
+
+(check-equal? (run "func.head:(3,2;)")
 3)
 
 (check-equal? (run "car:(3,2;)")
 3)
 
-(check-failure run "car:3")
+(check-failure run "func.head:3")
 
-(check-equal? (run "cdr:(3,2)")
+(check-equal? (run "func.tail:(3,2)")
 2)
+
+(check-equal? (run "func.tail:(3,2;)")
+'(2))
 
 (check-equal? (run "cdr:(3,2;)")
 '(2))
 
-(check-failure run "cdr:3")
+(check-failure run "func.tail:3")
 
 ;;
 ;; list type funcs

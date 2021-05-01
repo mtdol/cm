@@ -55,10 +55,18 @@
    [(:or #\tab #\space #\newline) (import-list-lex input-port)]
    [(:: "->") "->"]
    [(:: ",") ","]
-   [(:: #\" (:* (:or (:: "\\\"") (:~ #\"))) #\") lexeme]
+   [str 
+     (match start-pos 
+       [(position _ linenum _)
+        (set-current-linenum! linenum)
+        (process-string lexeme)])]
    [(:: #\" (:* (:~ #\"))) (match start-pos [(position colnum linenum _)
                         (cm-error-linenum current-module-id linenum error-id 
                                 (format "Non-terminated string around column ~a." colnum))])]
+   ;[(:: #\" (:* (:or (:: "\\\"") (:~ #\"))) #\") lexeme]
+   ;[(:: #\" (:* (:~ #\"))) (match start-pos [(position colnum linenum _)
+                        ;(cm-error-linenum current-module-id linenum error-id 
+                                ;(format "Non-terminated string around column ~a." colnum))])]
    ;; everything else (vars and operators)
    [(:+ (:& (:+ any-char) (:~ import-key-token) (:~ whitespace) (:~ #\"))) lexeme]
    ;; custom error behavior
@@ -94,48 +102,25 @@
         (make-position-token 
           (string-trim (substring lexeme 1 (sub1 (string-length lexeme))))
           start-pos end-pos)))]
-   [(:or "(" ")" "{" "}" "#" "..." "//") lexeme]
+   ;; tokens that lex as themselves
+   [(:or "(" ")" "{" "}" "#" "..." "//" "$" ">=" "<=" ">" "<"
+         "!=" "=" "==" "!==" "+" "-" "*" "/" "%" "^" ":" ":>" "::" "->"
+         ":=" "|" ",")
+    lexeme]
    ["`" "head"]
    ["~" "tail"]
-   ["," "cons"]
    [";" (return-without-pos 
           (list 
-            (make-position-token "cons" start-pos end-pos) 
+            (make-position-token "," start-pos end-pos) 
             (make-position-token "null" start-pos end-pos)))]
    ["()" "null"]
    ["[]" "null"]
    ["[" "("]
    ["]" ")"]
-   ["=" "equal"]
-   ["!=" "not_equal"]
-   ["neq" "not_equal"]
-   ["equals" "equal"]
-   ["eq" "equal"]
-   ["==" "eqq"]
-   ["!==" "neqq"]
-   ["<" "lt"]
-   [">" "gt"]
-   [">=" "ge"]
-   ["<=" "le"]
-   ["+" "plus"]
-   ["-" "minus"]
-   ["*" "star"]
-   ["/" "slash"]
-   ["^" "caret"]
-   ["%" "mod"]
-   ["&" "and"]
-   ["||" "or"]
    ;; escaped bar used in macros
    ["\\|" "\\|"]
-   ["|" "case"]
-   ["$" "cat"]
    ["@" "print"]
    ["lam" "lambda"]
-   [":=" "assign"]
-   [":" "apply"]
-   [":>" "appnull"]
-   ["::" "appindex"]
-   ["->" "yields"]
    [(:+ digit) lexeme]
    [(:: (:+ digit) #\. (:+ digit)) lexeme]
    [str 

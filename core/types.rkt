@@ -225,4 +225,4 @@
 (define (is-bool-token? v)
          (or (string=? "true") (string=? "false")))
 (define (is-var-token? v) 
-  (and (not (is-keyword? v)) (regexp-match? #rx"^[a-zA-Z_][a-zA-Z0-9_\\.]*[?!]?$" v)))
+  (and (not (is-reserved-keyword? v)) (regexp-match? #rx"^[a-zA-Z_][a-zA-Z0-9_\\.]*[?!]?$" v)))

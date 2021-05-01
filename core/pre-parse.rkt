@@ -45,7 +45,7 @@
                 (get-current-linenum)
                 "MACRO" "Missing closing brace for macro application.")]
          ;; shifting to next argument
-         [(cons (? (tok=? "case")) t) #:when (zero? bcount) (parse-macro-contents t label 
+         [(cons (? (tok=? "|")) t) #:when (zero? bcount) (parse-macro-contents t label 
                             (cons '() (cons (reverse (car args)) (cdr args)))
                             module-id bcount depth)]
          [(cons (? (tok=? "}")) t)
@@ -93,8 +93,8 @@
   (let aux ([tokens tokens] [first? #t])
     (match tokens
            [(cons h t) #:when 
-                    (and first? (or (string=? "plus" (tok h))
-                                    (string=? "minus" (tok h))))
+                    (and first? (or (string=? "+" (tok h))
+                                    (string=? "-" (tok h))))
                 (aux (cons (make-token (string-append ":uni_" (tok h)) (line h)) t) #f)]
            ;; infix op being treated as prefix is error
            [(cons h t) #:when 
@@ -109,7 +109,7 @@
                                (and (is-operator? (tok h1)) 
                                     (not (zero? (op-to-arity (tok h1)))))) 
                            (and (is-operator? (tok h2)) (string=? (op-to-position (tok h2)) "infix")))
-                    (cond [(or (string=? "plus" (tok h2)) (string=? "minus" (tok h2)))
+                    (cond [(or (string=? "+" (tok h2)) (string=? "-" (tok h2)))
                         ;; call aux on uni since it is also an operator
                         (cons h1 (aux (cons (make-token (string-append ":uni_" (tok h2)) (line h2)) t) #f))]
                           [else (cm-error-linenum 

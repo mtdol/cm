@@ -19,7 +19,7 @@
 (check-equal? (run "{: map | cdr | {list 1,3|2,4.3|-2,4,1;}}")
 '(3 4.3 (4 1)))
 
-(check-equal? (run "let fs := {: map | add | {list 1|2|3}} in {: map | (lambda x := x:2) | fs}")
+(check-equal? (run "let fs := {: map | func.add | {list 1|2|3}} in {: map | (lambda x := x:2) | fs}")
 '(3 4 5))
 
 (check-failure run "{: map | value | 3}")

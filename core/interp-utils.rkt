@@ -41,11 +41,11 @@
 
 ;; tells if the type matches for the given value
 ;; (string | fun), value -> bool
-(define (guard-type-matches? type value)
+(define (guard-type-matches? type value params)
   (match type
     ;; type is a function guard
     [(? is-fun?) 
-     (let ([res (interp-apply type value)])
+     (let ([res (interp-apply type value params)])
      (unless (is-bool? res)
        (cm-error 
          "CONTRACT" 
@@ -63,19 +63,19 @@
       ])
 
   )
-(define (guard-types-match? types value)
-  (ormap (lambda (type) (guard-type-matches? type value)) types))
+(define (guard-types-match? types value params)
+  (ormap (lambda (type) (guard-type-matches? type value params)) types))
 
 
 
-(define (assign-type-check types value label) 
-  (assert-contract types value (string-append "var " label)))
+(define (assign-type-check types value params label) 
+  (assert-contract types value params (string-append "var " label)))
 
 ;; throws an exception if the given type and the type of the value do not match
 ;;
 ;; string list, value, string -> void | exception
-(define (assert-contract types value label)
-   (if (guard-types-match? types value)
+(define (assert-contract types value params label)
+   (if (guard-types-match? types value params)
      (void)
      (cm-error "CONTRACT" 
       (match types
@@ -114,12 +114,12 @@
     [_ #f]))
 
 ;; gets the label of a var
-(define (get-var-label expr context module-id debug)
+(define (get-var-label expr context params module-id debug)
   (match expr
     [(Var label) label]
     [(Prim1 'var var) 
      (check-var-string-name 
-       (trace-interp-expr var context module-id debug))]
+       (trace-interp-expr var context params module-id debug))]
     [_ #f]
     ))
 
@@ -137,7 +137,7 @@
 
 
 ;; checks if the given list matches the schema for the type
-(define (valid-against-schema? label schemas vs)
+(define (valid-against-schema? label schemas vs params)
  (let aux ([vs vs] [schemas schemas])
    (match vs
      ['() (null? schemas)]
@@ -145,7 +145,7 @@
       (match schemas
         ['() #f]
         [(cons (SchemaElem types _) schemas)
-         (if (guard-types-match? types v) (aux vs schemas) #f)]
+         (if (guard-types-match? types v params) (aux vs schemas) #f)]
         ;; the schema should have been validated, so we will
         ;; only end up here if something is wrong
         [_ 

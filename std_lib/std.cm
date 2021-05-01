@@ -77,7 +77,7 @@ if not ({_assert_types=_aux types | REST})
 ------------------------------
 
 -- allows `Error` struct to be indexed
-typedef Error := id, message;//
+typedef Error := string id, string message;//
 
 
 --- IO
@@ -91,7 +91,7 @@ defun sprint (v) := (print v) comma void//
 defun pprint (vs) :=
   match vs 
   | () -> void 
-  | v, t -> (@ v) comma (pprint:t)
+  | v, vs -> (@ v) comma (pprint:vs)
   | v -> (@ v) comma void
   end//
 
@@ -107,20 +107,28 @@ defun number? (v) :=
   let t := type v in
       t = "int" or t = "float"//
 
-defun add (types {number} n1, types {number} n2) :=
+defun func.add (types {number} n1, types {number} n2) :=
   {assert_types= "add"|{list type n1}|n1|n2} 
   n1 + n2//
-defun sub (types {number} n1, types {number} n2) :=
+defun func.sub (types {number} n1, types {number} n2) :=
   {assert_types= "sub"|{list type n1}|n1|n2} 
   n1 - n2//
-defun mult (types {number} n1, types {number} n2) :=
+defun func.mult (types {number} n1, types {number} n2) :=
   {assert_types= "mult"|{list type n1}|n1|n2} 
   n1 * n2//
-defun div (float n1, float n2) :=
+defun func.div (float n1, float n2) :=
   n1 / n2//
-defun exp (types {number} n1, types {number} n2) :=
+defun func.exp (types {number} n1, types {number} n2) :=
   n1 ^ n2//
 
+defun func.and (bool b1, bool b2) :=
+  b1 and b2//
+defun func.or (bool b1, bool b2) :=
+  b1 or b2//
+defun func.xor (bool b1, bool b2) :=
+  b1 xor b2//
+defun func.not (bool b) :=
+  not b//
 
 defun add1 (types {number} n) :=
   if type n = "int" then n + 1 else n + 1.0//
@@ -139,25 +147,25 @@ defun even? int n :=
 defun odd? int n :=
   n % 2 = 1//
 
-defun is_int? (dynamic v) :=
+defun func.int? (dynamic v) :=
   int? v//
-defun is_float? (dynamic v) :=
+defun func.float? (dynamic v) :=
   float? v//
-defun is_string? (dynamic v) :=
+defun func.string? (dynamic v) :=
   string? v//
-defun is_bool? (dynamic v) :=
+defun func.bool? (dynamic v) :=
   bool? v//
-defun is_list? (dynamic v) :=
+defun func.list? (dynamic v) :=
   list? v//
-defun is_pair? (dynamic v) :=
+defun func.pair? (dynamic v) :=
   pair? v//
-defun is_void? (dynamic v) :=
+defun func.void? (dynamic v) :=
   void? v//
-defun is_eof? (dynamic v) :=
+defun func.eof? (dynamic v) :=
   eof? v//
-defun is_fun? (dynamic v) :=
+defun func.fun? (dynamic v) :=
   fun? v//
-defun is_struct? (string label, dynamic v) :=
+defun func.struct? (string label, dynamic v) :=
   struct? (var label) v//
 
 -- spits back what you give it
@@ -171,8 +179,10 @@ defun to_float (v) := float v//
 defun to_string (v) := string v//
 defun to_bool (v) := bool v//
 
-defun car (pair v) := head v//
-defun cdr (pair v) := tail v//
+defun func.head (pair v) := head v//
+defun func.tail (pair v) := tail v//
+defun car (v) := func.head:v//
+defun cdr (v) := func.tail:v//
 
 
 -- list questions

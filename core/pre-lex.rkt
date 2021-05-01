@@ -122,15 +122,15 @@
      args)))
 
 
-;; removes "case" from a list, so it can be stored in the macro context
+;; removes "|" from a list, so it can be stored in the macro context
 (define (remove-bars ts)
-  (filter (lambda (elem) (not (string=? (tok elem) "case"))) ts))
+  (filter (lambda (elem) (not (string=? (tok elem) "|"))) ts))
 
 ;; unwraps the given string and returns it else false
 ;;
 ;; string -> string | bool
 (define (unwrap-string str)
-  (match (regexp-match #rx"^\\\"(.*)\\\"$" str) 
+  (match (regexp-match #rx"^\"(.*)\"$" str) 
            [(list _ r1) r1] 
            [_ #f]))
 ;; unwraps if is a string, else just returns str

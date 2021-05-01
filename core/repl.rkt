@@ -30,9 +30,12 @@
 ;; adds a dot to the end of the string if not present, and the line is not a
 ;; line macro
 (define (add-terminator str)
-  (if (regexp-match? #rx"^.*// *$" str)
-    str
-    (string-append str "//")))
+  (cond
+    ;; already terminated
+    [(regexp-match? #rx"^.*// *$" str) str]
+    ;; line macro
+    [(regexp-match? #px"^\\s*#" str) str]
+    [else (string-append str "//")]))
 
 ;; the cm function we will be calling
 (define mode (compose display-output run add-terminator))

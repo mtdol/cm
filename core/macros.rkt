@@ -141,11 +141,11 @@
     [(and (not (null? vars)) (string=? "REST" (last vars))) (>= (length args) (length vars))]
     [else (= (length args) (length vars))]))
 
-;; '(("1" "+" "2") ("3")) -> '("1" "+" "2" "case" "3")
+;; '(("1" "+" "2") ("3")) -> '("1" "+" "2" "|" "3")
 ;;
 ;; token list list -> token list
 (define (transform-rest rest)
   (match rest
          ['() '()]
          [(cons h '()) h]
-         [(cons h t) (append h (list (Token "case")) (transform-rest t))]))
+         [(cons h t) (append h (list (Token "|")) (transform-rest t))]))

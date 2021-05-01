@@ -29,7 +29,7 @@
 '("\"\"5 g\""))
 
 (check-equal? (tokenize "\"\\\"5 g\" + 7")
-'("\"\"5 g\"" "plus" "7"))
+'("\"\"5 g\"" "+" "7"))
 
 
 ;; check non-terminated strings

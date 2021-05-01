@@ -14,10 +14,9 @@
 
 - figure out how to turn operators neatly into functions
 
-- renamings
-    -- remove alternate names for operators
-    -- richer variable names
-    -- switch macros from `#:` to `#`
+- more general use macros?
+    #:defop:{a}+={b} set a := a + b
+    c += 2
 
 - std.cm
     -- append_map
@@ -25,10 +24,16 @@
     -- partition
     -- shuffle
     -- sort
-    -- `and`, `or`, `xor`, `not` functions
 
 - function composition
     -- {: filter | compose not f | vs}
+
+- `letrec` `var` `args`
+    -- like `defun` but `var` can only be accessed within scope.
+    letrec f (int x, bool b) :=
+      code...
+    in
+      f:3//
 
 - testing utility
     -- work in progress

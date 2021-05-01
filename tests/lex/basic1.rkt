@@ -26,52 +26,52 @@
 '("//" "3.4" "//"))
 
 (check-equal? (tokenize "+3.4")
-'("plus" "3.4"))
+'("+" "3.4"))
 
 (check-equal? (tokenize "5+3.4")
-'("5" "plus" "3.4"))
+'("5" "+" "3.4"))
 
 (check-equal? (tokenize "5+//3.4")
-'("5" "plus" "//" "3.4"))
+'("5" "+" "//" "3.4"))
 
 (check-equal? (tokenize "5+*3.4")
-'("5" "plus" "star" "3.4"))
+'("5" "+" "*" "3.4"))
 
 (check-equal? (tokenize "/5+*3.4//")
-'("slash" "5" "plus" "star" "3.4" "//"))
+'("/" "5" "+" "*" "3.4" "//"))
 
 (check-equal? (tokenize "/%5+*3.4//")
-'("slash" "mod" "5" "plus" "star" "3.4" "//"))
+'("/" "%" "5" "+" "*" "3.4" "//"))
 
 (check-equal? (tokenize "cond | true -> 2 else 3")
-'("cond" "case" "true" "yields" "2" "else" "3"))
+'("cond" "|" "true" "->" "2" "else" "3"))
 
 (check-equal? (tokenize "cond | true -> 2 else 3//")
-'("cond" "case" "true" "yields" "2" "else" "3" "//"))
+'("cond" "|" "true" "->" "2" "else" "3" "//"))
 
 (check-equal? (tokenize "cond|true->2 else 3//")
-'("cond" "case" "true" "yields" "2" "else" "3" "//"))
+'("cond" "|" "true" "->" "2" "else" "3" "//"))
 
 (check-equal? (tokenize "cond|true->2else3//")
-'("cond" "case" "true" "yields" "2else3" "//"))
+'("cond" "|" "true" "->" "2else3" "//"))
 
 (check-equal? (tokenize "cond|true->2//else3//")
-'("cond" "case" "true" "yields" "2" "//" "else3" "//"))
+'("cond" "|" "true" "->" "2" "//" "else3" "//"))
 
 (check-equal? (tokenize "cond|tru--e->2.else3//")
-'("cond" "case" "tru"))
+'("cond" "|" "tru"))
 
 (check-equal? (tokenize "cond|\ntrue->2//else3//")
-'("cond" "case" "true" "yields" "2" "//" "else3" "//"))
+'("cond" "|" "true" "->" "2" "//" "else3" "//"))
 
 (check-equal? (tokenize "cond|\ntrue->\n2//else3//")
-'("cond" "case" "true" "yields" "2" "//" "else3" "//"))
+'("cond" "|" "true" "->" "2" "//" "else3" "//"))
 
 (check-equal? (tokenize "cond|\ntrue-->\n2//else3//")
-'("cond" "case" "true" "2" "//" "else3" "//"))
+'("cond" "|" "true" "2" "//" "else3" "//"))
 
 (check-equal? (tokenize "cond|\nt--rue->\n2//else3//")
-'("cond" "case" "t" "2" "//" "else3" "//"))
+'("cond" "|" "t" "2" "//" "else3" "//"))
 
 (check-equal? (tokenize "cond|\nt--rue->\n2//el--se3//")
-'("cond" "case" "t" "2" "//" "el"))
+'("cond" "|" "t" "2" "//" "el"))
