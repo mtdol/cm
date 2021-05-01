@@ -14,10 +14,14 @@
 "")
 
 (check-equal? (run "connect_path_elems:{list \"a\"|\"b\"}")
-"a/b")
+(if (equal? (system-type) 'windows)
+  "a\\b"
+  "a/b"))
 
 (check-equal? (run "connect_path_elems:{list \"a\"|\"b\"|\"f.txt\"}")
-"a/b/f.txt")
+(if (equal? (system-type) 'windows)
+  "a\\b\\f.txt"
+  "a/b/f.txt"))
 
 ;;
 ;; get_extension
@@ -65,10 +69,18 @@
 ;; get_path_to_file
 ;;
 
-(check-equal? (run "get_path_to_file:\"a/b/f.txt\"")
-"a/b")
+(check-equal? 
+  (run (match (system-type) 
+    ['windows "get_path_to_file:\"a\\\\b\\\\f.txt\""]
+    [_ "get_path_to_file:\"a/b/f.txt\""]))
+(if (equal? (system-type) 'windows)
+  "a\\b"
+  "a/b"))
 
-(check-equal? (run "get_path_to_file:\"a/f.txt\"")
+(check-equal?
+  (run (match (system-type) 
+    ['windows "get_path_to_file:\"a\\\\f.txt\""]
+    [_ "get_path_to_file:\"a/f.txt\""]))
 "a")
 
 (check-equal? (run "get_path_to_file:\"f.txt\"")
