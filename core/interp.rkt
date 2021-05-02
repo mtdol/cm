@@ -824,14 +824,20 @@
             (interp-lambda args-e2 body-e2
                            label context params module-id debug)])
        (trace-interp-expr 
-         in-e context (set-local-var label f params) module-id debug)
+         ;; add reference to `f` in both local context and as a param
+         in-e (set-local-var label f context) 
+         (set-local-var label f params) module-id debug)
        )]))
 
 (define (interp-letaux label e context params module-id debug)
   (let-values ([(args-e body-e in-e) (interp-letaux-aux e)])
     (interp-letrec 
-      label args-e in-e 
-      (Prefix2 'appl (Var label) body-e)
+      label args-e 
+      ;; auto let bind for convenience
+      (Let (Var label) (Assign (Prim1 'get_param (Var label))) (In in-e))
+      ;; `in` section of `letrec` will just 
+      ;;   apply the arguments onto the parameters
+      (Prefix2 'appl (Prim1 'get_param (Var label)) body-e)
       context params module-id debug)))
 
 ;; parses the case portion of `letaux`

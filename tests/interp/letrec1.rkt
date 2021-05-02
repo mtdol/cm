@@ -43,15 +43,15 @@
 (check-equal? 
   (run "let f := 3 in
          letrec f () := 2
-          in f")
-3)
+          in :>f")
+2)
 
 (run-silent "def f := 4")
 
 (check-equal? 
   (run "letrec f () := 2
-          in f")
-4)
+          in :>f")
+2)
 
 (check-equal? 
   (run "letrec f () := 2
