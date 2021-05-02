@@ -264,13 +264,14 @@ defun minf (fun f, dynamic v1, dynamic v2) :=
       v1//
 
 defun reverse list xs :=
-  let aux := defun _aux_ (xs, acc) :=
-      match xs
-      | () -> acc
-      | x, t -> {: _aux_ | t | x, acc}
-      end
+  letaux aux
+  | xs := xs
+  | acc := ()
   in
-      {: aux | xs | ()}//
+    match xs
+    | () -> acc
+    | x, t -> {: aux | t | x, acc}
+    end//
 
 defun append (list lsts) :=
   let f := lambda lst, acc :=
@@ -292,15 +293,17 @@ defun flatten (list lsts) :=
 
 -- simple range, no iterator, just returns a list
 defun range (int n1, int n2) :=
-  let aux := defun _aux_ (n1, n2) :=
-      {% 
-        def _v_ := ()
-        | while {iter {: iter_range|n2|n1}} 
-              do set _v_ := (:>iter_get, _v_) 
-      } comma _v_
+  letrec aux (n1, n2) :=
+    {% 
+      def _v_ := ()
+      | while {iter {: iter_range|n2|n1}} 
+            do set _v_ := (:>iter_get, _v_) 
+    } comma _v_
   in
-      | n1 > n2 -> {: aux|n1+1|n2+1}
-      else {: aux|n1-1|n2-1}//
+    | n1 > n2 ->
+      {: aux|n1+1|n2+1}
+    else
+      {: aux|n1-1|n2-1}//
 
 defun foldl (fun f, dynamic acc, list vs) :=
   match vs
@@ -373,14 +376,16 @@ defun build_list (int n, fun f) :=
 -- returns the index in `vs` where `f` is true,
 -- returns `false` if no such indexes exist
 defun index_where (list vs, fun f) :=
-  let aux := defun _aux_ (list vs, fun f, i) :=
+  letaux aux
+  | vs := vs
+  | f := f
+  | i := 0
+  in
     match vs
     | () -> false
     | v, vs when f:v -> i
-    | v, vs -> {: _aux_ | vs | f | add1:i}
-    end
-  in
-    {: aux | vs | f | 0}//
+    | v, vs -> {: aux | vs | f | add1:i}
+    end//
 
 -- returns the index in `vs` where `v` == `elem`
 defun index_of (list vs, dynamic elem) :=
@@ -396,30 +401,35 @@ defun last (list vs) :=
 
 -- updates the element at positions `is` with `updater`
 defun list_update (list vs, ? is int_list?, fun updater) :=
-  let aux := defun _aux_ (vs, is, updater, curr) :=
+  letaux aux
+  | vs := vs
+  | is := is
+  | updater := updater
+  | curr := 0
+  in
     match vs
     | () -> ()
     | v, vs when member?:curr:is -> 
-      updater:v, {: _aux_ | vs | is | updater | add1:curr}
+      updater:v, {: aux | vs | is | updater | add1:curr}
     | v, vs -> 
-      v, {: _aux_ | vs | is | updater | add1:curr}
-    end
-  in
-    {: aux | vs | is | updater | 0}//
+      v, {: aux | vs | is | updater | add1:curr}
+    end//
 
 defun list_set (list vs, ? is int_list?, dynamic elem) :=
   {: list_update | vs | is | lambda _ := elem}//
 
 -- returns the number of elements for which `f` yields true.
 defun count (list vs, fun f) :=
-  let aux := defun _aux_ (vs, f, n) :=
+  letaux aux 
+  | vs := vs
+  | f := f
+  | n := 0
+  in
     match vs
     | () -> n
-    | v, vs when f:v -> {: _aux_ | vs | f | add1:n}
-    | v, vs -> {: _aux_ | vs | f | n}
-    end
-  in
-    {: aux | vs | f | 0}//
+    | v, vs when f:v -> {: aux | vs | f | add1:n}
+    | v, vs -> {: aux | vs | f | n}
+    end//
 
 -- returns true if there are duplicate elements in `vs`
 defun duplicates? (list vs) :=
@@ -556,15 +566,17 @@ defun string_replace (string str, string targ, string rep) :=
                
 -- takes a string of form "~1 ~2 ~3 ~1" and turns it into "v1 v2 v3 v1"
 defun format (string str, list vs) :=
-  let aux := defun _aux_ (str, vs, i) := 
-      match vs
-      | () -> str
-      | v, t -> 
-          let str2 := {: string_replace | str | "~" $ i | string v} in
-              {: _aux_ | str2 | t | add1:i}
-      end
+  letaux aux
+  | str := str
+  | vs := vs
+  | i := 1
   in
-      {: aux | str | vs | 1}//
+    match vs
+    | () -> str
+    | v, t -> 
+        let str2 := {: string_replace | str | "~" $ i | string v} in
+            {: aux | str2 | t | add1:i}
+    end//
 
 -- splits `str` by `sep`
 defun string_split (string str, string sep) :=
