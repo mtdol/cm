@@ -23,6 +23,7 @@
         (cons "catch"           (OpData 1 "prefix"  0   'Catch   '()))
         (cons "with"            (OpData 1 "prefix"  0   'With    '()))
         (cons "let"             (OpData 3 "prefix"  0   'Let     '()))
+        (cons "letaux"          (OpData 2 "prefix"  0   'Letaux  '()))
         (cons "param"           (OpData 3 "prefix"  0   'Param   '()))
         (cons "letrec"          (OpData 4 "prefix"  0   'Letrec  '()))
         (cons "def"             (OpData 2 "prefix"  0   'Def     '()))

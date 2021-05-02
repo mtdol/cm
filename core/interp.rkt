@@ -187,6 +187,10 @@
                     args-e body-e in-e
                     context params module-id debug)]
     [(Letrec _ _ _ _) (cm-error "SYNTAX" "Improperly formed `letrec`.")]
+    [(Letaux (? var-container? var) expr)
+     (interp-letaux (get-var-label var context params module-id debug)
+                    expr context params module-id debug)]
+    [(Letaux _ _) (cm-error "SYNTAX" "Improperly formed `letaux`.")]
     [(Lambda e1 (Assign e2)) 
       (match (interp-lambda-list e1 e2)
              [(Lambda e1-2 (Assign e2-2)) 
@@ -822,6 +826,47 @@
        (trace-interp-expr 
          in-e context (set-local-var label f params) module-id debug)
        )]))
+
+(define (interp-letaux label e context params module-id debug)
+  (let-values ([(args-e body-e in-e) (interp-letaux-aux e)])
+    (interp-letrec 
+      label args-e in-e 
+      (Prefix2 'appl (Var label) body-e)
+      context params module-id debug)))
+
+;; parses the case portion of `letaux`
+;; when label = "f"
+;; `| int x := 3 | y := "a" in x + y`
+;; becomes
+;; (values 
+;;    (Prim2 'cons (Prim1 'int (Var "x")) (Var "y")) 
+;;    (Prim2 'cons (Int 3) (Prim2 'cons (String "a") (Null)))
+;;    (Prim2 'add (Var "x") (Var "y"))
+;;      )
+;;
+;; raises an exception if the expr is improperly formated
+;;
+;; expr -> (values expr expr expr)
+(define (interp-letaux-aux e)
+  (match e
+    [(Case e1 (Assign e2) e3)
+     (match/values (interp-letaux-aux e3)
+        ;; first ret val must be an incomplete list
+        [((Null) e2-2 e3-2)
+         (values e1
+                 (Prim2 'cons e2 e2-2)
+                 e3-2)]
+        [(e1-2 e2-2 e3-2)
+         (values (Prim2 'cons e1 e1-2)
+                 (Prim2 'cons e2 e2-2)
+                 e3-2)]
+        )]
+    [(In e1)
+     (values (Null)
+             (Null)
+             e1)]
+    [_ (cm-error "SYNTAX" "Improperly formed `letaux`.")]
+    ))
 
 ;; name is the name of the function and is either a string 
 ;; or '() for anonymous functions
