@@ -7,19 +7,6 @@
     #:defop:{a}+={b} set a := a + b
     c += 2
 
--- `static` keyword
-    -- like `def` except only defines a variable once
-        --- equivalent to 
-          `if not defined? {list "x"|{current_module}} then def x := val else void`
-    -- static x := val
-    -- defun will behave in a static manner
-    -- perhaps make it so that each file that imports "a.cm" gets their
-        own bindings; a `def x := 5` in "a.cm" will have a different reference for
-        each file that imports it.
-
-    -- perhaps make the static behavior the default and create a `redef`
-      operator if the user wants to redefine.  
-
 - figure out how to turn operators neatly into functions
 
 - flesh out `defined?` a bit
@@ -34,6 +21,9 @@
 
 - function composition
     -- {: filter | compose not f | vs}
+
+- when running cm.rkt on a file, sometimes values don't display correctly
+    -- true becomes #s(Bool 1)
 
 - testing utility
     -- work in progress

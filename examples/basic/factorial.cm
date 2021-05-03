@@ -1,6 +1,6 @@
 def fact := lam n := 
     | n < 2 -> 1
-    else n * (fact:(n - 1)).
+    else n * (fact:(n - 1))//
 
-@ "factorial of 5 is".
-@ fact:5.
+@ "factorial of 5 is"//
+@ fact:5//

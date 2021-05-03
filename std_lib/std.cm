@@ -533,10 +533,10 @@ defun string_to_list (string s) :=
   end//
 
 -- concatenates all of the elems in the list into a single string
-defun list_to_string (list ss) :=
-  match ss
+defun list_to_string (list strs) :=
+  match strs
   | () -> ""
-  | s, t -> s $ (list_to_string:t)
+  | str, strs -> str $ (list_to_string:strs)
   end//
 
 -- replaces all instances of target substring with rep

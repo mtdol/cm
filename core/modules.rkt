@@ -120,7 +120,7 @@
     ;; set current directory to file we are importing
     (do-import! id)
     ;; move references
-    (set-refs-from-module-space! id current-module-id prefix #t)
+    (migrate-context! id current-module-id prefix #t)
     ;; restore the old module id
     (set-current-module-id! current-module-id)))
 

@@ -6,7 +6,7 @@
 ;;
 
 (struct ContextEntry (value))
-(struct GlobalContextEntry (value private?))
+(struct GlobalContextEntry (value private? static?))
 ;; (GlobalContextKey "var" x "/home/user/dir/f.cm")
 ;; type = "var" | "type" | "macro"
 (struct GlobalContextKey (type name module-id) #:transparent)
@@ -19,7 +19,7 @@
   (match ref
          [(GlobalContextKey _ _ _) 
           (follow-key-to-entry (hash-ref global-context ref))]
-         [(GlobalContextEntry _ _) ref]
+         [(GlobalContextEntry _ _ _) ref]
          [(Reference ref)
           (follow-key-to-entry ref)]
          [_ #f]
@@ -27,7 +27,7 @@
 
 (define (follow-key-to-data ref)
   (match (follow-key-to-entry ref)
-         [(GlobalContextEntry data _) data]
+         [(GlobalContextEntry data _ _) data]
          [_ #f]
          ))
 
@@ -38,7 +38,7 @@
       (match curr
              [(GlobalContextKey _ _ _) 
               (aux (hash-ref global-context curr) curr)]
-             [(GlobalContextEntry _ _) last]
+             [(GlobalContextEntry _ _ _) last]
              [(Reference ref) (aux ref curr)]
              [_ #f]
          )))
@@ -61,9 +61,9 @@
 
 (define global-context (make-hash))
 
-(define (set-global-var! var value private? module-id) 
+(define (set-global-var! var value private? static? module-id) 
   (hash-set! global-context (GlobalContextKey "var" var module-id) 
-             (GlobalContextEntry value private?)))
+             (GlobalContextEntry value private? static?)))
 
 ;; derefs to the source of a mapping and alters it
 (define (update-global-var! var value module-id)
@@ -75,14 +75,14 @@
         ([key2 (follow-key-to-key key)] 
          [entry2 (hash-ref global-context key2)])
         (match entry2
-                [(GlobalContextEntry _ private?) 
+                [(GlobalContextEntry _ private? static?) 
                     (hash-set! global-context key2
-                         (GlobalContextEntry value private?))]))))
+                         (GlobalContextEntry value private? static?))]))))
 
 (define (get-global-var-data var module-id)
         (match (hash-ref global-context (GlobalContextKey "var" var module-id) (lambda () #f))
                [#f #f]
-               [(GlobalContextEntry data _) data]
+               [(GlobalContextEntry data _ _) data]
                [(Reference ref) (follow-key-to-data ref)]))
 
 ;; Types
@@ -90,13 +90,13 @@
 (define (set-type! type schema private? module-id)
   (hash-set! global-context
              (GlobalContextKey "type" type module-id)
-             (GlobalContextEntry schema private?)))
+             (GlobalContextEntry schema private? #t)))
 
 
 (define (get-type-data type module-id)
         (match (hash-ref global-context (GlobalContextKey "type" type module-id) (lambda () #f))
                [#f #f]
-               [(GlobalContextEntry data _) data]
+               [(GlobalContextEntry data _ _) data]
                [(Reference ref) (follow-key-to-data ref)]))
 
 (define (type-exists? type module-id)
@@ -113,19 +113,19 @@
                   (check-macro-vars vars)
                   value
                   module-id))
-               private?)))
+               private? #t)))
 
 ;; append onto the macros definitions
 (define (append-to-macro! label vars value module-id)
   (if (hash-has-key? global-context (GlobalContextKey "macro" label module-id))
     (match (hash-ref global-context (GlobalContextKey "macro" label module-id))
-     [(GlobalContextEntry defs private?)
+     [(GlobalContextEntry defs private? static?)
       (hash-set! global-context (GlobalContextKey "macro" label module-id) 
                  (GlobalContextEntry (append defs
                          (list (MacroRule 
                                  (check-macro-vars vars)
                                  value 
-                                 module-id))) private?))])
+                                 module-id))) private? static?))])
       (set-macro! label vars value (var-name-private? label))
                  ))
 
@@ -133,7 +133,7 @@
 (define (get-macro-defs label module-id)
         (match (hash-ref global-context (GlobalContextKey "macro" label module-id) (lambda () #f))
                [#f #f]
-               [(GlobalContextEntry defs _) defs]
+               [(GlobalContextEntry defs _ _) defs]
                [(Reference ref) (follow-key-to-data ref)]))
 
 ;;
@@ -159,13 +159,21 @@
 ;; ie. _var
 (define (var-name-private? name) (string=? "_" (substring name 0 1)))
 
-;; follows down a key to its resulting entry and returns whether #t if it is
+;; follows down a key to its resulting entry and returns #t if it is
 ;; private else #f
 ;;
 ;; GlobalContextKey -> bool
 (define (leads-to-private? key)
   (match (follow-key-to-entry key)
-         [(GlobalContextEntry _ private?) private?]))
+         [(GlobalContextEntry _ private? _) private?]))
+
+;; follows down a key to its resulting entry and returns #t if it is
+;; static else #f
+;;
+;; GlobalContextKey -> bool
+(define (leads-to-static? key)
+  (match (follow-key-to-entry key)
+         [(GlobalContextEntry _ _ static?) static?]))
 
 ;; #t if the key leads to a valid entry, else false.
 ;; if public-only? then only returns #t if the resulting entry is public
@@ -193,19 +201,44 @@
       #t)
     #f)))
 
+;; copies the item (not a reference!) to the current module space if it exists and returns #t,
+;; if it does not exist, then returns #f and does nothing
+;;
+;; string = ("macro" | "type" | "var"), string, string, string, bool -> bool
+(define (clone-item type name from-module-id to-module-id prefix private? public-only?)
+  (let ([key (GlobalContextKey type name from-module-id)])
+  (if (entry-exists? key public-only?)
+    (begin 
+      ;; get direct value and map directly in current module-space
+      (match (follow-key-to-entry key)
+        [(GlobalContextEntry value _ static?)
+        (hash-set! global-context 
+                 (GlobalContextKey 
+                   type (string-append prefix name) to-module-id)
+                 (GlobalContextEntry value private? static?))])
+      #t)
+    #f)))
 
-;; Populates the current module space with references to every item
-;; included in the given module referenced by module-id. 
+
+;; Populates the current module space with references (or copies if entry is not static)
+;; to every item included in the given module referenced by module-id. 
 ;; Every item is added with the given prefix.
 ;;
 ;; string, string, list, string, bool -> void
-(define (set-refs-from-module-space! 
+(define (migrate-context! 
           from-module-id to-module-id prefix public-only?)
   (map 
     ;; maps each reference; only keys that lead to public members will succeed
     (lambda (elem) 
       (match elem
-             [(GlobalContextKey type name id)
+             ;; non-static elems will be directly copied over
+             ;; as private members
+             [(GlobalContextKey type name id) 
+              #:when (not (leads-to-static? elem))
+              (clone-item type name id to-module-id prefix #t public-only?)]
+             ;; static elems will be mapped to with references in the
+             ;; current module space
+             [(GlobalContextKey type name id) 
               (map-reference type name id to-module-id prefix public-only?)]))
     ;; only use keys that belong to the current module
     (get-global-context-keys '() from-module-id public-only?))
@@ -272,7 +305,7 @@
                   )])
     (match ms
         ['() (void)]
-        [(cons (cons label (GlobalContextEntry defs _)) t) 
+        [(cons (cons label (GlobalContextEntry defs _ _)) t) 
          (display (format "label: ~a\n" label))
          (print-entries defs)
          (displayln "")

@@ -68,7 +68,7 @@
   ;; run `main` if it exists with `args`
   (interp-expr 
     (run-parse-expr "if defined? \"main\" and fun? main then main:args else void")
-    (set-local-var "args" args (hash)) current-module-id '())
+    (set-local-var "args" args (hash)) (hash) current-module-id '())
   (void))
 
 ;; runs an expr (no dot)

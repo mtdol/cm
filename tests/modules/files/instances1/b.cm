@@ -1,0 +1,5 @@
+-- guarded def, so def is not redefined when the file is reloaded
+cond
+| defined? "b" -> void
+else
+  def b := 3//

@@ -158,15 +158,26 @@
               (let ([v2 (trace-interp-expr e2-2 context params module-id debug)])
               (let-values ([(guard-types label)
                             (interp-left-hand-expr e1-2 context params module-id debug)])
-                (interp-def guard-types label v2 context params module-id #f debug)))])]
+                (interp-def guard-types label v2 "def" context params module-id debug)))])]
     [(Def _ _) (cm-error "SYNTAX" "Improperly formed `def`.")]
+    [(Static e1 (Assign e2)) 
+      (match (interp-static-list e1 e2)
+        [(Static e1-2 (Assign e2-2)) 
+         (let-values ([(guard-types label)
+                       (interp-left-hand-expr e1-2 context params module-id debug)])
+         ;; only interp and assign if not already defined, else return void
+         (if (get-global-var-data label module-id)
+           (Prim0 'void)
+           (let ([v2 (trace-interp-expr e2-2 context params module-id debug)])
+             (interp-def guard-types label v2 "static" context params module-id debug))))])]
+    [(Static _ _) (cm-error "SYNTAX" "Improperly formed `static`.")]
     [(Set e1 (Assign e2)) 
      (let-values ([(guard-types label) 
                    (interp-left-hand-expr e1 context params module-id debug)])
      (interp-def 
        guard-types label
        (trace-interp-expr e2 context params module-id debug)
-       context params module-id #t debug))]
+       "set" context params module-id debug))]
     [(Set _ _) (cm-error "SYNTAX" "Improperly formed `set`.")]
     [(Defun (? var-container? var) e1 (Assign e2))
      (let ([name (get-var-label var context params module-id debug)])
@@ -174,7 +185,7 @@
        [(Lambda e1-2 (Assign e2-2))
         (interp-def '("dynamic") name
           (interp-lambda e1-2 e2-2 name context params module-id debug)
-          context params module-id #f debug)
+          "def" context params module-id debug)
         ])
       )]
     [(Defun _ _ _) (cm-error "SYNTAX" "Improperly formed `defun`.")]
@@ -778,21 +789,31 @@
         )]
     ))
 
-(define (interp-def guard-types label v context params module-id update? debug)
+;; op-type = "def" | "set" | "static"
+(define (interp-def guard-types label v op-type context params module-id debug)
  (match label
-      [#f #:when update? 
+      [#f #:when (equal? op-type "set")
         (cm-error "SYNTAX" "Unknown Item on left hand of `set`.")] 
+      [#f #:when (equal? op-type "static") 
+        (cm-error "SYNTAX" "Unknown Item on left hand of `static`.")] 
       [#f (cm-error "SYNTAX" "Unknown Item on left hand of `def`.")]
       ['() (cm-error "SYNTAX" "`def` is missing a variable.")]
       ;; sets var in global context hash and returns value to caller
       [_
         (assign-type-check guard-types v params label)
-        (if update? 
-         (update-global-var! label v module-id)
-         (set-global-var! label v (var-name-private? label) module-id))
+        (match op-type
+          ;; `set`
+          ["set"
+            (update-global-var! label v module-id)]
+          ;; `static`
+          ["static"
+            (set-global-var! label v (var-name-private? label) #t module-id)]
+          ;; `def`
+          ["def"
+            (set-global-var! label v (var-name-private? label) #f module-id)]
+          )
        v]))
          
-
 (define (interp-let e1 e2 e3 context params module-id debug)
   (let-values ([(v2) (trace-interp-expr e2 context params module-id debug)] 
                [(guard-types label)

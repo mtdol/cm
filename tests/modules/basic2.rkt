@@ -13,6 +13,13 @@
 (check-equal? (run-stat "v//")
 '(4))
 
+;; check basic properties of `static`
+(check-equal? (run "static vv := 6")
+6)
+
+(check-equal? (run "static vv := 6")
+val-void)
+
 
 (run-file-silent "files/basic2/a.cm")
 

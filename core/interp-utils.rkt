@@ -8,7 +8,8 @@
          apply-if-type-1 assign-type-check check-types-list
          valid-against-schema?
          value->list value-length
-         interp-def-list interp-lambda-list struct-schema->string)
+         interp-def-list interp-static-list interp-lambda-list
+         struct-schema->string)
 
 ;; Matthew Dolinka
 ;;
@@ -190,6 +191,10 @@
   (match es
          [(Prim2 'cons e1 e2) (Def e1 (Assign (interp-def-list e2 rexpr)))]
          [e (Def e (Assign rexpr))]))
+(define (interp-static-list es rexpr)
+  (match es
+         [(Prim2 'cons e1 e2) (Static e1 (Assign (interp-static-list e2 rexpr)))]
+         [e (Static e (Assign rexpr))]))
 (define (interp-lambda-list es rexpr)
   (match es
          [(Prim2 'cons e1 e2) (Lambda e1 (Assign (interp-lambda-list e2 rexpr)))]

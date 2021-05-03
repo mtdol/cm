@@ -6,7 +6,7 @@
 
 ;; words that cannot be used as variable names
 (define reserved-keywords 
- (set "rec" "this" "for" "by" "letrec" "let_values" "values" "unless" "where"))
+ (set "rec" "this" "for" "by" "let_values" "values" "unless" "where"))
 
 
 (define (is-reserved-keyword? v)
