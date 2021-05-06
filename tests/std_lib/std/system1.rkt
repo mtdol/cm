@@ -1,77 +1,122 @@
 #lang racket
 (require cm/tests/test-utils rackunit)
 
-(run-stat-silent "#:import \"std_lib::std.cm\"")
+;; ensure that directory exists
+(run-racket-silent 
+  (unless (directory-exists? "files/system1")
+    (make-directory "files/system1")))
 
-;;
-;; macros
-;;
+;; clear out the directory
+(run-racket-silent 
+  (map delete-directory/files (directory-list "files/system1" #:build? #t)))
 
-(check-equal? 
-  (run "match system_type 
-       | \"windows\" -> {ifdef \"windows\" | true | false} 
-       | \"macosx\" -> {ifdef \"macosx\" | true | false}
-       | \"unix\" -> {ifdef \"unix\" | true | false}
-       end")
-val-true)
+(run-silent "#:lang cm")
 
-;;
-;; Path stuff
-;;
+(run-silent "def dir := \"files/system1/\"")
 
-(check-equal? 
-  (run "build_path:{list \"a\"|\"\"}")
-"a")
+(check-equal? (run "ls:dir")
+'())
 
-(check-equal? 
-  (run "build_path:{list \"\"|\"a\"}")
-"a")
-
-(check-equal? 
-  (run "build_path:{list \" \"|\"a\"}")
-(if (equal? (system-type) 'windows)
-  " \\a"
-  " /a"))
-
-(check-equal? 
-  (run "build_path:{list \"f/\"|\"a\"}")
-(if (equal? (system-type) 'windows)
-  "f/\\a"
-  "f/a"))
-
-(check-equal? 
-  (run "build_path:{list \"f\\\\\"|\"a\"}")
-(if (equal? (system-type) 'windows)
-  "f\\a"
-  "f\\/a"))
-
-(check-equal? 
-  (run "build_path:{list \"a\"|\"bcd\"|\"\"|\"ef\"}")
-(if (equal? (system-type) 'windows)
-  "a\\bcd\\ef"
-  "a/bcd/ef"))
-
-(check-equal? 
-  (run "ls_build:\"files/system1\"")
-(if (equal? (system-type) 'windows)
-  '("files\\system1\\f.txt")
-  '("files/system1/f.txt")))
-
-(check-equal? 
-  (run "ls_build:\"files/system1/\"")
-(if (equal? (system-type) 'windows)
-  '("files\\system1\\f.txt")
-  '("files/system1/f.txt")))
-
-;; invalid directory
-(check-exn exn:fail? (lambda ()
-  (run "cd2:\"file/system1\"")))
-
-(check-equal? (run "cd2:\"files/system1\"")
+(check-equal? (run "writestrf : \"ab\\nc\" : (dir $ \"f.txt\")")
 val-void)
 
-(check-equal? 
-  (run "ls_build:\"\"")
-(if (equal? (system-type) 'windows)
-  '("f.txt")
-  '("f.txt")))
+(check-equal? (run "ls:dir")
+'("f.txt"))
+
+(check-equal? (run "getlinesf:(dir $ \"f.txt\")")
+'("ab" "c"))
+
+(check-equal? (run "appendstrf : \"\\nef\" : (dir $ \"f.txt\")")
+val-void)
+
+(check-equal? (run "getlinesf : (dir $ \"f.txt\")")
+'("ab" "c" "ef"))
+
+(check-equal? (run "cp : (dir $ \"f.txt\") : (dir $ \"f2.txt\")")
+val-void)
+
+(check-equal? (run "getlinesf : (dir $ \"f.txt\")")
+'("ab" "c" "ef"))
+
+(check-equal? (run "getlinesf : (dir $ \"f2.txt\")")
+'("ab" "c" "ef"))
+
+(check-equal? (run "mkdir : (dir $ \"d\")")
+val-void)
+
+(check-equal? (run "ls:dir")
+'("d" "f.txt" "f2.txt"))
+
+(check-equal? (run "ls:(dir $ \"d\")")
+'())
+
+(check-equal? (run "mv : (dir $ \"f2.txt\") : (dir $ \"d/f.txt\")")
+val-void)
+
+(check-equal? (run "ls:dir")
+'("d" "f.txt"))
+
+(check-equal? (run "ls:(dir $ \"d\")")
+'("f.txt"))
+
+(check-equal? (run "getlinesf : (dir $ \"d/f.txt\")")
+'("ab" "c" "ef"))
+
+(run-silent "def old_dir := cd : \"\"")
+
+(check-equal? (run "cd:(dir $ \"d\")")
+val-void)
+
+(check-equal? (run "ls:\"\"")
+'("f.txt"))
+
+(check-equal? (run "cd:old_dir")
+val-void)
+
+(check-equal? (run "ls:dir")
+'("d" "f.txt"))
+
+(check-equal? (run "file? : (dir $ \"d/f.txt\")")
+val-true)
+
+(check-equal? (run "file? : (dir $ \"f.txt\")")
+val-true)
+
+(check-equal? (run "directory? : (dir $ \"d\")")
+val-true)
+
+(check-equal? (run "directory? : (dir $ \"d1\")")
+val-false)
+
+(check-equal? (run "file? : (dir $ \"f1.txt\")")
+val-false)
+
+;; remove everything
+
+;; should not be removable as it does not exist
+(check-exn exn:fail? (lambda ()
+  (run "rm:(dir $ \"d1\")")))
+
+(check-equal? (run "rm:(dir $ \"d/f.txt\")")
+val-void)
+
+(check-equal? (run "ls:dir")
+'("d" "f.txt"))
+
+(check-equal? (run "ls:(dir $ \"d\")")
+'())
+
+(check-equal? (run "rm:(dir $ \"d\")")
+val-void)
+
+(check-equal? (run "ls:dir")
+'("f.txt"))
+
+(check-exn exn:fail? (lambda ()
+  (run "ls:(dir $ \"d\")")))
+
+(check-equal? (run "rm:(dir $ \"f.txt\")")
+val-void)
+
+(check-equal? (run "ls:dir")
+'())

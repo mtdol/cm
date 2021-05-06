@@ -4,6 +4,23 @@
 (run-stat-silent "#:import \"std_lib::std.cm\"")
 
 ;;
+;; compose
+;;
+
+(check-equal? (run "compose : {list add1} : 2")
+3)
+
+(check-equal? (run "compose : {list} : 2")
+2)
+
+(check-equal? (run "compose : {list add1|add1} : 2")
+4)
+
+(check-equal? (run "compose : {list add1|neg|sub1} : 5")
+-3)
+
+
+;;
 ;; map
 ;;
 

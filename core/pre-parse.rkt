@@ -17,22 +17,22 @@
 
 (define (parse-macro-tokens tokens module-id depth)
   (match tokens
-         [_ #:when (> depth 5000) 
-            (cm-error-linenum 
-              module-id
-              (get-current-linenum) 
-              "MACRO" 
-              "Too many macro applications. Possible infinite recursion detected.")]
-         ['() '()]
-         [(cons (? (tok=? "{") h1) (cons (? (tok=? "}")) t)) 
-          (set-check-current-linenum! (line h1))
-          (cm-error-linenum 
-            module-id
-            (get-current-linenum) "MACRO" "Missing label for macro.")]
-         [(cons (? (tok=? "{") h1) (cons h2 t)) 
-          (set-check-current-linenum! (line h1))
-          (parse-macro-contents t h2 '(()) module-id 0 depth)]
-         [(cons h t) (cons h (parse-macro-tokens t module-id depth))]
+    [_ #:when (> depth 5000) 
+       (cm-error-linenum 
+         module-id
+         (get-current-linenum) 
+         "MACRO" 
+         "Too many macro applications. Possible infinite recursion detected.")]
+    ['() '()]
+    [(cons (? (tok=? "{") h1) (cons (? (tok=? "}")) t)) 
+     (set-check-current-linenum! (line h1))
+     (cm-error-linenum 
+       module-id
+       (get-current-linenum) "MACRO" "Missing label for macro.")]
+    [(cons (? (tok=? "{") h1) (cons h2 t)) 
+     (set-check-current-linenum! (line h1))
+     (parse-macro-contents t h2 '(()) module-id 0 depth)]
+    [(cons h t) (cons h (parse-macro-tokens t module-id depth))]
    ))
 
 ;; once inside a macro body, parses its contents into an arguments list
@@ -40,42 +40,42 @@
 ;; token list, string, token list list, string, int, int -> token list
 (define (parse-macro-contents tokens label args module-id bcount depth)
   (match tokens 
-         ['() (cm-error-linenum 
-                module-id
-                (get-current-linenum)
-                "MACRO" "Missing closing brace for macro application.")]
-         ;; shifting to next argument
-         [(cons (? (tok=? "|")) t) #:when (zero? bcount) (parse-macro-contents t label 
-                            (cons '() (cons (reverse (car args)) (cdr args)))
-                            module-id bcount depth)]
-         [(cons (? (tok=? "}")) t)
-          #:when (= 0 bcount)
-          (let 
-            ([args 
-                 (if (equal? args '(()))
-                   '(())
-                     ;; eager evaluate args
-                     (foldl (lambda (arg acc) 
-                              (cons 
-                                (parse-macro-tokens arg module-id (add1 depth))
-                                acc))
-                            '()
-                            (cons (reverse (car args)) (cdr args))))])
-          (let-values 
-            ([(res/tokens res/module-id)
-              (apply-macro label args module-id)])
-                ;; re-parse after we apply the macro
-              (append (parse-macro-tokens res/tokens res/module-id (add1 depth))
-                      (parse-macro-tokens t module-id depth))))]
-         [(cons (? (tok=? "}") h1) t) (parse-macro-contents t label 
-                            (cons (cons h1 (car args)) (cdr args))
-                            module-id (sub1 bcount) depth)]
-         [(cons (? (tok=? "{") h1) t) (parse-macro-contents t label 
-                            (cons (cons h1 (car args)) (cdr args))
-                            module-id (add1 bcount) depth)]
-         [(cons h t) (parse-macro-contents t label 
-                            (cons (cons h (car args)) (cdr args))
-                            module-id bcount depth)]))
+    ['() (cm-error-linenum 
+           module-id
+           (get-current-linenum)
+           "MACRO" "Missing closing brace for macro application.")]
+    ;; shifting to next argument
+    [(cons (? (tok=? "|")) t) #:when (zero? bcount) (parse-macro-contents t label 
+                       (cons '() (cons (reverse (car args)) (cdr args)))
+                       module-id bcount depth)]
+    [(cons (? (tok=? "}")) t)
+     #:when (= 0 bcount)
+     (let 
+       ([args 
+            (if (equal? args '(()))
+              '(())
+                ;; eager evaluate args
+                (foldl (lambda (arg acc) 
+                         (cons 
+                           (parse-macro-tokens arg module-id (add1 depth))
+                           acc))
+                       '()
+                       (cons (reverse (car args)) (cdr args))))])
+     (let-values 
+       ([(res/tokens res/module-id)
+         (apply-macro label args module-id)])
+           ;; re-parse after we apply the macro
+         (append (parse-macro-tokens res/tokens res/module-id (add1 depth))
+                 (parse-macro-tokens t module-id depth))))]
+    [(cons (? (tok=? "}") h1) t) (parse-macro-contents t label 
+                       (cons (cons h1 (car args)) (cdr args))
+                       module-id (sub1 bcount) depth)]
+    [(cons (? (tok=? "{") h1) t) (parse-macro-contents t label 
+                       (cons (cons h1 (car args)) (cdr args))
+                       module-id (add1 bcount) depth)]
+    [(cons h t) (parse-macro-contents t label 
+                       (cons (cons h (car args)) (cdr args))
+                       module-id bcount depth)]))
 
 (define current-module-id "0")
 

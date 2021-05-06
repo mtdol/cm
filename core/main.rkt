@@ -71,7 +71,7 @@
     (set-local-var "args" args (hash)) (hash) current-module-id '())
   (void))
 
-;; runs an expr (no dot)
+;; runs an expr (no terminator)
 (define (run-expr input) 
   (interp 
     (parse-expr 

@@ -1,16 +1,13 @@
 - cm.rkt application includes racket stack trace, no es muy bien
 
-- look over equality checking
-    -- perhaps allow custom equality functions
-
-- more general use macros?
-    #:defop:{a}+={b} set a := a + b
-    c += 2
-
-- figure out how to turn operators neatly into functions
-
 - flesh out `defined?` a bit
     -- add ability to ask `local`, `param`, and `global`
+
+- check that `file?` and `dir?` work on hidden files like `.git`
+
+- make `ls` auto-expand paths like "~"
+
+- make `:>` mandatory for null arg lambdas
 
 - std.cm
     -- append_map
@@ -19,11 +16,6 @@
     -- shuffle
     -- sort
 
-- function composition
-    -- {: filter | compose not f | vs}
-
-- when running cm.rkt on a file, sometimes values don't display correctly
-    -- true becomes #s(Bool 1)
-
 - testing utility
     -- work in progress
+    -- add line numbers for tests being run

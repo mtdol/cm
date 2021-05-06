@@ -75,9 +75,9 @@
 5.0)
 (check-equal? (run "match 5.0,3; | a, b when a = 5.1 -> a | _ -> 2 end")
 2)
-(check-equal? (run "match 5.0,3; | a, b when type a = \"float\" -> a | _ -> 2 end")
+(check-equal? (run "match 5.0,3; | a, b when typeof a = \"float\" -> a | _ -> 2 end")
 5.0)
-(check-equal? (run "match 5.0,3; | a, b when type a = \"int\" -> a | _ -> 2 end")
+(check-equal? (run "match 5.0,3; | a, b when typeof a = \"int\" -> a | _ -> 2 end")
 2)
 
 (check-equal? (run "match 5.0,3 | _, b -> b | a, b -> 2 end")

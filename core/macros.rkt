@@ -118,17 +118,15 @@
 ;;
 ;; string, token list, token list list, token list -> token list
 (define (apply-macro-var var arg rest body)
-    (flatten (foldl 
-                (lambda (elem acc)
-                  (if (string=? (tok elem) var) 
-                    (cond
-                        [(string=? var "REST") (append acc (transform-rest (cons arg rest)))]
-                        [else (append acc arg)])
-                    (append acc (list elem))
-                    )
-                  
-                  )
-                '() body)))
+ (flatten (foldl 
+   (lambda (elem acc)
+     (if (string=? (tok elem) var) 
+       (cond
+           [(string=? var "REST")
+            (append acc (transform-rest (cons arg rest)))]
+           [else (append acc arg)])
+       (append acc (list elem))))
+   '() body)))
 
 ;; ensures that the given args are valid for the macro schema
 ;; ie. {a|b} is valid for '(arg1 arg2), but not '(arg1)
@@ -138,7 +136,8 @@
 (define (args-match-macro-entry? args vars)
   (cond
     [(equal? args '(())) (null? vars)]
-    [(and (not (null? vars)) (string=? "REST" (last vars))) (>= (length args) (length vars))]
+    [(and (not (null? vars)) (string=? "REST" (last vars)))
+     (>= (length args) (length vars))]
     [else (= (length args) (length vars))]))
 
 ;; '(("1" "+" "2") ("3")) -> '("1" "+" "2" "|" "3")

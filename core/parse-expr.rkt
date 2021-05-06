@@ -163,8 +163,6 @@
         [(string=? token "end") (Prim0 'end)]
         [(string=? token "void") (Prim0 'void)]
         [(string=? token "eof") (Prim0 'eof)]
-        [(string=? token "system_type") (String (symbol->string (system-type)))]
-        [(string=? token "read_line") (Prim0 'read_line)]
         [(string=? token "...") (Prim0 '...)]
         [(is-var-token? token) (Var token)]
         [(is-operator? token)  

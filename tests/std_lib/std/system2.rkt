@@ -4,139 +4,74 @@
 (run-stat-silent "#:import \"std_lib::std.cm\"")
 
 ;;
-;; connect_path_elems
-;;
-
-(check-equal? (run "connect_path_elems:{list \"a\"}")
-"a")
-
-(check-equal? (run "connect_path_elems:{list}")
-"")
-
-(check-equal? (run "connect_path_elems:{list \"a\"|\"b\"}")
-(if (equal? (system-type) 'windows)
-  "a\\b"
-  "a/b"))
-
-(check-equal? (run "connect_path_elems:{list \"a\"|\"b\"|\"f.txt\"}")
-(if (equal? (system-type) 'windows)
-  "a\\b\\f.txt"
-  "a/b/f.txt"))
-
-;;
-;; get_extension
-;;
-
-(check-equal? (run "get_extension:\"af\"")
-"")
-
-(check-equal? (run "get_extension:\"\"")
-"")
-
-(check-equal? (run "get_extension:\"af.\"")
-"")
-
-(check-equal? (run "get_extension:\"af.c\"")
-"c")
-
-(check-equal? (run "get_extension:\"af.c.def\"")
-"def")
-
-(check-equal? (run "get_extension:\"f/af.c.def\"")
-"def")
-
-;;
-;; get_path_elements
-;;
-
-(check-equal? (run "get_path_elements:\"a\"")
-'("a"))
-
-(check-equal? (run "get_path_elements:\"\"")
-'(""))
-
-(check-equal? (run (match (system-type) 
-                          ['windows "get_path_elements:\"a\\\\b\""]
-                          [_ "get_path_elements:\"a/b\""]))
-'("a" "b"))
-
-(check-equal? (run (match (system-type) 
-                          ['windows "get_path_elements:\"a\\\\b\\\\f.txt\""]
-                          [_ "get_path_elements:\"a/b/f.txt\""]))
-'("a" "b" "f.txt"))
-
-;;
-;; get_path_to_file
+;; macros
 ;;
 
 (check-equal? 
-  (run (match (system-type) 
-    ['windows "get_path_to_file:\"a\\\\b\\\\f.txt\""]
-    [_ "get_path_to_file:\"a/b/f.txt\""]))
-(if (equal? (system-type) 'windows)
-  "a\\b"
-  "a/b"))
+  (run "match system_type 
+       | \"windows\" -> {ifdef \"windows\" | true | false} 
+       | \"macosx\" -> {ifdef \"macosx\" | true | false}
+       | \"unix\" -> {ifdef \"unix\" | true | false}
+       end")
+val-true)
 
-(check-equal?
-  (run (match (system-type) 
-    ['windows "get_path_to_file:\"a\\\\f.txt\""]
-    [_ "get_path_to_file:\"a/f.txt\""]))
+;;
+;; Path stuff
+;;
+
+(check-equal? 
+  (run "build_path:{list \"a\"|\"\"}")
 "a")
 
-(check-equal? (run "get_path_to_file:\"f.txt\"")
-"")
+(check-equal? 
+  (run "build_path:{list \"\"|\"a\"}")
+"a")
 
-;;
-;; file?, directory?
-;;
-
-(check-equal? (run "file? : \"files/system/a.txt\"")
-val-false)
-
-(check-equal? (run "file? : \"files/system2/a.txt\"")
-val-true)
-
-(check-equal? (run "directory? : \"files/system2/d\"")
-val-false)
-
-(check-equal? (run "directory? : \"files/system2/d1\"")
-val-true)
-
-;;
-;; ls_rec
-;;
-
-(check-equal? (run "ls_rec : \"files/system2\"")
+(check-equal? 
+  (run "build_path:{list \" \"|\"a\"}")
 (if (equal? (system-type) 'windows)
-  '("files\\system2\\a.txt" "files\\system2\\d1"
-    "files\\system2\\d1\\a.txt" "files\\system2\\d1\\d1-1"
-    "files\\system2\\d1\\d1-1\\b.cm" "files\\system2\\d1\\d1-1\\b.txt")
-  '("files/system2/a.txt" "files/system2/d1"
-    "files/system2/d1/a.txt" "files/system2/d1/d1-1"
-    "files/system2/d1/d1-1/b.cm" "files/system2/d1/d1-1/b.txt")))
+  " \\a"
+  " /a"))
 
-;;
-;; expand_path
-;;
+(check-equal? 
+  (run "build_path:{list \"f/\"|\"a\"}")
+(if (equal? (system-type) 'windows)
+  "f/\\a"
+  "f/a"))
 
-(check-equal? (run "(expand_path : \"n.txt\") = (cd \"\" $ \"n.txt\")")
-val-true)
+(check-equal? 
+  (run "build_path:{list \"f\\\\\"|\"a\"}")
+(if (equal? (system-type) 'windows)
+  "f\\a"
+  "f\\/a"))
 
-(check-equal? (run "(expand_path : \"./n.txt\") = (cd \"\" $ \"n.txt\")")
-val-true)
+(check-equal? 
+  (run "build_path:{list \"a\"|\"bcd\"|\"\"|\"ef\"}")
+(if (equal? (system-type) 'windows)
+  "a\\bcd\\ef"
+  "a/bcd/ef"))
 
-;;
-;; current_module{}
-;;
+(check-equal? 
+  (run "ls_build:\"files/system2\"")
+(if (equal? (system-type) 'windows)
+  '("files\\system2\\f.txt")
+  '("files/system2/f.txt")))
 
-(check-equal? (run ":>current_module")
-"0")
+(check-equal? 
+  (run "ls_build:\"files/system2/\"")
+(if (equal? (system-type) 'windows)
+  '("files\\system2\\f.txt")
+  '("files/system2/f.txt")))
 
-(run-file-silent "files/system2/d1/d1-1/b.cm")
+;; invalid directory
+(check-exn exn:fail? (lambda ()
+  (run "cd_check:\"file/system2\"")))
 
-(check-equal? (run "b") 
-3)
+(check-equal? (run "cd_check:\"files/system2\"")
+val-void)
 
-;; check that `current_module` still works in the context of another file
-(check-regexp-match ".*files.system2.d1.d1-1.b\\.cm$" 
-                    (run ":>current_module"))
+(check-equal? 
+  (run "ls_build:\"\"")
+(if (equal? (system-type) 'windows)
+  '("f.txt")
+  '("f.txt")))

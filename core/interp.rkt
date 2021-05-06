@@ -52,56 +52,26 @@
     [(Prim1 'get_param var) 
      (interp-get-param var context params module-id debug)]
     [(Prim1 'schemaof e1) (interp-schemaof e1 context params module-id debug)]
+    [(Prefix2 'internal_op e1 e2)
+     (interp-internal-ops
+       (trace-interp-expr e1 context params module-id debug)
+       (trace-interp-expr e2 context params module-id debug)
+       context params module-id debug)]
+    [(Prefix2 'load e1 e2)
+     (interp-load 
+       (trace-interp-expr e1 context params module-id debug)
+       (trace-interp-expr e2 context params module-id debug)
+       params module-id)]
     [(Prefix2 'struct e1 e2) (interp-struct e1 e2 context params module-id debug)]
     [(Prefix2 'struct? e1 e2) (interp-struct? e1 e2 context params module-id debug)]
     [(Prefix2 'appl e1 e2) (interp-appl e1 e2 context params module-id debug)]
     [(Prefix2 'index e1 e2) (interp-index e1 e2 context params module-id debug)]
     [(Prim2 ':: e1 e2) (interp-index e1 e2 context params module-id debug)]
-    [(Prefix2 'writestrf e1 e2) 
-     (interp-writestrf 
-       (trace-interp-expr e1 context params module-id debug)
-       (trace-interp-expr e2 context params module-id debug)
-       params)]
     [(Prefix2 'appendstrf e1 e2) 
      (interp-appendstrf 
        (trace-interp-expr e1 context params module-id debug)
        (trace-interp-expr e2 context params module-id debug)
        params)]
-    [(Prefix2 'cp e1 e2) 
-     (interp-cp 
-       (trace-interp-expr e1 context params module-id debug)
-       (trace-interp-expr e2 context params module-id debug)
-       params)]
-    [(Prefix2 'mv e1 e2) 
-     (trace-interp-expr (Prefix2 'cp e1 e2) context params module-id debug)
-     (trace-interp-expr (Prim1 'rm e1) context params module-id debug)]
-    [(Prefix2 'hash_ref e1 e2) 
-     (interp-hash-ref 
-       (trace-interp-expr e1 context params module-id debug)
-       (trace-interp-expr e2 context params module-id debug)
-       params)]
-    [(Prefix2 'hash_has_key? e1 e2) 
-     (interp-hash-has-key? 
-       (trace-interp-expr e1 context params module-id debug)
-       (trace-interp-expr e2 context params module-id debug))]
-    [(Prefix2 'peek_string e1 e2) 
-     (interp-peek-string 
-       (trace-interp-expr e1 context params module-id debug)
-       (trace-interp-expr e2 context params module-id debug)
-       params)]
-    [(Prefix3 'hash_set e1 e2 e3) 
-     (interp-hash-set 
-       (trace-interp-expr e1 context params module-id debug)
-       (trace-interp-expr e2 context params module-id debug)
-       (trace-interp-expr e3 context params module-id debug)
-       )]
-    [(Prefix3 'hash_ref_check e1 e2 e3) 
-     (interp-hash-ref-check 
-       (trace-interp-expr e1 context params module-id debug)
-       (trace-interp-expr e2 context params module-id debug)
-       (trace-interp-expr e3 context params module-id debug)
-       params
-       )]
     ;; short circuiting and/or
     [(Prim2 'and e1 e2) 
      (let ([v1 (trace-interp-expr e1 context params module-id debug)])
@@ -268,128 +238,8 @@
   (match op
         ['print (interp-print v)]
         [':> (interp-apply v null params)]
-        ['error 
-         (match v
-                ;; TODO use cm error struct and use id
-                [(list id msg) (cm-error id msg)]
-                [msg #:when (string? msg) (cm-error "GENERIC" msg)]
-                [_ (cm-error "CONTRACT" "Invalid argument(s) to error.")])]
-        ['eval #:when (string? v) (run v)] 
-        ['eval (cm-error "CONTRACT" "`eval` requires a string argument.")] 
-        ['evalxp #:when (string? v) (run-expr v)] 
-        ['evalxp (cm-error "CONTRACT" "`evalxp` requires a string argument.")] 
-        ['ls 
-         (assert-contract (list "string" "list") v params "ls")
-         (match v
-           ["" (map path->string 
-                     (try-with-error "GENERIC" "ls: Could not load directory \".\"." 
-                                     directory-list (list ".")))]
-           [v1 (map path->string 
-                     (try-with-error "GENERIC" (format "ls: Could not load directory \"~a\"." v1)
-                     directory-list (list v1)))])]
-        ['cd 
-         (assert-contract (list "string") v params "cd")
-         (match v
-               ["" (path->string 
-                     (try-with-error "SYSTEM" "cd: Could not load directory \".\"."
-                                     current-directory '()))]
-               [v1 
-                 (try-with-error "SYSTEM" (format "cd: Could not load directory \"~a\"." v1)
-                                      current-directory (list v1)) (Prim0 'void)])]
-        ['mkdir 
-         (assert-contract (list "string") v params "mkdir")
-         (match v
-               ["" (cm-error "CONTRACT" "Missing argument to `mkdir`.")]
-               [v1 
-                 (try-with-error "SYSTEM" (format "mkdir: Could not make directory \"~a\"." v1)
-                                    make-directory (list v1)) (Prim0 'void)])]
-        ['rm 
-         (assert-contract (list "string") v params "rm")
-         (match v
-           ["" (cm-error "CONTRACT" "Missing argument to rm")]
-           [v1 
-             (try-with-error "SYSTEM" (format "rm: Could not delete file or directory \"~a\"." v1)
-                                 delete-directory/files (list v1)) (Prim0 'void)])]
-        ['getlinesf 
-         (assert-contract (list "string") v params "getlinesf")
-         (match v
-           ["" (cm-error "CONTRACT" "Missing argument to `getlinesf`.")]
-           [v1 (try-with-error "SYSTEM" (format "getlinesf: Could not load file \"~a\"." v1)
-                                   file->lines (list v1))])]
-        ['system 
-         (assert-contract (list "string") v params "system")
-         (match v
-           [_ (racket-to-bool (system v))])]
-        ['sysres
-         (assert-contract (list "string") v params "sysres")
-         (match v
-           [_ (with-output-to-string (lambda () (system v)))])]
-        ['file_exists? 
-         (assert-contract (list "string") v params "file_exists?")
-         (match v
-           ["" (cm-error "CONTRACT" "Missing argument to `file_exists?`")]
-           [v1 (racket-to-bool (file-exists? v1))])]
-        ['dir_exists? 
-         (assert-contract (list "string") v params "dir_exists?")
-         (match v
-           ["" (cm-error "CONTRACT" "Missing argument to `dir_exists?`")]
-           [v1 (racket-to-bool (directory-exists? v1))])]
-        ['to_complete_path 
-         (assert-contract (list "string") v params "to_complete_path")
-         (match v
-           ["" (cm-error "CONTRACT" "`to_complete_path`: string argument cannot be empty.")]
-           [_ (path->string 
-                (simplify-path 
-                  (path->complete-path (expand-user-path v))))])]
-        ['make_hash 
-         (match v
-           ['() (CmHash (hash) "immutable" '())]
-           [(list "mutable") (CmHash (make-hash) "mutable" '())]
-           [(list "immutable") (CmHash (hash) "immutable" '())]
-           [(list "immutable" f) #:when (is-fun? f) (CmHash (hash) "immutable" f)]
-           [(list "mutable" f) #:when (is-fun? f) (CmHash (make-hash) "mutable" f)]
-           [(CmHash _ "immutable" _) v]
-           ;; deep copy of mutable hash
-           [(CmHash h "mutable" handler) (CmHash (hash-copy h) "mutable" handler)]
-           [_ (cm-error "CONTRACT" "Invalid arg(s) to `make_hash`.")]
-           )]
-        ['hash? (racket-to-bool (is-hash? v))]
-        ['mutable_hash? (racket-to-bool (is-mutable-hash? v))]
         ;; get-global-var-data will return false if v not yet defined
         ['defined? (interp-defined? v context params module-id)]
-        ['hash_keys (interp-hash-keys v)]
-        ['hash_values (interp-hash-values v)]
-        ['hash_to_list (interp-hash-to-list v)]
-        ['read_string (interp-read-string v params)]
-        ['write_string (interp-write-string v params)]
-        ['gensym (interp-gensym v)]
-        ['regex (interp-regex v params)]
-        ['load 
-         (match v
-           [(list (? string? arg1) (? string? arg2))
-            (process-import arg2 arg1 module-id)
-            (Prim0 'void)]
-           [_ (cm-error "CONTRACT" "Invalid arguments to `load`.")])]
-        ['random (interp-random v)]
-        ['char_to_int 
-         (assert-contract (list "string") v params "char_to_int")
-         (match (string->list v)
-           [(list c) (char->integer c)]
-           [_ (cm-error "CONTRACT" "Argument to `char_to_int` must be a single char")])]
-        ['int_to_char 
-         (assert-contract (list "int") v params "int_to_char")
-         (with-handlers* 
-           ([exn:fail? 
-              (lambda (exn) 
-                (cm-error "CONTRACT"
-                 (format "`int_to_char`: invalid value: ~a" v)))])
-           (string (integer->char v)))]
-        ['exit 
-         ;; exit with 1 if error code is screwy
-         (let ([i (match v
-                    [(? is-int?) #:when (and (>= v 0) (<= v 255)) v]
-                    [_ 1])])
-           (exit i))]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]
@@ -424,7 +274,7 @@
         ['length (cm-error "CONTRACT" (string-append 
             "Applied `length` to non list or string. Given type "
             (get-type v) "."))]
-        ['type (get-type v)] 
+        ['typeof (get-type v)] 
         ['string (string-coerce v)] 
         ['int (int-coerce v)] 
         ['float (float-coerce v)] 
@@ -448,7 +298,6 @@
   (match op
          ['void (Prim0 'void)]
          ['eof (Prim0 'eof)]
-         ['read_line (interp-read-line)]
          ))
 
 ;;
@@ -1074,6 +923,22 @@
          [s (cm-error "CONTRACT" (format "Invalid operand for index: ~a" (string-coerce s)))]
          ))
 
+;;
+;; hash ops
+;;
+
+(define (interp-make-hash as)
+  (match as
+    [(list "mutable") (CmHash (make-hash) "mutable" '())]
+    [(list "immutable") (CmHash (hash) "immutable" '())]
+    [(list "immutable" f) #:when (is-fun? f) (CmHash (hash) "immutable" f)]
+    [(list "mutable" f) #:when (is-fun? f) (CmHash (make-hash) "mutable" f)]
+    [(list (CmHash _ "immutable" _)) (car as)]
+    ;; deep copy of mutable hash
+    [(list (CmHash h "mutable" handler)) (CmHash (hash-copy h) "mutable" handler)]
+    [_ (cm-error "CONTRACT" "Invalid arg(s) to `make_hash`.")]
+    ))
+
 (define (interp-hash-set v1 v2 v3)
   (match v1
         [(CmHash h "immutable" handler) (CmHash (hash-set h v2 v3) "immutable" handler)]
@@ -1110,7 +975,7 @@
          [(CmHash h _ _) (hash->list h)]
          [_ (cm-error "CONTRACT" "Missing hash for `hash_to_list`.")]))
 
-(define (interp-hash-ref-check v1 v2 v3 params)
+(define (interp-handler.hash-ref v1 v2 v3 params)
   (match v1
          [(CmHash h _ _)
             (if (is-fun? v3)
@@ -1119,8 +984,83 @@
                 (cm-error "CONTRACT" "Third arg to `hash_ref_check` must be a function."))]
          [_ (cm-error "CONTRACT" "Missing hash for `hash_ref_check`.")]))
 
+(define (interp-hash? v params)
+  (match v
+    [(CmHash _ _ _) (racket-to-bool #t)]
+    [_ (racket-to-bool #f)]))
+
+(define (interp-mutable-hash? v params)
+  (match v
+    [(CmHash _ "mutable" _) (racket-to-bool #t)]
+    [_ (racket-to-bool #f)]))
+
+;;
+;; system ops
+;;
+
+(define (interp-exit v params)
+  ;; exit with 1 if error code is screwy
+  (let ([i (match v
+             [(? is-int?) #:when (and (>= v 0) (<= v 255)) v]
+             [_ 1])])
+    (exit i)))
+
+(define (interp-load prefix arg params module-id)
+  (process-import arg prefix module-id)
+  (Prim0 'void))
+
+(define (interp-error as params)
+  (match as
+    [(list id msg) (cm-error id msg)]
+    [(list msg) #:when (string? msg) (cm-error "GENERIC" msg)]
+    [_ (cm-error "CONTRACT" (format "Invalid argument(s) to error: ~a" as))]))
+
+(define (interp-system-type)
+  (symbol->string (system-type)))
+
+(define (interp-system v params)
+  (assert-contract (list "string") v params "system")
+  (match v
+    [_ (racket-to-bool (system v))]))
+
+(define (interp-sysres v params)
+  (assert-contract (list "string") v params "sysres")
+  (match v
+    [_ (with-output-to-string (lambda () (system v)))]))
+
+(define (interp-eval v params)
+  (assert-contract (list "string") v params "eval")
+  (run v))
+
+(define (interp-evalxp v params)
+  (assert-contract (list "string") v params "evalxp")
+  (run-expr v))
+
+;;
+;; type conversions
+;;
+
+(define (interp-int-to-char v params)
+  (assert-contract (list "int") v params "int_to_char")
+  (with-handlers* 
+   ([exn:fail? 
+      (lambda (exn) 
+        (cm-error "CONTRACT"
+         (format "`int_to_char`: invalid value: ~a" v)))])
+   (string (integer->char v))))
+
+(define (interp-char-to-int v params)
+  (assert-contract (list "string") v params "char_to_int")
+  (match (string->list v)
+    [(list c) (char->integer c)]
+    [_ (cm-error "CONTRACT" "Argument to `char_to_int` must be a single char")]))
+
+;;
+;; file/io ops
+;;
+
 (define (interp-print v)
- (begin (displayln v) 
+ (begin (displayln (string-coerce v)) 
         v))
 
 ;; reads until i chars or eof
@@ -1131,23 +1071,6 @@
         (format "Argument to `read_string` must be greater than zero.\nGot: ~a" v1)))
   (read-string v1))
 
-(define (interp-peek-string v1 v2 params)
-  (assert-contract (list "int") v1 params "peek_string")
-  (assert-contract (list "int") v2 params "peek_string")
-  (peek-string v1 v2))
-
-(define (interp-cp v1 v2 params)
-  (assert-contract (list "string") v1 params "cp")
-  (assert-contract (list "string") v2 params "cp")
-  (match (cons v1 v2) 
-       [(cons v1 v2) #:when (or (string=? v1 "") (string=? v2 "")) 
-                     (cm-error "CONTRACT" "Missing argument to `cp`.")]
-       [(cons v1 v2)
-        (with-handlers* 
-         ([exn:fail? (lambda (exn) 
-          (cm-error "SYSTEM" (format "Could not copy \"~a\" to \"~a\"" v1 v2)))])
-         (copy-directory/files v1 v2))
-        (Prim0 'void)]))
 
 (define (interp-appendstrf v1 v2 params)
   (assert-contract (list "string") v1 params "appendstrf")
@@ -1175,6 +1098,92 @@
       (display-to-file v1 v2 #:exists 'replace))
     (Prim0 'void)]))
 
+(define (interp-getlinesf v params)
+  (assert-contract (list "string") v params "getlinesf")
+  (match v
+    ["" (cm-error "CONTRACT" "Missing argument to `getlinesf`.")]
+    [_ (try-with-error "SYSTEM" (format "getlinesf: Could not load file \"~a\"." v)
+                            file->lines (list v))]))
+
+(define (interp-ls v params)
+  (assert-contract (list "string") v params "ls")
+  (match v
+    ["" (map path->string 
+              (try-with-error "GENERIC" "ls: Could not load directory \"\"."
+                              directory-list (list ".")))]
+    [_ (map path->string 
+              (try-with-error "GENERIC" (format "ls: Could not load directory \"~a\"." v)
+              directory-list (list v)))]))
+
+(define (interp-cd v params)
+  (assert-contract (list "string") v params "cd")
+  (match v
+    ["" (path->string 
+          (try-with-error "SYSTEM" "cd: Could not load directory \".\"."
+                          current-directory '()))]
+    [_ 
+      (try-with-error "SYSTEM" (format "cd: Could not load directory \"~a\"." v)
+                           current-directory (list v)) (Prim0 'void)]))
+
+(define (interp-mv v1 v2 params)
+  (assert-contract (list "string") v1 params "mv")
+  (assert-contract (list "string") v2 params "mv")
+  (when (or (equal? v1 "") (equal? v2 ""))
+    (cm-error "CONTRACT" "Cannot move to or from empty directory."))
+  (try-with-error "SYSTEM" 
+        (format "mv: Could not move directory \"~a\" to \"~a\"." v1 v2)
+        rename-file-or-directory (list v1 v2)) 
+  (Prim0 'void))
+
+(define (interp-cp v1 v2 params)
+  (assert-contract (list "string") v1 params "cp")
+  (assert-contract (list "string") v2 params "cp")
+  (match (cons v1 v2) 
+    [(cons v1 v2) 
+     #:when (or (string=? v1 "") (string=? v2 "")) 
+     (cm-error "CONTRACT" "Cannot move to or from empty directory.")]
+    [(cons v1 v2)
+     (with-handlers* 
+      ([exn:fail? (lambda (exn) 
+       (cm-error "SYSTEM" (format "Could not copy \"~a\" to \"~a\"" v1 v2)))])
+      (copy-directory/files v1 v2))
+     (Prim0 'void)]))
+
+(define (interp-rm v params)
+  (assert-contract (list "string") v params "rm")
+  (match v
+    ["" (cm-error "CONTRACT" "Missing argument to rm")]
+    [_ 
+      (try-with-error "SYSTEM" (format "rm: Could not delete file or directory \"~a\"." v)
+                          delete-directory/files (list v)) (Prim0 'void)]))
+(define (interp-mkdir v params)
+  (assert-contract (list "string") v params "mkdir")
+  (match v
+        ["" (cm-error "CONTRACT" "Missing argument to `mkdir`.")]
+        [_ 
+          (try-with-error "SYSTEM" (format "mkdir: Could not make directory \"~a\"." v)
+                             make-directory (list v)) (Prim0 'void)]))
+
+(define (interp-expand-path v params)
+  (assert-contract (list "string") v params "expand_path")
+  (match v
+    ["" (cm-error "CONTRACT" "`expand_path`: string argument cannot be empty.")]
+    [_ (path->string 
+         (simplify-path 
+           (path->complete-path (expand-user-path v))))]))
+
+(define (interp-directory? v params)
+  (assert-contract (list "string") v params "directory?")
+  (match v
+    ["" (racket-to-bool #f)]
+    [v1 (racket-to-bool (directory-exists? v1))]))
+
+(define (interp-file? v params)
+  (assert-contract (list "string") v params "file?")
+  (match v
+    ["" (racket-to-bool #f)]
+    [v1 (racket-to-bool (file-exists? v1))]))
+
 (define (interp-read-line) (read-line))
 
 (define (interp-write-string v1 params)
@@ -1182,9 +1191,8 @@
   (display v1) (Prim0 'void))
 
 (define last-gensym-id 0)
-(define (interp-gensym v1)
-  (unless (is-string? v1) 
-    (cm-error "CONTRACT" "The prefix for `gensym` must be a string."))
+(define (interp-gensym v1 params)
+  (assert-contract (list "string") v1 params "gensym")
   (let ([id last-gensym-id])
     (set! last-gensym-id (add1 id))
     (string-append v1 (number->string id))
@@ -1237,7 +1245,8 @@
                   [(list "quote" regex) (regexp-quote regex)]
                   [(list "rx" regex) (regexp regex)]
                   [(list "px" regex) (pregexp regex)])
-                )])])
+                )]
+             [_ (cm-error "CONTRACT" "Invalid arguments to `regex`.")])])
   (match v1
          [(list "regexp-match" _ str)
           (assert-contract (list "string") str params "regex -> regexp-match")
@@ -1287,3 +1296,130 @@
      (random-seed k) (Prim0 'void)]
     [_ (cm-error "CONTRACT" 
         (format "Invalid arguments to `random`: ~a" (string-coerce v)))]))
+
+
+;; processes lesser operators such as `regex` and `make_hash` that do
+;; not deserve their own operators
+(define (interp-internal-ops v1 v2 context params module-id debug)
+  ;; Asserts that the list argument to internal_op is a list and a list
+  ;; of the correct length.
+  ;;
+  ;; The number of args should be [n1 n2]
+  (define (assert-num-args n1 n2)
+    (match v2
+      [(list as ...)
+       #:when (and (>= (length as) n1) (<= (length as) n2))
+       (void)]
+      [_ (cm-error "CONTRACT" (format "Invalid args to `~a`: ~a" v1 v2))]))
+  (assert-contract (list "string") v1 params "internal_op")
+  (assert-contract (list "list") v2 params "internal_op")
+  (match v1
+    ["regex" 
+     (interp-regex v2 params)]
+    ["random"
+     (interp-random v2)]
+    ["gensym"
+     (assert-num-args 1 1)
+     (interp-gensym (car v2) params)]
+    ["expand_path"
+     (assert-num-args 1 1)
+     (interp-expand-path (car v2) params)]
+    ["directory?"
+     (assert-num-args 1 1)
+     (interp-directory? (car v2) params)]
+    ["file?"
+     (assert-num-args 1 1)
+     (interp-file? (car v2) params)]
+    ["ls"
+     (assert-num-args 1 1)
+     (interp-ls (car v2) params)]
+    ["cd"
+     (assert-num-args 1 1)
+     (interp-cd (car v2) params)]
+    ["mv"
+     (assert-num-args 2 2)
+     (interp-mv (car v2) (cadr v2) params)]
+    ["cp"
+     (assert-num-args 2 2)
+     (interp-cp (car v2) (cadr v2) params)]
+    ["rm"
+     (assert-num-args 1 1)
+     (interp-rm (car v2) params)]
+    ["mkdir"
+     (assert-num-args 1 1)
+     (interp-mkdir (car v2) params)]
+    ["writestrf"
+     (assert-num-args 2 2)
+     (interp-writestrf (car v2) (cadr v2) params)]
+    ["appendstrf"
+     (assert-num-args 2 2)
+     (interp-appendstrf (car v2) (cadr v2) params)]
+    ["getlinesf"
+     (assert-num-args 1 1)
+     (interp-getlinesf (car v2) params)]
+    ["make_hash"
+     (interp-make-hash v2)]
+    ["hash_ref"
+     (assert-num-args 2 2)
+     (interp-hash-ref (car v2) (cadr v2) params)]
+    ["handler.hash_ref"
+     (assert-num-args 3 3)
+     (interp-handler.hash-ref (car v2) (cadr v2) (caddr v2) params)]
+    ["hash_set"
+     (assert-num-args 3 3)
+     (interp-hash-set (car v2) (cadr v2) (caddr v2))]
+    ["hash_keys"
+     (assert-num-args 1 1)
+     (interp-hash-keys (car v2))]
+    ["hash_values"
+     (assert-num-args 1 1)
+     (interp-hash-values (car v2))]
+    ["hash_to_list"
+     (assert-num-args 1 1)
+     (interp-hash-to-list (car v2))]
+    ["hash_has_key?"
+     (assert-num-args 2 2)
+     (interp-hash-has-key? (car v2) (cadr v2))]
+    ["hash?"
+     (assert-num-args 1 1)
+     (interp-hash? (car v2) params)]
+    ["mutable_hash?"
+     (assert-num-args 1 1)
+     (interp-mutable-hash? (car v2) params)]
+    ["system_type"
+     (assert-num-args 0 0)
+     (interp-system-type)]
+    ["system"
+     (assert-num-args 1 1)
+     (interp-system (car v2) params)]
+    ["sysres"
+     (assert-num-args 1 1)
+     (interp-sysres (car v2) params)]
+    ["write_string"
+     (assert-num-args 1 1)
+     (interp-write-string (car v2) params)]
+    ["read_string"
+     (assert-num-args 1 1)
+     (interp-read-string (car v2) params)]
+    ["read_line"
+     (assert-num-args 0 0)
+     (interp-read-line)]
+    ["eval"
+     (assert-num-args 1 1)
+     (interp-eval (car v2) params)]
+    ["evalxp"
+     (assert-num-args 1 1)
+     (interp-evalxp (car v2) params)]
+    ["exit"
+     (assert-num-args 1 1)
+     (interp-exit (car v2) params)]
+    ["error"
+     (interp-error v2 params)]
+    ["int_to_char"
+     (assert-num-args 1 1)
+     (interp-int-to-char (car v2) params)]
+    ["char_to_int"
+     (assert-num-args 1 1)
+     (interp-char-to-int (car v2) params)]
+    [_ 
+      (cm-error "CONTRACT" (format "Invalid op-id to `internal_op`: ~a" v1))]))

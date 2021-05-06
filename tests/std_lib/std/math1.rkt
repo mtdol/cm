@@ -108,6 +108,17 @@ val-false)
 
 (check-failure run "sub1:\"a\"")
 
+(check-equal? (run "neg:3")
+-3)
+
+(check-equal? (run "neg:-3")
+3)
+
+(check-equal? (run "neg:-3.2")
+3.2)
+
+(check-failure run "neg:\"a\"")
+
 (check-equal? (run "zero?:3.2")
 val-false)
 
@@ -266,7 +277,7 @@ val-false)
 (check-equal? (run "value:\"s\"")
 "s")
 
-(check-equal? (run "type (value:(lambda x := x))")
+(check-equal? (run "typeof (value:(lambda x := x))")
 "fun")
 
 (check-equal? (run "value:3")

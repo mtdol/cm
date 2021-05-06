@@ -57,8 +57,8 @@ if defined? {string var} then void else def guard var
 -- checks that the types of items in REST equal
 #:<def:assert_types={op|types|REST}
 if not ({_assert_types=_aux types | REST}) 
-  then error 
-      {list "CONTRACT"
+  then {: id.error 
+          | "CONTRACT"
           | {: format
               | "Types for ~2 must be one of ~1:\n~3"
               | {list string (types) | op | string {list REST}}}}
@@ -66,11 +66,11 @@ if not ({_assert_types=_aux types | REST})
   -- user code after this
 >:#
 #:<def:_assert_types=_aux{types|a|REST}
-{: ormap | lambda typ := typ = type (a) | types} and
+{: ormap | lambda typ := typ = typeof (a) | types} and
   {_assert_types=_aux types|REST} 
 >:#
 #:<def+:_assert_types=_aux{types|a}
-{: ormap | lambda typ := typ = type (a) | types}
+{: ormap | lambda typ := typ = typeof (a) | types}
 >:#
 
 --- Errors
@@ -79,14 +79,33 @@ if not ({_assert_types=_aux types | REST})
 -- allows `Error` struct to be indexed
 typedef Error := string id, string message;//
 
+-- calls error with an id and a message
+defun id.error (string id, string message) :=
+  internal_op "error" {list id|message}//
+
+-- raises a "GENERIC" exception
+defun error (string message) :=
+  internal_op "error" {list message}//
+
 
 --- IO
 ------------------------------
 
+defun write_string (string s) :=
+  internal_op "write_string" {list s}//
+
+defun read_line () :=
+  internal_op "read_line" {list}//
+
+defun read_string (int n) :=
+  internal_op "read_string" {list n}//
+
 -- allows print to be used like a function
-defun print2 (v) := print v// 
+defun func.print (v) := print v// 
+
 -- prints and yields void
 defun sprint (v) := (print v) comma void// 
+
 -- pretty print
 defun pprint (vs) :=
   match vs 
@@ -104,17 +123,17 @@ defun pprint (vs) :=
 
 
 defun number? (v) :=
-  let t := type v in
+  let t := typeof v in
       t = "int" or t = "float"//
 
 defun func.add (types {number} n1, types {number} n2) :=
-  {assert_types= "add"|{list type n1}|n1|n2} 
+  {assert_types= "add"|{list typeof n1}|n1|n2} 
   n1 + n2//
 defun func.sub (types {number} n1, types {number} n2) :=
-  {assert_types= "sub"|{list type n1}|n1|n2} 
+  {assert_types= "sub"|{list typeof n1}|n1|n2} 
   n1 - n2//
 defun func.mult (types {number} n1, types {number} n2) :=
-  {assert_types= "mult"|{list type n1}|n1|n2} 
+  {assert_types= "mult"|{list typeof n1}|n1|n2} 
   n1 * n2//
 defun func.div (float n1, float n2) :=
   n1 / n2//
@@ -131,17 +150,19 @@ defun func.not (bool b) :=
   not b//
 
 defun add1 (types {number} n) :=
-  if type n = "int" then n + 1 else n + 1.0//
+  if typeof n = "int" then n + 1 else n + 1.0//
 defun sub1 (types {number} n) :=
-  if type n = "int" then n - 1 else n - 1.0//
+  if typeof n = "int" then n - 1 else n - 1.0//
+defun neg (types {number} n) :=
+  -n//
 defun zero? (types {number} n) :=
-  if type n = "int" then n = 0 else n = 0.0//
+  if typeof n = "int" then n = 0 else n = 0.0//
 defun pos? (types {number} n) :=
-  if type n = "int" then n > 0 else n > 0.0//
+  if typeof n = "int" then n > 0 else n > 0.0//
 defun neg? (types {number} n) :=
-  if type n = "int" then n < 0 else n < 0.0//
+  if typeof n = "int" then n < 0 else n < 0.0//
 defun one? (types {number} n) :=
-  if type n = "int" then n = 1 else n = 1.0//
+  if typeof n = "int" then n = 1 else n = 1.0//
 defun even? int n :=
   n % 2 = 0//
 defun odd? int n :=
@@ -193,15 +214,15 @@ defun homogeneous_list? (dynamic vs) :=
   | list? vs ->
     | null? vs -> true
     else 
-      let typ := type `vs in
-        {: andmap | lambda elem := type elem = typ | vs}
+      let typ := typeof `vs in
+        {: andmap | lambda elem := typeof elem = typ | vs}
   else false//
 
 defun list_of_type? (dynamic vs, string typ) :=
   | homogeneous_list?:vs ->
     | null? vs -> true
     else 
-      type `vs = typ
+      typeof `vs = typ
   else false//
 
 defun int_list? (dynamic vs) :=
@@ -223,14 +244,26 @@ defun fun_list? (dynamic vs) :=
 -- functions and math
 --
 
--- maps f onto all members of list lst
+-- `compose : {list f1|f2|f3|...|fn}` yields
+-- `lambda x := f1 : (f2 : (f3 : (... : (fn : x))))`
+defun compose (list fs) :=
+  lambda x :=
+    letaux compose
+    | fs := fs
+    in
+      match fs
+      | () -> x
+      | f, fs -> f : (compose : fs)
+      end//
+
+-- maps f onto all members of vs
 defun map (fun f, list vs) := 
   match vs
   | () -> ()
   | v, vs -> (f:v), {: map | f | vs}
   end//
 
--- returns a list with only the elements that are true according to f
+-- vs where f : (v in vs) -> true
 defun filter (fun f, list vs) := 
   match vs
   | () -> ()
@@ -240,12 +273,12 @@ defun filter (fun f, list vs) :=
 
 -- int | float -> int | float
 defun max (types {number} n1, types {number} n2) :=
-  {assert_types= "max"|{list type n1}|n1|n2} 
+  {assert_types= "max"|{list typeof n1}|n1|n2} 
   if n1 > n2 then n1 else n2//
 
 -- int | float -> int | float
 defun min (types {number} n1, types {number} n2) :=
-  {assert_types= "min"|{list type n1}|n1|n2} 
+  {assert_types= "min"|{list typeof n1}|n1|n2} 
   if n1 < n2 then n1 else n2//
 
 -- generalized max func
@@ -368,8 +401,9 @@ defun build_list_range (int n1, int n2, fun f) :=
 -- applies f to each integer [0 n)
 defun build_list (int n, fun f) :=
   | neg?:n ->
-      error {list "CONTRACT" 
-          | "Arg `n` to `build_list` must be non-negative."}
+      {: id.error
+        | "CONTRACT" 
+        | "Arg `n` to `build_list` must be non-negative."}
   else
       {: build_list_range | 0 | n | f}//
 
@@ -394,7 +428,7 @@ defun index_of (list vs, dynamic elem) :=
 -- gets the last element of `vs`
 defun last (list vs) :=
   match vs
-  | () -> error {list "CONTRACT"|"List must be non-empty."}
+  | () -> id.error : "CONTRACT" : "List must be non-empty."
   | v, () -> v
   | v, vs -> last:vs
   end//
@@ -433,34 +467,37 @@ defun count (list vs, fun f) :=
 
 -- returns true if there are duplicate elements in `vs`
 defun duplicates? (list vs) :=
-  let h := make_hash {list "mutable"} in
+  let h := :>make_mutable_hash in
     {: ormap 
       | lambda elem :=
-          if hash_has_key? h elem
+          if hash_has_key? : h : elem
           then
             true
-          else (hash_set h elem void) comma false
+          else (hash_set : h : elem : void) comma false
       | vs}//
 
 -- removes duplicate elements from `vs`
 defun remove_duplicates (list vs) :=
-  let h := make_hash {list "mutable"} in
+  let h := :>make_mutable_hash in
     {: filter 
       | lambda elem :=
-          if hash_has_key? h elem
+          if hash_has_key? : h : elem
           then
             false
-          else (hash_set h elem void) comma true
+          else (hash_set : h : elem : void) comma true
       | vs}//
 
 --- Iterators, Generators
 --------------------------------
 
+defun gensym (string prefix) :=
+  internal_op "gensym" {list prefix}//
+
 -- generates a string that is undefined when treated as a variable
 defun gen_undefined (string prefix, string module) := 
   {%
     def _v_ := 0
-  | while defined? {list set _v_ := gensym prefix | module} do void
+  | while defined? {list set _v_ := gensym:prefix | module} do void
   } comma _v_
   //
 
@@ -539,6 +576,12 @@ defun list_to_string (list strs) :=
   | str, strs -> str $ (list_to_string:strs)
   end//
 
+defun int_to_char (int i) :=
+  internal_op "int_to_char" {list i}//
+
+defun char_to_int (string c) :=
+  internal_op "char_to_int" {list c}//
+
 -- replaces all instances of target substring with rep
 defun string_replace (string str, string targ, string rep) :=
   if length str < length targ then str
@@ -580,7 +623,7 @@ defun format (string str, list vs) :=
 
 -- splits `str` by `sep`
 defun string_split (string str, string sep) :=
-  regex {list "regexp-split" | {list "quote"|sep} | str}//
+  internal_op "regex" {list "regexp-split" | {list "quote"|sep} | str}//
 
 -- trims whitespace from str
 defun string_trim (string str) :=
@@ -593,53 +636,142 @@ defun string_trim (string str) :=
 -- regex funcs
 --
 defun regex_match (string pattern, string input) :=
-  regex {list "regexp-match" | {list "px"|pattern} | input}//
+  internal_op "regex" {list "regexp-match" | {list "px"|pattern} | input}//
 
 defun regex_match_all (string pattern, string input) :=
-  regex {list "regexp-match*" | {list "px"|pattern} | input}//
+  internal_op "regex" {list "regexp-match*" | {list "px"|pattern} | input}//
 
 defun regex_match? (string pattern, string input) :=
-  regex {list "regexp-match?" | {list "px"|pattern} | input}//
+  internal_op "regex" {list "regexp-match?" | {list "px"|pattern} | input}//
 
 defun regex_split (string pattern, string input) :=
-  regex {list "regexp-split" | {list "px"|pattern} | input}//
+  internal_op "regex" {list "regexp-split" | {list "px"|pattern} | input}//
 
 defun regex_replace (string pattern, string input, string insert) :=
-  regex {list "regexp-replace" | {list "px"|pattern} | input | insert}//
+  internal_op "regex" {list "regexp-replace" | {list "px"|pattern} | input | insert}//
 
 defun regex_replace_all (string pattern, string input, string insert) :=
-  regex {list "regexp-replace*" | {list "px"|pattern} | input | insert}//
+  internal_op "regex" {list "regexp-replace*" | {list "px"|pattern} | input | insert}//
 
 
 --- Hashmap
 --------------------------------
 
+defun hash? (dynamic v) :=
+  internal_op "hash?" {list v}//
+
+defun mutable_hash? (dynamic v) :=
+  internal_op "mutable_hash?" {list v}//
+
+defun make_hash () :=
+  internal_op "make_hash" {list "immutable"}//
+
+defun make_mutable_hash () :=
+  internal_op "make_hash" {list "mutable"}//
+
+defun handler.make_hash (fun handler) :=
+  internal_op "make_hash" {list "immutable"|handler}//
+
+defun handler.make_mutable_hash (fun handler) :=
+  internal_op "make_hash" {list "mutable"|handler}//
+
+defun clone_hash (? h hash?) :=
+  internal_op "make_hash" {list h}//
+
+defun hash_ref (? h hash?, dynamic key) :=
+  internal_op "hash_ref" {list h|key}//
+
+defun handler.hash_ref (? h hash?, dynamic key, fun handler) :=
+  internal_op "handler.hash_ref" {list h|key|handler}//
+
+defun hash_set (? h hash?, dynamic key, dynamic value) :=
+  internal_op "hash_set" {list h|key|value}//
+
+defun hash_keys (? h hash?) :=
+  internal_op "hash_keys" {list h}//
+
+defun hash_values (? h hash?) :=
+  internal_op "hash_values" {list h}//
+
+defun hash_to_list (? h hash?) :=
+  internal_op "hash_to_list" {list h}//
+
+defun hash_has_key? (? h hash?, dynamic key) :=
+  internal_op "hash_has_key?" {list h|key}//
+
+
 defun list_to_hash (list ms) :=
   {: foldl 
-      | lam m,h := hash_set h (`m) (~m)
-      | make_hash ()
+      | lam m, h := hash_set : h : (`m) : (~m)
+      | :>make_hash
       | ms}//
 
 defun list_to_mutable_hash (list ms) :=
   {: foldl 
-      | lam m,h := (hash_set h (`m) (~m)) comma h
-      | make_hash {list "mutable"}
+      | lam m, h := (hash_set : h : (`m) : (~m)) comma h
+      | :>make_mutable_hash
       | ms}//
 
 
 --- System
 --------------------------------
 
+defun exit (dynamic id) :=
+  internal_op "exit" {list id}//
+
+defun eval (string query) :=
+  internal_op "eval" {list query}//
+
+defun evalxp (string query) :=
+  internal_op "evalxp" {list query}//
+
 -- get the current module-id dynamicaly
 defun current_module () :=
-  evalxp "{current_module}"//
+  evalxp : "{current_module}"//
+
+def system_type :=
+  internal_op "system_type" {list}//
 
 match system_type
-| "windows" -> (eval "#:def:windows{} true") comma void
-| "macosx" -> (eval "#:def:macosx{} true") comma void
-| "unix" -> (eval "#:def:unix{} true") comma void
+| "windows" -> (eval : "#:def:windows{} true") comma void
+| "macosx" -> (eval : "#:def:macosx{} true") comma void
+| "unix" -> (eval : "#:def:unix{} true") comma void
 | _ -> void
 end//
+
+defun system (string request) :=
+  internal_op "system" {list request}//
+
+defun sysres (string request) :=
+  internal_op "sysres" {list request}//
+
+defun ls (string f) :=
+  internal_op "ls" {list f}//
+
+defun cd (string dir) :=
+  internal_op "cd" {list dir}//
+
+defun mv (string f1, string f2) :=
+  internal_op "mv" {list f1|f2}//
+
+defun cp (string f1, string f2) :=
+  internal_op "cp" {list f1|f2}//
+
+defun rm (string f) :=
+  internal_op "rm" {list f}//
+
+defun mkdir (string dir) :=
+  internal_op "mkdir" {list dir}//
+
+defun writestrf (string v, string file) :=
+  internal_op "writestrf" {list v|file}//
+
+defun appendstrf (string v, string file) :=
+  internal_op "appendstrf" {list v|file}//
+
+defun getlinesf (string file) :=
+  internal_op "getlinesf" {list file}//
+
 
 def path_separator := 
   match system_type
@@ -697,33 +829,34 @@ defun build_path (list elems) :=
   }//
 
 -- cds only if the directory exists
-defun cd2 (string s) :=
-  if dir_exists? s 
+defun cd_check (string dir) :=
+  if directory?:dir 
   then 
-      cd s 
+      cd:dir
   else 
-      error ("SYSTEM", ("Dir "$s$" does not exist.");)//
+      id.error : "SYSTEM" : ("Dir "$dir$" does not exist.")//
 
 -- pretty print ls of current dir
 defun lsc () :=
-  pprint:(ls ".")//
+  pprint:(ls : ".")//
 defun cdc () :=
-  (cd "")//
+  (cd : "")//
 
 -- display contents of file
 defun catf (string f) :=
-  pprint:(getlinesf f)//
+  pprint:(getlinesf:f)//
 
--- accesses the file-system and asks if `f` is a directory
+-- accesses the file-system and asks if `f` exists as a directory
 defun directory? (string f) :=
-  dir_exists? f//
+  internal_op "directory?" {list f}//
 
+-- accesses the file-system and asks if `f` exists as a file
 defun file? (string f) :=
-  file_exists? f//
+  internal_op "file?" {list f}//
 
 -- converts the given path to its absolute form
 defun expand_path (string path) :=
-  to_complete_path path//
+  internal_op "expand_path" {list path}//
 
 -- gives the arguments to ls with the prefix appended onto the results.
 defun ls_build (string arg) :=
@@ -734,7 +867,7 @@ defun ls_build (string arg) :=
           else arg 
         in
           build_path:{list arg | elem}
-    | ls arg
+    | ls:arg
   }//
 
 -- recursive ls
@@ -746,3 +879,21 @@ defun ls_rec (string f) :=
       | {: filter | directory? | res}
       }
     }//
+
+
+-- generates a random float in (0 1)
+defun randomf () :=
+  internal_op "random" {list}//
+
+-- generates a random number in (n1 n2)
+defun random (int n1, int n2) :=
+  internal_op "random" {list n1|n2}//
+
+-- sleeps for the given number of seconds
+--
+-- int -> void
+defun sleep (int seconds) :=
+  match system_type
+  | "windows" -> (system : ("TIMEOUT " $ seconds)) comma void
+  | _ -> (system : ("sleep " $ seconds)) comma void
+  end//

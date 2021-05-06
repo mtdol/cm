@@ -5,15 +5,15 @@
 def cont := true//
 def resp := ""//
 while cont do {%
-    write_string "> "
-  | set resp := read_line
+    write_string : "> "
+  | set resp := :>read_line
   | if resp = "#exit" or resp = "#e" 
     then 
       set cont := false 
     else
       try
-        @ evalxp resp
+        @ evalxp:resp
       catch e with
-        match e \| struct Error (_,msg;) -> @ msg end
+        @ e::message
   }//
 @ "Good Bye!"//

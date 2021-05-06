@@ -205,7 +205,7 @@
 ;; if it does not exist, then returns #f and does nothing
 ;;
 ;; string = ("macro" | "type" | "var"), string, string, string, bool -> bool
-(define (clone-item type name from-module-id to-module-id prefix private? public-only?)
+(define (clone-item type name from-module-id to-module-id prefix make-private? public-only?)
   (let ([key (GlobalContextKey type name from-module-id)])
   (if (entry-exists? key public-only?)
     (begin 
@@ -215,10 +215,16 @@
         (hash-set! global-context 
                  (GlobalContextKey 
                    type (string-append prefix name) to-module-id)
-                 (GlobalContextEntry value private? static?))])
+                 (GlobalContextEntry value make-private? static?))])
       #t)
     #f)))
 
+;; attemps to map the item, if it cannot be mapped, attempts to clone the item,
+;; if it cannot be cloned, returns #f else #t.
+(define (map-or-clone-item type name from-module-id to-module-id prefix public-only?)
+  (if (map-reference type name from-module-id to-module-id prefix public-only?)
+    #t
+    (clone-item type name from-module-id to-module-id prefix #t public-only?)))
 
 ;; Populates the current module space with references (or copies if entry is not static)
 ;; to every item included in the given module referenced by module-id. 

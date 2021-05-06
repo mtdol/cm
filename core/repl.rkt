@@ -95,10 +95,9 @@
       [exn:fail? (lambda (e) (begin (displayln (match e [(exn:fail m _) m])) (repl-failsafe)))]
                   ) (repl)))
 
-;; import standard libs
 (define (run-lang-line!) 
-  (let ([id (get-current-module-id)])
-  (begin (run "#:lang cm") (set-current-module-id! id) (void))))
+  (run "#:lang cm") 
+  (void))
 
 (run-lang-line!)
 (display "Welcome to the cm repl!\nType `#exit` or `#e` to exit. Type `#help` for help.\n\n")

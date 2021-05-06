@@ -126,7 +126,7 @@
 
 (define (process-lazy-import file-str type item prefix current-module-id)
   (let ([module-id (file-name->module-id (module-string->filename file-str))])
-    (when (not (map-reference type item module-id current-module-id prefix #t))
+    (unless (map-or-clone-item type item module-id current-module-id prefix #t)
       (cm-error "IMPORT" 
                 (format "Could not lazy require ~a ~a from module ~a"
                         type item module-id)))

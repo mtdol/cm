@@ -72,7 +72,6 @@
                          module-id)
                        ""]
                       [_ (cm-error-linenum module-id linenum "LEX" "Invalid macro def name.")]
-
                  )]
          [name #:when (regexp-match? #rx"^def\\+\\:.*" name)
                (match (regexp-match #rx"^def\\+\\:([^{}]+){([a-zA-Z0-9_\\|]*)\\}$" name)
@@ -85,7 +84,6 @@
                          module-id)
                        ""]
                       [_ (cm-error-linenum module-id linenum "LEX" "Invalid macro def name.")]
-
                  )]
          [name #:when (regexp-match? #rx"^import$" name)
                (map 
@@ -101,7 +99,6 @@
                    (process-import elem r1 module-id)) 
                  (file-list-string->list body module-id))]) 
                ""]
-
          [name #:when (regexp-match? #rx"^lazy_import$" name)
                (process-lazy-import-macro body "" module-id) ""]
          [name #:when (regexp-match? #rx"^lazy_import:.+" name)
