@@ -1,5 +1,7 @@
+#:lang cm
+
 -- guarded def, so def is not redefined when the file is reloaded
 cond
-| defined? "b" -> void
+| defined? "b" :>current_module -> void
 else
   def b := 3//

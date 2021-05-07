@@ -150,30 +150,6 @@
 '(""))
 
 ;;
-;; defcheck{}
-;;
-
-(run-stat-silent "def x := 7//")
-
-(check-equal? (run-stat "string ({defcheck int|x} := 3)//")
-'(""))
-
-(check-equal? (run-stat "x//")
-'(7))
-
-(check-equal? (run-stat "({defcheck int|z} := 3)//")
-'(3))
-
-(check-equal? (run-stat "z//")
-'(3))
-
-(check-exn exn:fail? (lambda ()
-  (run-stat "{defcheck int|x1} := 3.2//")))
-
-(check-exn exn:fail? (lambda ()
-  (run-stat "{defcheck int|x y} := 3//")))
-
-;;
 ;; let{}
 ;;
 

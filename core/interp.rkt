@@ -62,6 +62,16 @@
        (trace-interp-expr e1 context params module-id debug)
        (trace-interp-expr e2 context params module-id debug)
        params module-id)]
+    [(Prefix2 'defined? e1 e2)
+     (interp-defined?
+       (trace-interp-expr e1 context params module-id debug)
+       (trace-interp-expr e2 context params module-id debug)
+       "all" context params)]
+    [(Prefix2 'global.defined? e1 e2)
+     (interp-defined?
+       (trace-interp-expr e1 context params module-id debug)
+       (trace-interp-expr e2 context params module-id debug)
+       "global" context params)]
     [(Prefix2 'struct e1 e2) (interp-struct e1 e2 context params module-id debug)]
     [(Prefix2 'struct? e1 e2) (interp-struct? e1 e2 context params module-id debug)]
     [(Prefix2 'appl e1 e2) (interp-appl e1 e2 context params module-id debug)]
@@ -237,9 +247,10 @@
 (define (interp-prim1 op v context params module-id debug)
   (match op
         ['print (interp-print v)]
+        ['local.defined? (interp-defined? v "" "local" context params)]
+        ['params.defined? (interp-defined? v "" "params" context params)]
         [':> (interp-apply v null params)]
         ;; get-global-var-data will return false if v not yet defined
-        ['defined? (interp-defined? v context params module-id)]
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
         (+ v)]
@@ -1198,20 +1209,34 @@
     (string-append v1 (number->string id))
     ))
 
-(define (interp-defined? v1 context params current-module-id)
-  (match v1
-         [(list (? is-string? label) (? is-string? id))
-          (racket-to-bool 
-            (or
-              (get-local-var-data label context)
-              (get-local-var-data label params)
-              (get-global-var-data label id)))]
-         [(? is-string? label) 
-          (racket-to-bool
-            (or
-              (get-local-var-data label context)
-              (get-local-var-data label params)
-              (get-global-var-data label current-module-id)))]))
+;; `id` := the variable name
+;; `module` := the module to look in
+;; `space` := "local" | "global" | "params" | "all"
+;;      where `local` is the local context
+;;            `global` is the global context
+;;            `params` is the param context
+;;            `all` is any context
+(define (interp-defined? id module space context params) 
+  (assert-contract (list "string") id params "defined?")
+  (assert-contract (list "string") module params "defined?")
+  (assert-contract (list "string") space params "defined?")
+  (match space
+    ["local"
+     (racket-to-bool (hash-has-key? context id))]
+    ["params"
+     (racket-to-bool (hash-has-key? params id))]
+    ["global"
+     (let ([res (get-global-var-data id module)])
+       (racket-to-bool (not (not res))))]
+    ["all"
+     (racket-to-bool 
+       (or 
+         (bool-to-racket (interp-defined? id module "local" context params))
+         (bool-to-racket (interp-defined? id module "params" context params))
+         (bool-to-racket (interp-defined? id module "global" context params))))]
+    [_ (cm-error "CONTRACT" 
+                 (format "Invalid space for `defined?`: ~a" space))]))
+
 
 (define (interp-schemaof e1 context params module-id debug)
   (match e1

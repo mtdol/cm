@@ -1,8 +1,5 @@
 - cm.rkt application includes racket stack trace, no es muy bien
 
-- flesh out `defined?` a bit
-    -- add ability to ask `local`, `param`, and `global`
-
 - check that `file?` and `dir?` work on hidden files like `.git`
 
 - make `ls` auto-expand paths like "~"
