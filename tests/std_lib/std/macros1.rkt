@@ -21,8 +21,7 @@
 '((9 (1 2 3) . 7)))
 
 ;; parse error 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{list |3}//")))
+(check-failure run-stat "{list |3}//")
 
 ;;
 ;; empty{}
@@ -36,11 +35,9 @@
 (check-equal? (run-stat "{_empty_and_arg 2 + 3} - 1//")
 '(4))
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "1 + {empty}//")))
+(check-failure run-stat "1 + {empty}//")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{empty 3}//")))
+(check-failure run-stat "{empty 3}//")
 
 ;;
 ;; --{}
@@ -49,8 +46,7 @@
 (check-equal? (run-stat "1 + {-- 1 + \\{  } 2//")
 '(3))
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{-- must close braces { }//")))
+(check-failure run-stat "{-- must close braces { }//")
 
 (check-equal? (run-stat "1 + {-- cool \\{\\} comment that you got! th~er\\{ } 2//")
 '(3))
@@ -81,8 +77,7 @@
 (check-equal? (run-stat "{vari * | 1 | {vari ^ | 2 | {vari + | 1 | 2}} | 2}//")
 '(16))
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{vari +}//")))
+(check-failure run-stat "{vari +}//")
 
 ;;
 ;; %{}
@@ -126,11 +121,9 @@
 (check-equal? (run-stat "{: _nuffin}//")
 '(3))
 
-(check-equal? (run-stat "{: _nuffin | \"null arg dont care\"}//")
-'(3))
+(check-failure run-stat "{: _nuffin | 2}//")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{: _nuffin | 2 | 3}//")))
+(check-failure run-stat "{: _nuffin | 2 | 3}//")
 
 
 ;;
@@ -162,14 +155,11 @@
 (check-equal? (run-stat "{let x|3| y|lam () := 4| z|:>y + 1} in x - z - :>y//")
 '(-6))
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{let int|3} in 1//")))
+(check-failure run-stat "{let int|3} in 1//")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{let x} in 1//")))
+(check-failure run-stat "{let x} in 1//")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{let x|3|z} in 1//")))
+(check-failure run-stat "{let x|3|z} in 1//")
 
 ;;
 ;; assert_types={}
@@ -178,8 +168,7 @@
 (check-equal? (run-stat "{assert_types= \"main\"|{list \"int\"}|1|2} 5//")
 '(5))
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{assert_types= \"main\"|{list \"int\"}|1|2.2} 5//")))
+(check-failure run-stat "{assert_types= \"main\"|{list \"int\"}|1|2.2} 5//")
 
 (check-equal? (run-stat "{assert_types= \"main\"|{list \"int\"|\"float\"}|1|2.2} 5//")
 '(5))

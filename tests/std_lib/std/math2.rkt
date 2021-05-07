@@ -45,7 +45,7 @@
 ;; filter
 ;;
 
-(check-equal? (run "{: filter | lambda () := true | {list 1|2|3}}")
+(check-equal? (run "{: filter | lambda _ := true | {list 1|2|3}}")
 '(1 2 3))
 
 (check-equal? (run "{: filter | odd? | {list 1|2|3|4}}")

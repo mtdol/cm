@@ -51,5 +51,8 @@
 
 
 (run-silent "def v := lam () := 2 + 1")
-(check-equal? (run "v:()")
+(check-equal? (run ":>v")
 3)
+
+;; can't apply arg onto null-arg lambda
+(check-failure run "v:()")

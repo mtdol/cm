@@ -15,8 +15,10 @@
 5.5)
 
 (run-silent "defun v () := 2 + 1")
-(check-equal? (run "v:()")
+(check-equal? (run ":>v")
 3)
+
+(check-failure run "v:()")
 
 (run-silent "defun a (types (\"int\", \"float\";) x, float y) := float x + float y")
 (check-exn exn:fail? (lambda ()

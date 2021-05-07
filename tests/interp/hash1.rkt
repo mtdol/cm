@@ -5,7 +5,7 @@
 
 (run-silent "def h1 := :>make_hash")
 (run-silent "def h2 := :>make_mutable_hash")
-(run-silent "def h3 := handler.make_mutable_hash : (lambda () := \"wazup\")")
+(run-silent "def h3 := handler.make_mutable_hash : (lambda x := \"wazup\")")
 
 (check-equal? (run "hash? : h1")
 val-true)
@@ -24,41 +24,35 @@ val-true)
 (check-equal? (run "mutable_hash? : 7")
 val-false)
 
-(check-exn exn:fail? (lambda ()
-  (run "hash_ref : h1 : 4")))
+(check-failure run "hash_ref : h1 : 4")
 
-(check-exn exn:fail? (lambda ()
-  (run "hash_ref : h2 : 4")))
+(check-failure run "hash_ref : h2 : 4")
 
 (check-equal? (run "hash_ref : h3 : 4")
 "wazup")
 
-(check-equal? (run "handler.hash_ref : h3 : 4 : (lambda () := \"cool\")")
+(check-equal? (run "handler.hash_ref : h3 : 4 : (lambda x := \"cool\")")
 "cool")
 
-(check-equal? (run "handler.hash_ref : h1 : 4 : (lambda () := \"cool\")")
+(check-equal? (run "handler.hash_ref : h1 : 4 : (lambda x := \"cool\")")
 "cool")
 
 (check-equal? (run "handler.hash_ref : h1 : 4 : (lambda x := x+1)")
 5)
 
-(check-exn exn:fail? (lambda ()
-  (run "handler.hash_ref : h1 : 4 : 5")))
+(check-failure run "handler.hash_ref : h1 : 4 : 5")
 
-(check-exn exn:fail? (lambda ()
-  (run "handler.hash_ref : 1 : 4 : (lambda () := \"cool\")")))
+(check-failure run "handler.hash_ref : 1 : 4 : (lambda x := \"cool\")")
 
 
-(check-exn exn:fail? (lambda ()
-  (run "hash_set : 1 : 4 : 5")))
+(check-failure run "hash_set : 1 : 4 : 5")
 
 (run-silent "def h1 := hash_set : h1 : 4 : 1")
 (check-equal? (run "hash_set : h3 : 4 : 1")
 (Prim0 'void))
 
 
-(check-exn exn:fail? (lambda ()
-  (run "hash_ref : h1 : 5")))
+(check-failure run "hash_ref : h1 : 5")
 
 (check-equal? (run "hash_ref : h3 : 5")
 "wazup")
@@ -110,8 +104,7 @@ val-false)
 (check-equal? (run "hash_has_key? : h3 : 5")
 val-false)
 
-(check-exn exn:fail? (lambda ()
-  (run "hash_has_key? : 5 : 6")))
+(check-failure run "hash_has_key? : 5 : 6")
 
 
 (check-equal? (run "(((hash_keys : h1) == (4, \"x\";)) 
@@ -144,14 +137,11 @@ val-true)
                      [(hash_to_list : h3) == ((\"x\", 7), (4, 2);)]]")
 val-true)
 
-(check-exn exn:fail? (lambda ()
-  (run "hash_to_list : 3")))
+(check-failure run "hash_to_list : 3")
 
-(check-exn exn:fail? (lambda ()
-  (run "hash_values : 3")))
+(check-failure run "hash_values : 3")
 
-(check-exn exn:fail? (lambda ()
-  (run "hash_keys : 3")))
+(check-failure run "hash_keys : 3")
 
 
 (check-equal? (run "h1 == h3")

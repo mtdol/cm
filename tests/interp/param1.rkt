@@ -44,7 +44,7 @@
 
 ;; check if param works with guard functions
 
-(run-silent "defun y_is_1? () := y = 1")
+(run-silent "defun y_is_1? _ := y = 1")
 
 (check-failure run "let ? x1 y_is_1? := 3 in x1")
 

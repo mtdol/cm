@@ -249,7 +249,7 @@
         ['print (interp-print v)]
         ['local.defined? (interp-defined? v "" "local" context params)]
         ['params.defined? (interp-defined? v "" "params" context params)]
-        [':> (interp-apply v null params)]
+        [':> (interp-null-apply v params)]
         ;; get-global-var-data will return false if v not yet defined
         ['pos  #:when (or (string=? (get-type v) "int" ) 
                         (string=? (get-type v) "float"))
@@ -775,10 +775,8 @@
   (match v1
     ;; no arg lambda
     [(Fun name '() '() fcontext fexpr fmodule-id fdebug)
-     ;; trace
-     (trace name fmodule-id fdebug)
-
-     (trace-interp-expr fexpr fcontext params fmodule-id fdebug)]
+     (cm-error "CONTRACT" 
+        (format "Attempted to apply argument onto null-arg lambda: ~a\ngot: ~a" name v2))]
     [(Fun name var types fcontext fexpr fmodule-id fdebug)
      ;; trace
      (trace name fmodule-id fdebug)
@@ -786,6 +784,24 @@
      ;; check val against guards
      (assign-type-check types v2 params var)
      (trace-interp-expr fexpr (set-local-var var v2 fcontext) params fmodule-id fdebug)]
+    [_ (cm-error "CONTRACT" "Attempted to apply onto a non function.")])))
+
+(define (interp-null-apply v params)
+  (let ([trace
+          (lambda (name id debug)
+            (push-elem-to-trace-stack! 
+              (TraceElem "fun" (if (null? name) "lambda" name)
+                    id (debug->linenum debug))))])
+  (match v
+    ;; no arg lambda
+    [(Fun name '() '() fcontext fexpr fmodule-id fdebug)
+     ;; trace
+     (trace name fmodule-id fdebug)
+
+     (trace-interp-expr fexpr fcontext params fmodule-id fdebug)]
+    [(Fun name var types fcontext fexpr fmodule-id fdebug)
+     (cm-error "CONTRACT" 
+        (format "Attempted to null-apply non-null arg lambda: ~a" name))]
     [_ (cm-error "CONTRACT" "Attempted to apply onto a non function.")])))
 
 

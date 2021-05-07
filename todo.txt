@@ -4,8 +4,6 @@
 
 - make `ls` auto-expand paths like "~"
 
-- make `:>` mandatory for null arg lambdas
-
 - std.cm
     -- append_map
     -- filter_map
