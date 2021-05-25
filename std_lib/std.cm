@@ -483,6 +483,20 @@ defun remove_duplicates (list vs) :=
           else (hash_set : h : elem : void) comma true
       | vs}//
 
+-- sorts the list `vs` according to `f`.
+-- quicksort algo
+--
+-- list, (any -> int | float) -> list
+defun sort (fun f, list vs) :=
+  match vs
+  | () -> ()
+  | v, vs -> 
+    append : {list 
+        sort : f : {: filter | lambda x := (f:v) > (f:x) | vs}
+      | {list v}
+      | sort : f : {: filter | lambda x := (f:v) <= (f:x) | vs}}
+  end//
+
 --- Iterators, Generators
 --------------------------------
 
@@ -844,11 +858,13 @@ defun catf (string f) :=
 
 -- accesses the file-system and asks if `f` exists as a directory
 defun directory? (string f) :=
-  internal_op "directory?" {list f}//
+  let f := expand_path:f in
+    internal_op "directory?" {list f}//
 
 -- accesses the file-system and asks if `f` exists as a file
 defun file? (string f) :=
-  internal_op "file?" {list f}//
+  let f := expand_path:f in
+    internal_op "file?" {list f}//
 
 -- converts the given path to its absolute form
 defun expand_path (string path) :=

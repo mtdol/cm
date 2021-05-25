@@ -1194,7 +1194,8 @@
 (define (interp-expand-path v params)
   (assert-contract (list "string") v params "expand_path")
   (match v
-    ["" (cm-error "CONTRACT" "`expand_path`: string argument cannot be empty.")]
+    ["" ""]
+     ;(cm-error "CONTRACT" "`expand_path`: string argument cannot be empty.")]
     [_ (path->string 
          (simplify-path 
            (path->complete-path (expand-user-path v))))]))

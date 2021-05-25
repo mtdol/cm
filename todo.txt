@@ -1,15 +1,10 @@
 - cm.rkt application includes racket stack trace, no es muy bien
 
-- check that `file?` and `dir?` work on hidden files like `.git`
-
-- make `ls` auto-expand paths like "~"
-
 - std.cm
     -- append_map
     -- filter_map
     -- partition
     -- shuffle
-    -- sort
 
 - testing utility
     -- work in progress
