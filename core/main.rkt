@@ -47,27 +47,40 @@
     current-module-id))
 
 ;; string -> value list
-(define (run-file file) 
-  (let ([file (module-string->filename file)])
-  (unless (file-exists? file) 
-    (cm-error "GENERAL" (format "File does not exist: \"~a\"" file)))
-  (let* ([id (file-name->module-id file)])
-    (set-current-module-id! id)
-    (interp 
-      (parse-stat 
-        (tokenize-string (file->string id) id)
-        id)
-      id))))
+(define (run-file file)
+  (define (run-file file) 
+    (let ([file (module-string->filename file)])
+    (unless (file-exists? file) 
+      (cm-error "GENERAL" (format "File does not exist: \"~a\"" file)))
+    (let* ([id (file-name->module-id file)])
+      (set-current-module-id! id)
+      (interp 
+        (parse-stat 
+          (tokenize-string (file->string id) id)
+          id)
+        id))))
+  ;(with-handlers* 
+    ;([exn:fail? 
+       ;(lambda err
+         ;(match err
+           ;; if we get an error, display the message and exit
+           ;[(list (exn:fail err-msg _)) 
+            ;(displayln err-msg) (exit 1)]))])
+    ;(run-file file))
+  (run-file file)
+  )
 
 ;; runs the main function if it exists, then returns void
 ;;
-;; string, string list
+;; string, string list -> value list
 (define (run-file/main file args)
   ;; run `file`, discard results
   (run-file file)
   ;; run `main` if it exists with `args`
   (interp-expr 
-    (run-parse-expr "if defined? \"main\" and fun? main then main:args else void")
+    (run-parse-expr 
+      "if defined? \"main\" (evalxp:\"{current_module}\")
+              and fun? main then main:args else void")
     (set-local-var "args" args (hash)) (hash) current-module-id '())
   (void))
 
