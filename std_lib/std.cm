@@ -145,6 +145,9 @@ defun func.xor (bool b1, bool b2) :=
 defun func.not (bool b) :=
   not b//
 
+defun func.append (list xs, list ys) :=
+  xs ++ ys//
+
 defun add1 (types {number} n) :=
   if typeof n = "int" then n + 1 else n + 1.0//
 defun sub1 (types {number} n) :=
@@ -316,7 +319,7 @@ defun append (list lsts) :=
 defun flatten (list lsts) :=
   match lsts
   | () -> ()
-  | list lst, lsts -> {: append | {list (flatten:lst) | (flatten:lsts)}}
+  | list lst, lsts -> (flatten:lst) ++ (flatten:lsts)
   | elem, lsts -> elem, (flatten:lsts)
   end//
 
@@ -491,10 +494,9 @@ defun sort (fun f, list vs) :=
   match vs
   | () -> ()
   | v, vs -> 
-    append : {list 
-        sort : f : {: filter | \x -> (f:v) > (f:x) | vs}
-      | {list v}
-      | sort : f : {: filter | \x -> (f:v) <= (f:x) | vs}}
+      (sort : f : {: filter | \x -> (f:v) > (f:x) | vs}) ++
+        {list v} ++
+          (sort : f : {: filter | \x -> (f:v) <= (f:x) | vs})
   end//
 
 --- Iterators, Generators

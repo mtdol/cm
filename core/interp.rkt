@@ -209,6 +209,11 @@
         [': (interp-apply v1 v2 params)]
         ['$ (string-append (string-coerce v1)
                            (string-coerce v2))]
+
+        ['++ 
+         (assert-contract (list "list") v1 params "++")
+         (assert-contract (list "list") v2 params "++")
+         (append v1 v2)]
         ['comma v2]
         ['== (racket-to-bool (deep-equal? v1 v2))]
         ['!== (racket-to-bool (not-eqq? v1 v2))]

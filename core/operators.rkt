@@ -48,6 +48,7 @@
     (cons "or"              (OpData 2 "infix"   2   'Prim2   'or))
     (cons "xor"             (OpData 2 "infix"   2   'Prim2   'xor))
     (cons "$"               (OpData 2 "infix"   2   'Prim2   '$))
+    (cons "++"              (OpData 2 "infix"   2   'Prim2   '++))
     (cons ">"               (OpData 2 "infix"   3   'Prim2   '>))
     (cons "<"               (OpData 2 "infix"   3   'Prim2   '<))
     (cons ">="              (OpData 2 "infix"   3   'Prim2   '>=))
