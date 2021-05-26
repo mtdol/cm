@@ -152,7 +152,7 @@
 (check-equal? (run-stat "{let x|3|y|x+1} in y + x//")
 '(7))
 
-(check-equal? (run-stat "{let x|3| y|lam () := 4| z|:>y + 1} in x - z - :>y//")
+(check-equal? (run-stat "{let x|3| y| \\() -> 4| z|:>y + 1} in x - z - :>y//")
 '(-6))
 
 (check-failure run-stat "{let int|3} in 1//")

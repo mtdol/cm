@@ -36,7 +36,7 @@
 (check-equal? (run "{: map | cdr | {list 1,3|2,4.3|-2,4,1;}}")
 '(3 4.3 (4 1)))
 
-(check-equal? (run "let fs := {: map | func.add | {list 1|2|3}} in {: map | (lambda x := x:2) | fs}")
+(check-equal? (run "let fs := {: map | func.add | {list 1|2|3}} in {: map | (\\x -> x:2) | fs}")
 '(3 4 5))
 
 (check-failure run "{: map | value | 3}")
@@ -45,7 +45,7 @@
 ;; filter
 ;;
 
-(check-equal? (run "{: filter | lambda _ := true | {list 1|2|3}}")
+(check-equal? (run "{: filter | \\ _ -> true | {list 1|2|3}}")
 '(1 2 3))
 
 (check-equal? (run "{: filter | odd? | {list 1|2|3|4}}")
@@ -54,7 +54,7 @@
 (check-equal? (run "{: filter | even? | {list 1|2|3|4}}")
 '(2 4))
 
-(check-equal? (run "{: filter | lambda v := odd?:(`v) | {list 1,3;|2,4;|5,1;}}")
+(check-equal? (run "{: filter | \\v -> odd?:(`v) | {list 1,3;|2,4;|5,1;}}")
 '((1 3) (5 1)))
 
 ;;
@@ -214,22 +214,22 @@
 ;; foldl, foldr
 ;;
 
-(check-equal? (run "{: foldl | lambda elem, acc := elem, acc | () | {list 1|2|3}}")
+(check-equal? (run "{: foldl | \\elem, acc -> elem, acc | () | {list 1|2|3}}")
 '(3 2 1))
 
-(check-equal? (run "{: foldr | lambda elem, acc := elem, acc | () | {list 1|2|3}}")
+(check-equal? (run "{: foldr | \\elem, acc -> elem, acc | () | {list 1|2|3}}")
 '(1 2 3))
 
-(check-equal? (run "{: foldl | lambda elem, acc := elem, acc | () | {list}}")
+(check-equal? (run "{: foldl | \\elem, acc -> elem, acc | () | {list}}")
 '())
 
-(check-equal? (run "{: foldl | lambda elem, acc := elem - acc | 0 | {list 1|2|3}}")
+(check-equal? (run "{: foldl | \\elem, acc -> elem - acc | 0 | {list 1|2|3}}")
 (- 3 (- 2 (- 1 0))))
 
-(check-equal? (run "{: foldr | lambda elem, acc := elem - acc | 0 | {list 1|2|3}}")
+(check-equal? (run "{: foldr | \\elem, acc -> elem - acc | 0 | {list 1|2|3}}")
 (- 1 (- 2 (- 3 0))))
 
-(check-failure run "{: foldl | lambda elem := elem | () | {list 1|2|3}}")
+(check-failure run "{: foldl | \\elem -> elem | () | {list 1|2|3}}")
 
 ;;
 ;; ormap, andmap
@@ -246,7 +246,7 @@
 
 (check-failure run "{: ormap | odd? | 1}")
 
-(check-failure run "{: ormap | lambda x, y := true | {list 1|2|3}}")
+(check-failure run "{: ormap | \\x, y -> true | {list 1|2|3}}")
 
 (check-equal? (run "string {: andmap | odd? | {list 1|2|3}}")
 "false")
@@ -259,7 +259,7 @@
 
 (check-failure run "{: andmap | odd? | 1}")
 
-(check-failure run "{: andmap | lambda x, y := true | {list 1|2|3}}")
+(check-failure run "{: andmap |  \\x, y -> true | {list 1|2|3}}")
 
 ;;
 ;; member, member?

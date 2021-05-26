@@ -27,8 +27,7 @@
 (check-equal? (run "var s")
 1)
 
-(check-exn exn:fail? (lambda ()
-  (run "def var s_long := 1")))
+(check-failure run "def var s_long := 1")
 
 ;; check typedef
 (run-silent 
@@ -37,8 +36,6 @@
 (check-equal? (run "string struct S (1, 2, 3.2, 4;)")
 "(struct S (1, 2, 3.2, 4;))")
 
-(check-exn exn:fail? (lambda ()
-  (run "struct S (1.2, 2, 3, 4.2;)")))
+(check-failure run "struct S (1.2, 2, 3, 4.2;)")
 
-(check-exn exn:fail? (lambda ()
-  (run "struct S (1, 2, 3, \"4.2\";)")))
+(check-failure run "struct S (1, 2, 3, \"4.2\";)")

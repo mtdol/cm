@@ -17,20 +17,16 @@
 (check-equal? (run-stat "_a//")
 '("i'm private"))
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "c//")))
+(check-failure run-stat "c//")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "_b//")))
+(check-failure run-stat "_b//")
 
 (check-equal? (run-stat "string struct B ()//")
 '("(struct B ())"))
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "struct _B ()//")))
+(check-failure run-stat "struct _B ()//")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "struct C ()//")))
+(check-failure run-stat "struct C ()//")
 
 (check-equal? (run-stat "{b_txt}//")
 '("b macro"))
@@ -38,24 +34,19 @@
 (check-equal? (run-stat "b_txt//")
 '("b macro"))
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{_b_txt}//")))
+(check-failure run-stat "{_b_txt}//")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{c_txt}//")))
+(check-failure run-stat "{c_txt}//")
 
 
 ;; this will rerun b.cm and set the current module id to b's path
 (run-file-silent "files/basic1/b.cm")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat ":>a_b//")))
+(check-failure run-stat ":>a_b//")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat ":>a_c//")))
+(check-failure run-stat ":>a_c//")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "_a//")))
+(check-failure run-stat "_a//")
 
 (check-equal? (run-stat "b//")
 '(4))
@@ -63,11 +54,9 @@
 (check-equal? (run-stat "c//")
 '(4))
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "_c//")))
+(check-failure run-stat "_c//")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "struct A ()//")))
+(check-failure run-stat "struct A ()//")
 
 (check-equal? (run-stat "string struct B ()//")
 '("(struct B ())"))
@@ -75,8 +64,7 @@
 (check-equal? (run-stat "string struct C ()//")
 '("(struct C ())"))
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{a_txt}//")))
+(check-failure run-stat "{a_txt}//")
 
 (check-equal? (run-stat "{b_txt}//")
 '("b macro"))
@@ -92,5 +80,4 @@
 ;; the other tests
 ;;
 ;; this file has an undefined macro, so it should not load
-(check-exn exn:fail? (lambda ()
-  (run-file-silent "files/basic1/d.cm")))
+(check-failure run-file-silent "files/basic1/d.cm")

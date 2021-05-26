@@ -4,17 +4,13 @@
 ;; import macros
 (run-file-silent "files/basic1.cm")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "one//")))
+(check-failure run-stat "one//")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{one//")))
+(check-failure run-stat "{one//")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "one}//")))
+(check-failure run-stat "one}//")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{}//")))
+(check-failure run-stat "{}//")
 
 (check-equal? (run-stat "{one}//")
 '(1))

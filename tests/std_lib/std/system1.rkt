@@ -94,8 +94,7 @@ val-false)
 ;; remove everything
 
 ;; should not be removable as it does not exist
-(check-exn exn:fail? (lambda ()
-  (run "rm:(dir $ \"d1\")")))
+(check-failure run "rm:(dir $ \"d1\")")
 
 (check-equal? (run "rm:(dir $ \"d/f.txt\")")
 val-void)
@@ -112,8 +111,7 @@ val-void)
 (check-equal? (run "ls:dir")
 '("f.txt"))
 
-(check-exn exn:fail? (lambda ()
-  (run "ls:(dir $ \"d\")")))
+(check-failure run "ls:(dir $ \"d\")")
 
 (check-equal? (run "rm:(dir $ \"f.txt\")")
 val-void)

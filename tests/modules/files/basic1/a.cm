@@ -2,9 +2,9 @@
 #:def:a_txt{} "a macro"
 typedef A := ()//
 
-def a_b := lam () := b//
+def a_b := \() -> b//
 
-def a_c := lam () :=
+def a_c := \() ->
     try c catch e with "failure"//
 
 def _a := "i'm private"//

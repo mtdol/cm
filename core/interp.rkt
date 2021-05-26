@@ -162,7 +162,7 @@
     [(Defun (? var-container? var) e1 (Assign e2))
      (let ([name (get-var-label var context params module-id debug)])
      (match (interp-lambda-list e1 e2)
-       [(Lambda e1-2 (Assign e2-2))
+       [(Lambda e1-2 (Yields e2-2))
         (interp-def '("dynamic") name
           (interp-lambda e1-2 e2-2 name context params module-id debug)
           "def" context params module-id debug)
@@ -182,9 +182,9 @@
      (interp-letaux (get-var-label var context params module-id debug)
                     expr context params module-id debug)]
     [(Letaux _ _) (cm-error "SYNTAX" "Improperly formed `letaux`.")]
-    [(Lambda e1 (Assign e2)) 
+    [(Lambda e1 (Yields e2)) 
       (match (interp-lambda-list e1 e2)
-             [(Lambda e1-2 (Assign e2-2)) 
+             [(Lambda e1-2 (Yields e2-2)) 
               (interp-lambda e1-2 e2-2 '() context params module-id debug)])]
     [(Lambda _ _) (cm-error "SYNTAX" "`lambda` is missing an assignment.")]
     [(Typedef e1 (Assign e2)) (interp-typedef e1 e2 context params module-id debug)]
@@ -700,7 +700,7 @@
 
 (define (interp-letrec label args-e body-e in-e context params module-id debug)
   (match (interp-lambda-list args-e body-e)
-    [(Lambda args-e2 (Assign body-e2))
+    [(Lambda args-e2 (Yields body-e2))
      (let ([f 
             (interp-lambda args-e2 body-e2
                            label context params module-id debug)])

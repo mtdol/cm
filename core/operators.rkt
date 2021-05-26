@@ -29,7 +29,7 @@
     (cons "def"             (OpData 2 "prefix"  0   'Def     '()))
     (cons "static"          (OpData 2 "prefix"  0   'Static  '()))
     (cons "set"             (OpData 2 "prefix"  0   'Set     '()))
-    (cons "lambda"          (OpData 2 "prefix"  0   'Lambda  '()))
+    (cons "\\"              (OpData 2 "prefix"  0   'Lambda  '()))
     (cons "in"              (OpData 1 "prefix"  0   'In      '()))
     (cons "->"              (OpData 1 "prefix"  0   'Yields  '()))
     (cons "|"               (OpData 3 "prefix"  0   'Case    '()))

@@ -5,7 +5,7 @@
 
 (run-silent "def h1 := :>make_hash")
 (run-silent "def h2 := :>make_mutable_hash")
-(run-silent "def h3 := handler.make_mutable_hash : (lambda x := \"wazup\")")
+(run-silent "def h3 := handler.make_mutable_hash : (\\x -> \"wazup\")")
 
 (check-equal? (run "hash? : h1")
 val-true)
@@ -31,18 +31,18 @@ val-false)
 (check-equal? (run "hash_ref : h3 : 4")
 "wazup")
 
-(check-equal? (run "handler.hash_ref : h3 : 4 : (lambda x := \"cool\")")
+(check-equal? (run "handler.hash_ref : h3 : 4 : (\\x -> \"cool\")")
 "cool")
 
-(check-equal? (run "handler.hash_ref : h1 : 4 : (lambda x := \"cool\")")
+(check-equal? (run "handler.hash_ref : h1 : 4 : (\\x -> \"cool\")")
 "cool")
 
-(check-equal? (run "handler.hash_ref : h1 : 4 : (lambda x := x+1)")
+(check-equal? (run "handler.hash_ref : h1 : 4 : (\\x -> x+1)")
 5)
 
 (check-failure run "handler.hash_ref : h1 : 4 : 5")
 
-(check-failure run "handler.hash_ref : 1 : 4 : (lambda x := \"cool\")")
+(check-failure run "handler.hash_ref : 1 : 4 : (\\x -> \"cool\")")
 
 
 (check-failure run "hash_set : 1 : 4 : 5")
@@ -172,6 +172,6 @@ val-false)
 val-true)
 
 ;; lambda does not affect equal
-(check-equal? (run "(handler.make_mutable_hash : lambda x := x + 3) 
+(check-equal? (run "(handler.make_mutable_hash : \\x -> x + 3) 
                    == :>make_mutable_hash")
 val-true)

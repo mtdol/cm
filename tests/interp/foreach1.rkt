@@ -1,23 +1,17 @@
 #lang racket
 (require cm/tests/test-utils rackunit cm/core/ast)
 
-(check-exn exn:fail? (lambda ()
-  (run "foreach x 5 7")))
+(check-failure run "foreach x 5 7")
 
-(check-exn exn:fail? (lambda ()
-  (run "foreach x 5 do 7")))
+(check-failure run "foreach x 5 do 7")
 
-(check-exn exn:fail? (lambda ()
-  (run "foreach x in 5 do 7")))
+(check-failure run "foreach x in 5 do 7")
 
-(check-exn exn:fail? (lambda ()
-  (run "foreach float x in 5; do 7")))
+(check-failure run "foreach float x in 5; do 7")
 
-(check-exn exn:fail? (lambda ()
-  (run "foreach x with 5; do 7")))
+(check-failure run "foreach x with 5; do 7")
 
-(check-exn exn:fail? (lambda ()
-  (run "foreach x in 5; do y")))
+(check-failure run "foreach x in 5; do y")
 
 
 (run-silent "def res := \"\"")

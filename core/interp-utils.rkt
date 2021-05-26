@@ -197,8 +197,8 @@
          [e (Static e (Assign rexpr))]))
 (define (interp-lambda-list es rexpr)
   (match es
-         [(Prim2 'cons e1 e2) (Lambda e1 (Assign (interp-lambda-list e2 rexpr)))]
-         [e (Lambda e (Assign rexpr))]))
+         [(Prim2 'cons e1 e2) (Lambda e1 (Yields (interp-lambda-list e2 rexpr)))]
+         [e (Lambda e (Yields rexpr))]))
 
 ;; Ensures that the subarguments given are all lists.
 (define (check-list-arguments args op)

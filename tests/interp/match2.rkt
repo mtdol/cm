@@ -8,31 +8,26 @@
 2)
 
 
-(run-silent "def x := lam n := match n | 5 -> 3 end")
+(run-silent "def x := \\n -> match n | 5 -> 3 end")
 
 (check-equal? (run "x:5")
 3)
-(check-exn exn:fail? (lambda ()
-  (run "x:4")))
-(check-exn exn:fail? (lambda ()
-  (run "x:(4,2)")))
+(check-failure run "x:4")
+(check-failure run "x:(4,2)")
 
-(run-silent "def x := lam n := match n | 5 -> 3 | 7 -> 1 end")
+(run-silent "def x := \\n -> match n | 5 -> 3 | 7 -> 1 end")
 
 (check-equal? (run "x:5")
 3)
 (check-equal? (run "x:7")
 1)
-(check-exn exn:fail? (lambda ()
-  (run "x:3")))
-(check-exn exn:fail? (lambda ()
-  (run "x:\"6h\"")))
+(check-failure run "x:3")
+(check-failure run "x:\"6h\"")
 
 (check-equal? (run "(match 5 | 5 -> 2 end) + 1")
 3)
 
-(check-exn exn:fail? (lambda ()
-  (run "def x := match 5 | 6 -> 2 end")))
+(check-failure run "def x := match 5 | 6 -> 2 end")
 
 
 ;; variable time
@@ -41,14 +36,10 @@
 7)
 (check-equal? (run "match 5 | x -> x+1 end")
 6)
-(check-exn exn:fail? (lambda ()
-  (run "match 5 | x,y -> 2 end")))
-(check-exn exn:fail? (lambda ()
-  (run "match 5 | x,5 -> 2 end")))
-(check-exn exn:fail? (lambda ()
-  (run "match 5 | x -> x + 0.6 end")))
-(check-exn exn:fail? (lambda ()
-  (run "match 5 | float x -> x + 0.6 end")))
+(check-failure run "match 5 | x,y -> 2 end")
+(check-failure run "match 5 | x,5 -> 2 end")
+(check-failure run "match 5 | x -> x + 0.6 end")
+(check-failure run "match 5 | float x -> x + 0.6 end")
 
 (check-equal? (run "match 5.0 | float x -> x + 0.6 end")
 5.6)
@@ -61,8 +52,7 @@
 "(3, 5.0)")
 (check-equal? (run "string match 5.0,3; | float x,y; -> y,x end")
 "(3, 5.0)")
-(check-exn exn:fail? (lambda ()
-  (run "string match 5.0,3 | float x, bool y -> y,x end")))
+(check-failure run "string match 5.0,3 | float x, bool y -> y,x end")
 (check-equal? (run "string match 5.0,3 | float x, bool y -> y,x | x, y -> \"it worked\" end")
 "it worked")
 

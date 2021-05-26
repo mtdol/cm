@@ -64,8 +64,7 @@ val-true)
   '("files/system2/f.txt")))
 
 ;; invalid directory
-(check-exn exn:fail? (lambda ()
-  (run "cd_check:\"file/system2\"")))
+(check-failure run "cd_check:\"file/system2\"")
 
 (check-equal? (run "cd_check:\"files/system2\"")
 val-void)

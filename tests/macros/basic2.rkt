@@ -4,8 +4,7 @@
 ;; import macros
 (run-file-silent "files/basic2.cm")
 
-(check-exn exn:fail? (lambda ()
-  (run-stat "{comp}//")))
+(check-failure run-stat "{comp}//")
 
 (check-equal? (run-stat "{comp 4}//")
 '(1))

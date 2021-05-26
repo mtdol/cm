@@ -10,5 +10,4 @@
 (check-equal? (run "string struct S (4, true;)")
 "(struct S (4, true;))")
 
-(check-exn exn:fail? (lambda ()
-  (run "string struct S (true, 7;)")))
+(check-failure run "string struct S (true, 7;)")

@@ -21,7 +21,5 @@
 (check-failure run "v:()")
 
 (run-silent "defun a (types (\"int\", \"float\";) x, float y) := float x + float y")
-(check-exn exn:fail? (lambda ()
-  (run "a:3.2:2")))
-(check-exn exn:fail? (lambda ()
-  (run "a:true:2.5")))
+(check-failure run "a:3.2:2")
+(check-failure run "a:true:2.5")

@@ -31,8 +31,7 @@ val-false)
 '(""))
 
 ;; malformed
-(check-exn exn:fail? (lambda ()
-  (run "{: regex_match | \"a(?<f)\" | \"af\"}")))
+(check-failure run "{: regex_match | \"a(?<f)\" | \"af\"}")
 
 ;;
 ;; regex_match_all
@@ -57,8 +56,7 @@ val-false)
 '(("")))
 
 ;; malformed
-(check-exn exn:fail? (lambda ()
-  (run "{: regex_match_all | \"a(?<f)\" | \"af\"}")))
+(check-failure run "{: regex_match_all | \"a(?<f)\" | \"af\"}")
 
 
 ;;
@@ -87,8 +85,7 @@ val-false)
 val-true)
 
 ;; malformed
-(check-exn exn:fail? (lambda ()
-  (run "{: regex_match? | \"a(?<f)\" | \"af\"}")))
+(check-failure run "{: regex_match? | \"a(?<f)\" | \"af\"}")
 
 
 ;;
@@ -112,8 +109,7 @@ val-true)
 '("ab" "cd" "ef"))
 
 ;; malformed
-(check-exn exn:fail? (lambda ()
-  (run "{: regex_split | \"a(?<f)\" | \"af\"}")))
+(check-failure run "{: regex_split | \"a(?<f)\" | \"af\"}")
 
 
 ;;
@@ -134,8 +130,7 @@ val-true)
 
 
 ;; malformed
-(check-exn exn:fail? (lambda ()
-  (run "{: regex_replace | \"a(?<f)\" | \"af\" | \"\\\\1\"}")))
+(check-failure run "{: regex_replace | \"a(?<f)\" | \"af\" | \"\\\\1\"}")
 
 
 ;;
@@ -156,5 +151,4 @@ val-true)
 
 
 ;; malformed
-(check-exn exn:fail? (lambda ()
-  (run "{: regex_replace_all | \"a(?<f)\" | \"af\" | \"\\\\1\"}")))
+(check-failure run "{: regex_replace_all | \"a(?<f)\" | \"af\" | \"\\\\1\"}")

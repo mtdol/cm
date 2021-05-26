@@ -38,19 +38,19 @@
 (check-equal? (run "x")
 10)
 
-(run-silent "def x := lam int y := y + 1")
+(run-silent "def x := \\int y -> y + 1")
 (check-equal? (run "x:3")
 4)
 
-(run-silent "def x := lam x, y := x + y")
+(run-silent "def x := \\x, y -> x + y")
 (check-equal? (run "x:5:3")
 8)
 
-(check-equal? (run "(lam x, y := x + y):5:3")
+(check-equal? (run "( \\x, y -> x + y):5:3")
 8)
 
 
-(run-silent "def v := lam () := 2 + 1")
+(run-silent "def v := \\() -> 2 + 1")
 (check-equal? (run ":>v")
 3)
 

@@ -12,5 +12,4 @@
 
 ;; _b is not in a.cm's scope, so eager evaluation of arguments
 ;; should prevent _b from being meaningful
-(check-exn exn:fail? (lambda ()
-  (run "{gimme {_b}}")))
+(check-failure run "{gimme {_b}}")

@@ -36,5 +36,4 @@
 (check-equal? (run "string def x := {: list_to_hash | {list}}")
 "immutable hash")
 
-(check-exn exn:fail? (lambda ()
-  (run "x::1")))
+(check-failure run "x::1")

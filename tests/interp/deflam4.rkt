@@ -14,14 +14,14 @@
 (check-failure run "def ? x odd? := 2")
 
 ;; function must return a bool
-(check-failure run "def ? x (lambda _ := 3) := 3")
+(check-failure run "def ? x (\\_ -> 3) := 3")
 
-(check-equal? (run "def ? x (lambda _ := true) := 3")
+(check-equal? (run "def ? x (\\_ -> true) := 3")
 3)
 
 
 (run-silent "defun f ? x odd? := x + 1")
-(run-silent "defun g ? x (lambda _ := 3) := x - 1")
+(run-silent "defun g ? x (\\_ -> 3) := x - 1")
 
 (check-equal? (run "f:3")
 4)

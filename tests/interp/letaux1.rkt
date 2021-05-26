@@ -21,7 +21,7 @@
   (run "letaux f 
        | int x := 4 
        -- check if works with guard
-       | ? y (lam n := n > 0) := 3 
+       | ? y (\\n -> n > 0) := 3 
        in 
          | x = 0 -> 0 - y
          else
@@ -33,7 +33,7 @@
   run "letaux f 
        | int x := 4 
        -- should only work initially, not when y is incremented
-       | ? y (lam n := n % 2 = 1) := 3 
+       | ? y (\\n -> n % 2 = 1) := 3 
        in 
          | x = 0 -> 0 - y
          else

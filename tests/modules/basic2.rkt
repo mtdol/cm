@@ -2,8 +2,7 @@
 (require cm/tests/test-utils rackunit)
 
 ;; set should not work on an undeclared var
-(check-exn exn:fail? (lambda ()
-  (run-stat "set v := 5//")))
+(check-failure run-stat "set v := 5//")
 
 (run-stat-silent "def v := 5//")
 

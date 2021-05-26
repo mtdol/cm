@@ -20,7 +20,7 @@ val-false)
 (check-equal? (run "number?:true")
 val-false)
 
-(check-equal? (run "number?:(lambda x := x)")
+(check-equal? (run "number?:(\\x -> x)")
 val-false)
 
 
@@ -277,7 +277,7 @@ val-false)
 (check-equal? (run "value:\"s\"")
 "s")
 
-(check-equal? (run "typeof (value:(lambda x := x))")
+(check-equal? (run "typeof (value:(\\x -> x))")
 "fun")
 
 (check-equal? (run "value:3")
@@ -303,7 +303,7 @@ val-false)
 
 (check-failure run "to_int:\"s\"")
 
-(check-failure run "to_int:(lambda x := x)")
+(check-failure run "to_int:(\\x -> x)")
 
 (check-equal? (run "to_float:\"1\"")
 1.0)
@@ -319,7 +319,7 @@ val-false)
 
 (check-failure run "to_float:\"s\"")
 
-(check-failure run "to_float:(lambda x := x)")
+(check-failure run "to_float:(\\x -> x)")
 
 (check-equal? (run "to_string:\"1\"")
 "1")
@@ -354,7 +354,7 @@ val-false)
 (check-equal? (run "to_bool:true")
 val-true)
 
-(check-failure run "to_bool:(lambda x := x)")
+(check-failure run "to_bool:(\\x -> x)")
 
 (check-equal? (run "func.head:(3,2)")
 3)

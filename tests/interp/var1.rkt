@@ -16,8 +16,7 @@
 4)
 
 ;; cannot be empty
-(check-exn exn:fail? (lambda ()
-  (run "def var \"\" := 5")))
+(check-failure run "def var \"\" := 5")
 
 ;; this var name would usually be illegal
 (check-equal? (run "def var \"~y 4\" := 5")
@@ -38,8 +37,7 @@
 (check-equal? (run "var \"~z1 4\"")
 5)
 
-(check-exn exn:fail? (lambda ()
-  (run "def types (\"float\", \"string\";) var \"~z2 4\" := 5")))
+(check-failure run "def types (\"float\", \"string\";) var \"~z2 4\" := 5")
 
 (check-equal? (run "def types (\"int\";) var \"~z2 4\", dynamic var \"2\" := 5")
 5)

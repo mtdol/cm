@@ -119,8 +119,8 @@
    ["]" ")"]
    ;; escaped bar used in macros
    ["\\|" "\\|"]
+   ["\\" "\\"]
    ["@" "print"]
-   ["lam" "lambda"]
    [(:+ digit) lexeme]
    [(:: (:+ digit) #\. (:+ digit)) lexeme]
    [str 

@@ -58,7 +58,7 @@
 
 (run-stat-silent 
       "(def x := 0) comma 
-       while {iter :>(lambda () := 
+       while {iter :>(\\ () ->
             \\| not :>iter_open? -> iter_init:2
         else 
             \\| :>iter_get < 5 -> iter:add1

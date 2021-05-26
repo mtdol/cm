@@ -61,11 +61,11 @@ if not ({_assert_types=_aux types | REST})
   -- user code after this
 >:#
 #:<def:_assert_types=_aux{types|a|REST}
-{: ormap | lambda typ := typ = typeof (a) | types} and
+{: ormap | \typ -> typ = typeof (a) | types} and
   {_assert_types=_aux types|REST} 
 >:#
 #:<def+:_assert_types=_aux{types|a}
-{: ormap | lambda typ := typ = typeof (a) | types}
+{: ormap | \typ -> typ = typeof (a) | types}
 >:#
 
 --- Errors
@@ -211,7 +211,7 @@ defun homogeneous_list? (dynamic vs) :=
     | null? vs -> true
     else 
       let typ := typeof `vs in
-        {: andmap | lambda elem := typeof elem = typ | vs}
+        {: andmap | \elem -> typeof elem = typ | vs}
   else false//
 
 defun list_of_type? (dynamic vs, string typ) :=
@@ -241,9 +241,9 @@ defun fun_list? (dynamic vs) :=
 --
 
 -- `compose : {list f1|f2|f3|...|fn}` yields
--- `lambda x := f1 : (f2 : (f3 : (... : (fn : x))))`
+-- `\x -> f1 : (f2 : (f3 : (... : (fn : x))))`
 defun compose (list fs) :=
-  lambda x :=
+  \x -> 
     letaux compose
     | fs := fs
     in
@@ -303,10 +303,10 @@ defun reverse list xs :=
     end//
 
 defun append (list lsts) :=
-  let f := lambda lst, acc :=
+  let f := \lst, acc -> 
       {assert_types= "append"|{list "list"}|lst}
       {: foldl
-          | lambda elem, acc :=
+          | \elem, acc ->
               elem, acc
           | acc
           | lst}
@@ -382,7 +382,7 @@ defun remove (dynamic elem, list vs) :=
 -- applies f to each integer in [n1 n2)
 defun build_list_range (int n1, int n2, fun f) :=
   {: foldl 
-      | lambda elem, acc :=
+      | \elem, acc ->
           (f:elem), acc
       | ()
       | 
@@ -419,7 +419,7 @@ defun index_where (list vs, fun f) :=
 
 -- returns the index in `vs` where `v` == `elem`
 defun index_of (list vs, dynamic elem) :=
-  {: index_where | vs | lambda x := x == elem}//
+  {: index_where | vs | \x -> x == elem}//
 
 -- gets the last element of `vs`
 defun last (list vs) :=
@@ -446,7 +446,7 @@ defun list_update (list vs, ? is int_list?, fun updater) :=
     end//
 
 defun list_set (list vs, ? is int_list?, dynamic elem) :=
-  {: list_update | vs | is | lambda _ := elem}//
+  {: list_update | vs | is | \_ -> elem}//
 
 -- returns the number of elements for which `f` yields true.
 defun count (list vs, fun f) :=
@@ -465,7 +465,7 @@ defun count (list vs, fun f) :=
 defun duplicates? (list vs) :=
   let h := :>make_mutable_hash in
     {: ormap 
-      | lambda elem :=
+      | \elem ->
           if hash_has_key? : h : elem
           then
             true
@@ -476,7 +476,7 @@ defun duplicates? (list vs) :=
 defun remove_duplicates (list vs) :=
   let h := :>make_mutable_hash in
     {: filter 
-      | lambda elem :=
+      | \elem ->
           if hash_has_key? : h : elem
           then
             false
@@ -492,9 +492,9 @@ defun sort (fun f, list vs) :=
   | () -> ()
   | v, vs -> 
     append : {list 
-        sort : f : {: filter | lambda x := (f:v) > (f:x) | vs}
+        sort : f : {: filter | \x -> (f:v) > (f:x) | vs}
       | {list v}
-      | sort : f : {: filter | lambda x := (f:v) <= (f:x) | vs}}
+      | sort : f : {: filter | \x -> (f:v) <= (f:x) | vs}}
   end//
 
 --- Iterators, Generators
@@ -712,13 +712,13 @@ defun hash_has_key? (? h hash?, dynamic key) :=
 
 defun list_to_hash (list ms) :=
   {: foldl 
-      | lam m, h := hash_set : h : (`m) : (~m)
+      | \m, h -> hash_set : h : (`m) : (~m)
       | :>make_hash
       | ms}//
 
 defun list_to_mutable_hash (list ms) :=
   {: foldl 
-      | lam m, h := (hash_set : h : (`m) : (~m)) comma h
+      | \m, h -> (hash_set : h : (`m) : (~m)) comma h
       | :>make_mutable_hash
       | ms}//
 
@@ -830,7 +830,7 @@ defun _clean_path_elem (string elem) :=
 -- path between them
 defun build_path (list elems) :=
   {: foldl
-    | lambda elem, acc := 
+    | \elem, acc ->
       \| elem = "" -> acc
       \| acc = "" -> (_clean_path_elem : elem)
       else acc $ path_separator $ (_clean_path_elem : elem)
@@ -873,7 +873,7 @@ defun expand_path (string path) :=
 -- gives the arguments to ls with the prefix appended onto the results.
 defun ls_build (string arg) :=
   {: map
-    | lambda elem :=
+    | \elem ->
         let arg := if system_type = "windows" then
           string_replace:arg:"/":"\\" 
           else arg 

@@ -4,8 +4,7 @@
 (run-silent "#:lang cm")
 
 ;; will fail since no statement termination
-(check-exn exn:fail? (lambda ()
-  (run "eval : \"4\"")))
+(check-failure run "eval : \"4\"")
 
 (check-equal? (run "eval : \"4//\"")
 (list 4))
@@ -42,8 +41,7 @@
 
 
 ;; test evalxp
-(check-exn exn:fail? (lambda ()
-  (run "evalxp : \"4//\"")))
+(check-failure run "evalxp : \"4//\"")
 
 (check-equal? (run "evalxp : \"4\"")
 4)

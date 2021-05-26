@@ -26,28 +26,19 @@ null)
 "(1, 2;)")
 
 
-(check-exn exn:fail? (lambda ()
-  (run "index (1;) 1")))
+(check-failure run "index (1;) 1")
 
-(check-exn exn:fail? (lambda ()
-  (run "index (1,2) 1")))
+(check-failure run "index (1,2) 1")
 
-(check-exn exn:fail? (lambda ()
-  (run "index (1;) (-1)")))
+(check-failure run "index (1;) (-1)")
 
-(check-exn exn:fail? (lambda ()
-  (run "index (1,2;) 2")))
+(check-failure run "index (1,2;) 2")
 
 
-(check-exn exn:fail? (lambda ()
-  (run "index (1,2,3;) (0,1)")))
+(check-failure run "index (1,2,3;) (0,1)")
 
-(check-exn exn:fail? (lambda ()
-  (run "index (1,2,3;) (0,-1;)")))
+(check-failure run "index (1,2,3;) (0,-1;)")
 
-(check-exn exn:fail? (lambda ()
-  (run "index (1,2,3;) (0,4;)")))
+(check-failure run "index (1,2,3;) (0,4;)")
 
-(check-exn exn:fail? (lambda ()
-  (run "index (1,2,3;) (1,4;)")))
-
+(check-failure run "index (1,2,3;) (1,4;)")

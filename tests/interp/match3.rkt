@@ -13,10 +13,8 @@
 4)
 (check-equal? (run "match struct Si (3;) | struct Si (a;) -> a + 1 end")
 4)
-(check-exn exn:fail? (lambda ()
-  (run "match struct S (3;) | struct S float (a;) -> a + 1 end")))
-(check-exn exn:fail? (lambda ()
-  (run "match struct Si (3;) | struct S (a;) -> a + 1 end")))
+(check-failure run "match struct S (3;) | struct S float (a;) -> a + 1 end")
+(check-failure run "match struct Si (3;) | struct S (a;) -> a + 1 end")
 
 (check-equal? (run "match struct S (3.0;) | struct S (float a;) -> a + 1.0 end")
 4.0)
@@ -29,10 +27,8 @@
 
 (check-equal? (run "match struct S2 (4.2,5;) | struct S2 (float a, b;) -> int a + b end")
 9)
-(check-exn exn:fail? (lambda ()
-  (run "match struct S2 (4,5;) | struct S2 (float a, b;) -> int a + b end")))
-(check-exn exn:fail? (lambda ()
-  (run "match struct S2 (4,5;) | struct S2 (a, float b;) -> int a + b end")))
+(check-failure run "match struct S2 (4,5;) | struct S2 (float a, b;) -> int a + b end")
+(check-failure run "match struct S2 (4,5;) | struct S2 (a, float b;) -> int a + b end")
 
 
 (check-equal? (run "match struct S (3;) | s -> 2 end")
@@ -51,10 +47,8 @@
 
 (check-equal? (run "match (struct S (3;)),4 | (struct S (a;)),b -> a+b end")
 7)
-(check-exn exn:fail? (lambda ()
-  (run "match (struct S2 (3,2;)),4 | (struct S (a;)),b -> a+b end")))
-(check-exn exn:fail? (lambda ()
-  (run "match (struct S (3;)),4 | (struct S (a;)), float b -> a+b end")))
+(check-failure run "match (struct S2 (3,2;)),4 | (struct S (a;)),b -> a+b end")
+(check-failure run "match (struct S (3;)),4 | (struct S (a;)), float b -> a+b end")
 
 (check-equal? (run "match (struct S (3;)),4 | (struct S (a;)), float b -> a+b | (struct S (a;)), int b -> a + b end")
 7)
@@ -83,8 +77,7 @@
 (check-equal? (run "match (struct S ((struct S (2;));)),4 | (struct S ((struct S (a;));)), b -> a | (struct S (a;)), b -> 0 end")
 2)
 
-(check-exn exn:fail? (lambda ()
-  (run "match (struct S ((struct S (2;));)),4 | (struct S ((struct S a);)), b -> b | (struct S (a;)), b -> 0 end")))
+(check-failure run "match (struct S ((struct S (2;));)),4 | (struct S ((struct S a);)), b -> b | (struct S (a;)), b -> 0 end")
 
 (check-equal? (run "match (struct S ((struct S2 (2,3;));)),4 | (struct S (struct S (a;);)), b -> a | (struct S ((struct S2 (a,b;));)), c  -> a + b end")
 5)

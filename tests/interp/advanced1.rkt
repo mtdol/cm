@@ -1,11 +1,11 @@
 #lang racket
 (require cm/tests/test-utils rackunit)
 
-(run-silent "def find_a := lam a := let sub1 := lam x := x - 1 in sub1:a")
+(run-silent "def find_a := \\a -> let sub1 := \\x -> x - 1 in sub1:a")
 (check-equal? (run "find_a:4")
 3)
 
-(run-silent "def fact := lam n := | n < 2 -> 1 else n * (fact : (n - 1))")
+(run-silent "def fact := \\n -> | n < 2 -> 1 else n * (fact : (n - 1))")
 (check-equal? (run "fact:4")
 24)
 (check-equal? (run "fact:1")
@@ -13,7 +13,7 @@
 (check-equal? (run "fact:0")
 1)
 
-(run-silent "def get_last := lam list lst := | null? lst -> null | null? ~lst -> `lst else get_last:~lst")
+(run-silent "def get_last := \\list lst -> | null? lst -> null | null? ~lst -> `lst else get_last:~lst")
 (check-equal? (run "get_last:(4,5;)")
 5)
 (check-equal? (run "get_last:(5;)")
@@ -21,7 +21,7 @@
 (check-equal? (run "get_last:null")
 null)
 
-(run-silent "def mult2 := lam int n1, int n2 := | n2 = 0 -> 0 | n2 = 1 -> n1 else n1 + (mult2:n1:(n2 - 1))")
+(run-silent "def mult2 := \\int n1, int n2 -> | n2 = 0 -> 0 | n2 = 1 -> n1 else n1 + (mult2:n1:(n2 - 1))")
 (check-equal? (run "mult2:4:3")
 12)
 (check-equal? (run "mult2:3:4")
