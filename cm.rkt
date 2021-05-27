@@ -51,28 +51,39 @@
     modules-file-path
     #:exists 'truncate))
 
-(match args
-  ['() (enter! cm/core/repl)]
-  [(list v) #:when (or (string=? v "-h") (string=? v "--help"))
-            (displayln help-text)]
-  [(list "-f" f) (main:silent (main:run-file/main f '()))]
-  [(list "-f" f args ...) (main:silent (main:run-file/main f args))]
-  [(list "-e" v) (main:display-expr-output (main:run-expr v))]
-  [(list "-E" v) (main:display-output (main:run v))]
-  [(list "--install") (reset-modules-file)]
-  [(list "--pkg") (displayln pkg-help-text)]
-  [(list "--pkg" v) 
-   #:when (or (string=? v "-h") (string=? v "help"))
-   (displayln pkg-help-text)]
-  [(list "--pkg" "show") (modules:show-modules)]
-  [(list "--pkg" "add" a1 a2) 
-   (modules:add-to-modules a1 (modules:string->module-path-string a2))
-   (modules:write-modules)]
-  [(list "--pkg" "remove" a1) 
-   (modules:remove-from-modules a1)
-   (modules:write-modules)]
-  [(list "--test") (displayln "Missing files to test.")]
-  [(list "--test" args ...) (main:run-file/main "std_lib::testing.cm" args)]
-  [(list f) (main:silent (main:run-file/main f '()))]
-  [(list f args ...) (main:silent (main:run-file/main f args))]
-  [_ (displayln "Invalid args.")])
+(define (main args)
+  (match args
+    ['() (enter! cm/core/repl)]
+    [(list v) #:when (or (string=? v "-h") (string=? v "--help"))
+              (displayln help-text)]
+    [(list "-f" f) (main:silent (main:run-file/main f '()))]
+    [(list "-f" f args ...) (main:silent (main:run-file/main f args))]
+    [(list "-e" v) (main:display-expr-output (main:run-expr v))]
+    [(list "-E" v) (main:display-output (main:run v))]
+    [(list "--install") (reset-modules-file)]
+    [(list "--pkg") (displayln pkg-help-text)]
+    [(list "--pkg" v) 
+     #:when (or (string=? v "-h") (string=? v "help"))
+     (displayln pkg-help-text)]
+    [(list "--pkg" "show") (modules:show-modules)]
+    [(list "--pkg" "add" a1 a2) 
+     (modules:add-to-modules a1 (modules:string->module-path-string a2))
+     (modules:write-modules)]
+    [(list "--pkg" "remove" a1) 
+     (modules:remove-from-modules a1)
+     (modules:write-modules)]
+    [(list "--test") (displayln "Missing files to test.")]
+    [(list "--test" args ...) (main:run-file/main "std_lib::testing.cm" args)]
+    [(list f) (main:silent (main:run-file/main f '()))]
+    [(list f args ...) (main:silent (main:run-file/main f args))]
+    [_ (displayln "Invalid args.")]))
+
+; run
+(with-handlers* 
+  ([exn:fail? 
+     (lambda (err)
+       (match err
+         ; if we get an error, display the message and exit
+         [(exn:fail err-msg _) 
+          (displayln err-msg) (exit 1)]))])
+  (main args))

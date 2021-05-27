@@ -59,16 +59,7 @@
           (tokenize-string (file->string id) id)
           id)
         id))))
-  ;(with-handlers* 
-    ;([exn:fail? 
-       ;(lambda err
-         ;(match err
-           ;; if we get an error, display the message and exit
-           ;[(list (exn:fail err-msg _)) 
-            ;(displayln err-msg) (exit 1)]))])
-    ;(run-file file))
-  (run-file file)
-  )
+  (run-file file))
 
 ;; runs the main function if it exists, then returns void
 ;;

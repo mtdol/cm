@@ -1,5 +1,3 @@
-- cm.rkt application includes racket stack trace, no es muy bien
-
 - std.cm
     -- append_map
     -- filter_map
