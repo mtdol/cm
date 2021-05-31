@@ -40,3 +40,40 @@
 
 (check-equal? (run "sort : abs : {list -2|3|1}")
 '(1 -2 3))
+
+;;
+;; shuffle
+;;
+
+; not a complete test but just makes sure that we get one of the possible values
+
+(define-syntax-rule (check-shuffle v vs)
+  (check 
+    (lambda (x xs) (member x xs)) 
+    v vs))
+
+(check-shuffle (run "shuffle : {list 1|2}")
+'((1 2) (2 1)))
+
+(check-shuffle (run "shuffle : {list 1|2|3}")
+'((1 2 3) (1 3 2) (2 1 3) (2 3 1) (3 1 2) (3 2 1)))
+
+;;
+;; sample
+;;
+
+; similar to `shuffle`
+
+(check-failure run "sample : -1 : {list 1|2}")
+
+(check-shuffle (run "sample : 0 : {list 1|2}")
+'(()))
+
+(check-shuffle (run "sample : 1 : {list 1|2}")
+'((1) (2)))
+
+(check-shuffle (run "sample : 2 : {list 1|2}")
+'((1 2) (2 1)))
+
+(check-shuffle (run "sample : 2 : {list 1|2|3}")
+'((1 2) (1 3) (2 1) (2 3) (3 1) (3 2)))

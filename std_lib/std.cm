@@ -499,34 +499,39 @@ defun sort (fun f, list vs) :=
           (sort : f : {: filter | \x -> (f:v) <= (f:x) | vs})
   end//
 
--- takes `n` random elements from `vs` without replacement
+-- generates a random number [n1 n2) that is not in the set `n`
+-- then adds it to `s` and returns it
+defun _gen_unique_num (int n1, int n2, ? s mutable_set?) :=
+  letaux aux
+  | i := random : n1 : n2
+  in
+    | set_member? : s : i ->
+      -- generate new number cycling through [n1 n2)
+      aux : ((i + 1) % (n2 - n1))
+    else
+      (set_add : s : i) comma i//
+
+-- returns a shuffled version of the list
+defun shuffle (list vs) :=
+  sample : (length vs) : vs//
+
+-- grabs `n` items from `vs` in random order without replacement
 defun sample (int n, list vs) :=
-  let vs.length := length vs
-  -- ensure `n` does not go beyond `vs.length`
-  in let n := if vs.length < n then vs.length else n
-  in let h := :>make_mutable_hash in
-    while ((hash_size:h) != n) do (
-      -- grab a random number,
-      -- if it is free, map it else, add1 until valid index is found
-      -- 
-      -- pull another number if a free index cannot be found
-      letaux aux
-      | i := random : 0 : vs.length
-      in
-        if (not (hash_has_key? : h : i)) then
-          hash_set : h : i : void
-        else
-          if i = vs.length then 
-            void 
-          else
-            aux : (add1:i)
-    ) comma
-      -- now we have all indexes, we will put out a list 
-        true
-
-      
-
-  //
+  let vs.length := length vs in
+  | n < 0 -> 
+    id.error : "CONTRACT" : ("Invalid int arg to `sample`: " $ n)
+  | vs.length < n -> 
+    id.error : "CONTRACT" : ("Invalid int arg to `sample`, list too short: "
+                              $ n $ "\nlength: " $ vs.length)
+  else
+    let s := :>make_mutable_set
+    in letaux sample
+    | n := n
+    in
+      | n = 0 -> ()
+      else 
+        let i := _gen_unique_num : 0 : vs.length : s in
+          (vs::i), (sample : (sub1:n))//
 
 --- Iterators, Generators
 --------------------------------

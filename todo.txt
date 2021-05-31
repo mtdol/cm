@@ -2,7 +2,6 @@
     -- append_map
     -- filter_map
     -- partition
-    -- shuffle
 
 - testing utility
     -- work in progress
