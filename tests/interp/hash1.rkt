@@ -51,6 +51,11 @@ val-false)
 (check-equal? (run "hash_set : h3 : 4 : 1")
 (Prim0 'void))
 
+(check-equal? (run "hash_size : h1")
+1)
+
+(check-equal? (run "hash_size : h3")
+1)
 
 (check-failure run "hash_ref : h1 : 5")
 
@@ -68,6 +73,12 @@ val-false)
 (check-equal? (run "hash_set : h3 : 4 : 2")
 (Prim0 'void))
 
+(check-equal? (run "hash_size : h1")
+1)
+
+(check-equal? (run "hash_size : h3")
+1)
+
 (check-equal? (run "hash_ref : h1 : 4")
 2)
 
@@ -78,6 +89,12 @@ val-false)
 (run-silent "def h1 := hash_set : h1 : \"x\" : 7")
 (check-equal? (run "hash_set : h3 : \"x\" : 7")
 (Prim0 'void))
+
+(check-equal? (run "hash_size : h1")
+2)
+
+(check-equal? (run "hash_size : h3")
+2)
 
 (check-equal? (run "hash_ref : h1 : \"x\"")
 7)

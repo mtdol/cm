@@ -5,7 +5,7 @@
 ;; Matthew Dolinka
 ;;
 
-(struct CmStruct (label args))
+(struct CmStruct (label args) #:transparent)
 (struct CmHash (hash type handler))
 
 ;; ("int", "float";) "var1"

@@ -992,6 +992,20 @@
          [(CmHash h _ _) (racket-to-bool (hash-has-key? h v2))]
          [_ (cm-error "CONTRACT" "Missing hash for `hash_has_key?`.")]))
 
+(define (interp-hash-remove v1 v2)
+  (match v1
+         [(CmHash h "immutable" handler) 
+          (CmHash (hash-remove h v2) "immutable" handler)]
+         [(CmHash h "mutable" _) 
+          (hash-remove! h v2)
+          (Prim0 'void)]
+         [_ (cm-error "CONTRACT" "Missing hash for `hash_remove`.")]))
+
+(define (interp-hash-size v1)
+  (match v1
+         [(CmHash h _ _) (hash-count h)]
+         [_ (cm-error "CONTRACT" "Missing hash for `hash_size`.")]))
+
 (define (interp-hash-keys v1)
   (match v1
          [(CmHash h _ _) (hash-keys h)]
@@ -1427,6 +1441,12 @@
     ["hash_has_key?"
      (assert-num-args 2 2)
      (interp-hash-has-key? (car v2) (cadr v2))]
+    ["hash_remove"
+     (assert-num-args 2 2)
+     (interp-hash-remove (car v2) (cadr v2))]
+    ["hash_size"
+     (assert-num-args 1 1)
+     (interp-hash-size (car v2))]
     ["hash?"
      (assert-num-args 1 1)
      (interp-hash? (car v2) params)]

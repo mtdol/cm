@@ -499,6 +499,35 @@ defun sort (fun f, list vs) :=
           (sort : f : {: filter | \x -> (f:v) <= (f:x) | vs})
   end//
 
+-- takes `n` random elements from `vs` without replacement
+defun sample (int n, list vs) :=
+  let vs.length := length vs
+  -- ensure `n` does not go beyond `vs.length`
+  in let n := if vs.length < n then vs.length else n
+  in let h := :>make_mutable_hash in
+    while ((hash_size:h) != n) do (
+      -- grab a random number,
+      -- if it is free, map it else, add1 until valid index is found
+      -- 
+      -- pull another number if a free index cannot be found
+      letaux aux
+      | i := random : 0 : vs.length
+      in
+        if (not (hash_has_key? : h : i)) then
+          hash_set : h : i : void
+        else
+          if i = vs.length then 
+            void 
+          else
+            aux : (add1:i)
+    ) comma
+      -- now we have all indexes, we will put out a list 
+        true
+
+      
+
+  //
+
 --- Iterators, Generators
 --------------------------------
 
@@ -711,6 +740,11 @@ defun hash_to_list (? h hash?) :=
 defun hash_has_key? (? h hash?, dynamic key) :=
   internal_op "hash_has_key?" {list h|key}//
 
+defun hash_remove (? h hash?, dynamic key) :=
+  internal_op "hash_remove" {list h|key}//
+
+defun hash_size (? h hash?) :=
+  internal_op "hash_size" {list h}//
 
 defun list_to_hash (list ms) :=
   {: foldl 
@@ -724,6 +758,71 @@ defun list_to_mutable_hash (list ms) :=
       | :>make_mutable_hash
       | ms}//
 
+
+--- Set
+--------------------------------
+
+typedef Set := {list ? h hash?}//
+
+defun mutable_set? (struct Set s) :=
+  match s
+  | struct Set {list ? _ mutable_hash?} -> true
+  | _ -> false
+  end//
+
+defun make_set () := 
+  struct Set {list :>make_hash}//
+
+defun make_mutable_set () := 
+  struct Set {list :>make_mutable_hash}//
+
+defun set_equal? (struct Set s1, struct Set s2) :=
+  match s1,s2
+  | struct Set {list h1}, struct Set {list h2} ->
+    h1 == h2
+  end//
+
+defun set_to_list (struct Set s) :=
+  match s
+  | struct Set {list h} ->
+    hash_keys : h
+  end//
+
+defun list_to_set (list vs) :=
+  foldl : (\e,s -> set_add:s:e) : (:>make_set) : vs//
+
+defun list_to_mutable_set (list vs) :=
+  let s := :>make_mutable_set in
+    (map : (\e -> set_add : s : e) : vs) comma
+      s//
+
+defun set_member? (struct Set s, dynamic v) :=
+  match s
+  | struct Set {list h} ->
+    hash_has_key? : h : v
+  end//
+
+defun set_add (struct Set s, dynamic v) :=
+  match s
+  | struct Set {list ? h mutable_hash?} ->
+    hash_set : h : v : void
+  | struct Set {list h} ->
+    struct Set {list hash_set : h : v : void}
+  end//
+
+defun set_remove (struct Set s, dynamic v) :=
+  match s
+  | struct Set {list ? h mutable_hash?} ->
+    hash_remove : h : v
+  | struct Set {list h} ->
+    struct Set {list hash_remove : h : v}
+  end//
+
+defun set_size (struct Set s) :=
+  match s
+  | struct Set {list h} ->
+    hash_size : h
+  end//
 
 --- System
 --------------------------------
