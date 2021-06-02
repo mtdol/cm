@@ -1,8 +1,2 @@
-- std.cm
-    -- append_map
-    -- filter_map
-    -- partition
-
 - testing utility
     -- work in progress
-    -- add line numbers for tests being run

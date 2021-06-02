@@ -20,8 +20,13 @@
 (check-equal? (run "appl add_heads ((7,9;),(-2,4;);)")
 5)
 
+(check-equal? (run "appl (\\() -> 3) ()")
+3)
+
 ;; check for things that should fail
 
+(check-failure run "appl add1 ()")
+(check-failure run "appl (\\() -> 3) (3;)")
 (check-failure run "appl add1 (3,4;)")
 (check-failure run "appl add1 4")
 (check-failure run "appl (4;)")

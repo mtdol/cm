@@ -270,6 +270,21 @@ defun filter (fun f, list vs) :=
   | _, vs -> {: filter | f | vs}
   end//
 
+-- returns a list of two lists, one where f:v is true
+-- and one where f:v is false
+defun partition (fun f, list vs) :=
+  match vs
+  | () -> {list {list}|{list}}
+  | v, vs -> 
+    match partition : f : vs
+    | {list xs|ys} ->
+      | f : v ->
+        {list v, xs | ys}
+      else
+        {list xs | v, ys}
+    end
+  end//
+
 -- int | float -> int | float
 defun max (types {number} n1, types {number} n2) :=
   {assert_types= "max"|{list typeof n1}|n1|n2} 

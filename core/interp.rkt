@@ -811,13 +811,16 @@
 
 
 (define (interp-appl e1 e2 context params module-id debug)
-  (match (trace-interp-expr e2 context params module-id debug)
-    [l1 #:when (list? l1) 
-      (let aux ([lst l1] [res (trace-interp-expr e1 context params module-id debug)])
-        (match lst
-          ['() res]
-          [(cons h t) (aux t (interp-apply res h params))]))]
-    [_ (cm-error "CONTRACT" "Arguments to appl must be a list.")]))
+  (let ([v1 (trace-interp-expr e1 context params module-id debug)]
+        [v2 (trace-interp-expr e2 context params module-id debug)])
+    (assert-contract (list "list") v2 params "appl")
+    (match v2
+      ['() (interp-null-apply v1 params)]
+      [_ 
+        (foldl 
+          (lambda (elem acc) 
+            (interp-apply acc elem params))
+          v1 v2)])))
 
 (define (interp-typedef e1 e2 context params module-id debug)
  (let ([lst2 

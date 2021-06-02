@@ -77,3 +77,22 @@
 
 (check-shuffle (run "sample : 2 : {list 1|2|3}")
 '((1 2) (1 3) (2 1) (2 3) (3 1) (3 2)))
+
+;;
+;; partition
+;;
+
+(check-equal? (run "partition : value : {list 1|2|3|4}")
+'((1 2 3 4) ()))
+
+(check-equal? (run "partition : odd? : {list 1|2|3|4}")
+'((1 3) (2 4)))
+
+(check-equal? (run "partition : odd? : {list 2|4}")
+'(() (2 4)))
+
+(check-equal? (run "partition : odd? : {list 1}")
+'((1) ()))
+
+(check-equal? (run "partition : odd? : {list}")
+'(() ()))
