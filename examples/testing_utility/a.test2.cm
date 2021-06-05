@@ -1,0 +1,5 @@
+#:lang cm
+#:import "std_lib::testing.cm", "a.source.cm"
+
+assert_equal:(a_add1:6):7//
+assert_equal:(a_add2:6):8//

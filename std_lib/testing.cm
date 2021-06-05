@@ -3,7 +3,19 @@
 -- macros for managing test results
 #:def:log{} {% set _num_tests := _num_tests + 1} comma
 #:def:pass{} {% set _num_successful_tests := _num_successful_tests + 1} comma
-#:def:fail{} {% set _num_failed_tests := _num_failed_tests + 1} comma
+#:<def:fail{input|output} 
+  {% 
+    set _num_failed_tests := _num_failed_tests + 1
+  | {when print_failures? | @ "failure"}
+  | {when print_failures? | @ ("input:\n" $ input)}
+  | {when print_failures? | @ ("output:\n" $ output)}
+  | {when print_failures? | @ ""}
+  }
+  comma
+>:#
+
+-- inputs and outputs will only be printed if this is `true`
+static print_failures? := true//
 
 -- the number of tests that we have run so far
 static _num_tests := 0//
@@ -75,14 +87,14 @@ defun assert_equalf (fun f, dynamic elem1, dynamic elem2) :=
     {pass}
     true
   else 
-    {fail}
+    {fail elem1 | elem2}
     false//
 
 -- `true` if `appl f args` fails, else `false`
 defun assert_failure (fun f, list args) :=
   {log}
   try 
-    (appl f args) comma {fail} false
+    (appl f args) comma {fail args | "no exception raised"} false
   catch _ with 
     {pass} true//
 
@@ -90,9 +102,9 @@ defun assert_failure (fun f, list args) :=
 defun assert_failure_id (string id, fun f, list args) :=
   {log}
   try 
-    (appl f args) comma {fail} false
+    (appl f args) comma {fail args | "no exception raised"} false
   catch e with 
     if e::id = id then 
       {pass} true 
     else
-      {fail} false//
+      {fail args | "no exception raised"} false//

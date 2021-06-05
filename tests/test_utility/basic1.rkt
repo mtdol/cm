@@ -14,6 +14,9 @@
 (run-silent "#:import \"std_lib::std.cm\"")
 (run-silent "#:import \"std_lib::testing.cm\"")
 
+; disable failure printing
+(run-silent "set print_failures? := false")
+
 (check-equal? (run "assert_equal : 3 : 3")
 val-true)
 
