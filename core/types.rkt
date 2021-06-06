@@ -32,6 +32,7 @@
 (define (is-fun? v) (match v [(Fun _ _ _ _ _ _ _) #t] [_ #f]))
 (define (is-struct? v) (match v [(CmStruct _ _) #t] [_ #f]))
 (define (is-hash? v) (match v [(CmHash _ _ _) #t] [_ #f]))
+(define (is-array? v) (vector? v))
 (define (is-mutable-hash? v) (match v [(CmHash _ "mutable" _) #t] [_ #f]))
 (define (is-void? v) (match v [(Prim0 'void) #t] [_ #f]))
 (define (is-eof? v) (match v [(Prim0 'eof) #t] [_ #f]))
@@ -95,6 +96,7 @@
     [(is-struct? v) (match v [(CmStruct label _) (get-struct-type-string label)])]
     [(is-hash? v) 
      (match v [(CmHash _ type _) (format "~a hash" type)])]
+    [(is-array? v) "array"]
     [(is-void? v) "void"]
     [(is-eof? v) "eof"]
     [else "unknown"]))
@@ -144,6 +146,7 @@
          ["pair" (string-append "(" (list-to-string v) ")")]
          ["void" ""]
          ["eof" "eof"]
+         ["array" "array"]
          ["mutable hash" "mutable hash"]
          ["immutable hash" "immutable hash"]
          ["fun" 
@@ -165,6 +168,7 @@
          ["pair" (cm-error "CONTRACT" "Cannot coerce a pair to an int.")]
          ["void" (cm-error "CONTRACT" "Cannot coerce a void to an int.")]
          ["eof" (cm-error "CONTRACT" "Cannot coerce an eof to an int.")]
+         ["array" (cm-error "CONTRACT" "Cannot coerce an array to an int.")]
          ["fun" (cm-error "CONTRACT" "Cannot coerce a fun to an int.")]
          [_ (cm-error "GENERIC" "Int coersion error.")])]))
 (define (float-coerce v) 
@@ -180,6 +184,7 @@
          ["pair" (cm-error "CONTRACT" "Cannot coerce a pair to a float.")]
          ["void" (cm-error "CONTRACT" "Cannot coerce a void to a float.")]
          ["eof" (cm-error "CONTRACT" "Cannot coerce an eof to a float.")]
+         ["array" (cm-error "CONTRACT" "Cannot coerce an array to a float.")]
          ["fun" (cm-error "CONTRACT" "Cannot coerce a fun to a float.")]
          [_ (cm-error "GENERIC" "Float coersion error.")])]))
 
@@ -198,6 +203,7 @@
          ["pair" (Bool 1)]
          ["void" (cm-error "CONTRACT" "Cannot coerce a void to a bool")]
          ["eof" (cm-error "CONTRACT" "Cannot coerce an eof to a bool")]
+         ["array" (cm-error "CONTRACT" "Cannot coerce an array to a bool")]
          ["fun" (cm-error "CONTRACT" "Cannot coerce a fun to a bool.")]
          [#t (Bool 1)]
          [#f (Bool 0)]

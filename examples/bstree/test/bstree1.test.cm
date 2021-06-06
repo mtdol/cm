@@ -1,0 +1,21 @@
+#:lang cm
+#:import "std_lib::testing.cm"
+#:import "../bstree.cm"
+
+defun compare (int x, int y) :=
+  | x > y -> 1
+  | y > x -> -1
+  else 0//
+
+def b := make_bstree : compare//
+
+assert_equalf : bstree_equal? 
+  : (insert : b : 3) 
+  : (struct BSTree 
+    {list compare | struct Node {list leaf|leaf|3}})//
+
+assert_equalf : bstree_equal? 
+  : (insert : (insert : b : 3) : 5) 
+  : (struct BSTree 
+      {list compare | struct Node 
+        {list leaf | struct Node {list leaf | leaf | 5} | 3}})//

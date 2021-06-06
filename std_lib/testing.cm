@@ -3,12 +3,12 @@
 -- macros for managing test results
 #:def:log{} {% set _num_tests := _num_tests + 1} comma
 #:def:pass{} {% set _num_successful_tests := _num_successful_tests + 1} comma
-#:<def:fail{input|output} 
+#:<def:fail{res|exp} 
   {% 
     set _num_failed_tests := _num_failed_tests + 1
   | {when print_failures? | @ "failure"}
-  | {when print_failures? | @ ("input:\n" $ input)}
-  | {when print_failures? | @ ("output:\n" $ output)}
+  | {when print_failures? | @ ("expected:\n" $ exp)}
+  | {when print_failures? | @ ("received:\n" $ res)}
   | {when print_failures? | @ ""}
   }
   comma

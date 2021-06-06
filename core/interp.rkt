@@ -282,11 +282,14 @@
         ['tail (cm-error "CONTRACT" (string-append 
             "Applied `tail` to non list or pair. Given type "
             (get-type v) "."))]
-        ['length  #:when (or (string=? (get-type v) "list")
+        ['length #:when (or (string=? (get-type v) "list")
                            (string=? (get-type v) "null")) 
         (length v)]
-        ['length  #:when (string=? (get-type v) "string" ) 
+        ['length  #:when (string=? (get-type v) "string") 
         (string-length v)]
+
+        ['length  #:when (string=? (get-type v) "array") 
+        (interp-array-length v params)]
         ['length (cm-error "CONTRACT" (string-append 
             "Applied `length` to non list or string. Given type "
             (get-type v) "."))]
@@ -894,6 +897,9 @@
 
 (define (interp-index e1 e2 context params module-id debug)
   (match (trace-interp-expr e1 context params module-id debug)
+         [(? is-array? a) 
+          (interp-array-ref 
+            a (trace-interp-expr e2 context params module-id debug) params)]
          [vs #:when (list? vs) 
              (match (trace-interp-expr e2 context params module-id debug)
                     [is #:when (and (list? is) (= (length is) 2) 
@@ -1042,6 +1048,35 @@
   (match v
     [(CmHash _ "mutable" _) (racket-to-bool #t)]
     [_ (racket-to-bool #f)]))
+
+;;
+;; array ops
+;;
+
+(define (check-array-bounds arr.length index)
+  (unless (and (>= index 0) (< index arr.length))
+    (cm-error "CONTRACT"
+        (format "Index out of bounds for array.\nIndex: ~a" index))))
+
+(define (interp-make-array v params)
+  (assert-contract (list "int") v params "make_array")
+  (make-vector v))
+
+(define (interp-array-length v params)
+  (assert-contract (list "array") v params "array_length")
+  (vector-length v))
+
+(define (interp-array-ref v1 v2 params)
+  (assert-contract (list "array") v1 params "array_ref")
+  (assert-contract (list "int") v2 params "array_ref")
+  (check-array-bounds (vector-length v1) v2)
+  (vector-ref v1 v2))
+
+(define (interp-array-set v1 v2 v3 params)
+  (assert-contract (list "array") v1 params "array_set")
+  (assert-contract (list "int") v2 params "array_set")
+  (check-array-bounds (vector-length v1) v2)
+  (vector-set! v1 v2 v3) (Prim0 'void))
 
 ;;
 ;; system ops
@@ -1456,6 +1491,15 @@
     ["mutable_hash?"
      (assert-num-args 1 1)
      (interp-mutable-hash? (car v2) params)]
+    ["make_array"
+     (assert-num-args 1 1)
+     (interp-make-array (car v2) params)]
+    ["array_length"
+     (assert-num-args 1 1)
+     (interp-array-length (car v2) params)]
+    ["array_set"
+     (assert-num-args 3 3)
+     (interp-array-set (car v2) (cadr v2) (caddr v2) params)]
     ["system_type"
      (assert-num-args 0 0)
      (interp-system-type)]

@@ -1,0 +1,57 @@
+-- Matthew Dolinka
+--- Self balancing Binary search tree
+
+#:lang cm
+
+---- definitions
+
+defun element? (dynamic v) :=
+  match v
+  | struct Node {list _|_|_} -> true
+  | struct Leaf () -> true
+  | _ -> false
+  end//
+
+typedef BSTree := {list fun f | ? b element?}//
+
+typedef Node := 
+        -- left node
+  {list ? l element? 
+        -- right node
+      | ? r element? 
+        -- stored value
+      | dynamic v}//
+
+-- leaf case
+typedef Leaf := {list}//
+
+-- easy leaf
+def leaf := struct Leaf ()//
+
+defun make_bstree (fun f) :=
+  struct BSTree {list f|leaf}//
+
+defun bstree_equal? (struct BSTree b1, struct BSTree b2) :=
+  (b1::b) == (b2::b)//
+
+---- functionality
+
+-- inserts `v` into `b`
+defun insert (struct BSTree b, dynamic v) :=
+  -- the comparison function
+  param f := b::f
+  in let res :=
+    letaux insert
+    -- the element we are working on
+    | ? b element? := b::b
+    in
+      match b
+      | struct Leaf () ->
+        struct Node {list leaf|leaf|v}
+      | struct Node {list l|r|b.v} ->
+        | f : v : b.v >= 0 ->
+          insert : r
+        else
+          insert : l
+      end
+  in struct BSTree {list f|res}//

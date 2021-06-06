@@ -844,6 +844,43 @@ defun set_size (struct Set s) :=
     hash_size : h
   end//
 
+
+--- Arrays
+--------------------------------
+
+defun make_array (int n) :=
+  internal_op "make_array" {list n}//
+
+defun array? (dynamic v) :=
+  typeof v = "array"//
+
+defun array_length (? a array?) :=
+  length a//
+  
+defun array_ref (? a array?, int i) :=
+  a::i//
+
+defun array_set (? a array?, int i, dynamic v) :=
+  internal_op "array_set" {list a|i|v}//
+
+defun array_to_list (? a array?) :=
+  letaux aux
+  | i := 0
+  in
+    | i = (length a) -> ()
+    else (a::i), (aux : (add1:i))//
+
+defun list_to_array (list vs) :=
+  param a := make_array : (length vs) 
+  in letaux aux
+  | i := 0
+  | vs := vs
+  in
+    match vs
+    | () -> a
+    | v, vs -> (array_set : a : i : v) comma aux : (add1:i) : vs
+    end//
+
 --- System
 --------------------------------
 
