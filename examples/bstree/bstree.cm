@@ -1,57 +1,178 @@
 -- Matthew Dolinka
---- Self balancing Binary search tree
+--- Binary search tree
 
 #:lang cm
+
+-- easy leaf
+#:def:_leaf{} struct _Leaf ()
 
 ---- definitions
 
 defun element? (dynamic v) :=
   match v
-  | struct Node {list _|_|_} -> true
-  | struct Leaf () -> true
+  | struct _Node {list _|_|_|_} -> true
+  | {_leaf} -> true
   | _ -> false
   end//
 
 typedef BSTree := {list fun f | ? b element?}//
 
-typedef Node := 
-        -- left node
+typedef _Node := 
+      -- left node
   {list ? l element? 
-        -- right node
+      -- right node
       | ? r element? 
-        -- stored value
+      -- key
+      | dynamic k
+      -- stored value
       | dynamic v}//
 
 -- leaf case
-typedef Leaf := {list}//
+typedef _Leaf := {list}//
 
--- easy leaf
-def leaf := struct Leaf ()//
+defun make (fun f) :=
+  struct BSTree {list f|{_leaf}}//
 
-defun make_bstree (fun f) :=
-  struct BSTree {list f|leaf}//
-
-defun bstree_equal? (struct BSTree b1, struct BSTree b2) :=
+defun equal? (struct BSTree b1, struct BSTree b2) :=
   (b1::b) == (b2::b)//
+
+defun empty? (struct BSTree b) :=
+  match b
+  | struct BSTree {list _ | {_leaf}} -> true
+  | _ -> false
+  end//
 
 ---- functionality
 
 -- inserts `v` into `b`
-defun insert (struct BSTree b, dynamic v) :=
-  -- the comparison function
-  param f := b::f
-  in let res :=
-    letaux insert
-    -- the element we are working on
-    | ? b element? := b::b
-    in
-      match b
-      | struct Leaf () ->
-        struct Node {list leaf|leaf|v}
-      | struct Node {list l|r|b.v} ->
-        | f : v : b.v >= 0 ->
-          insert : r
-        else
-          insert : l
-      end
-  in struct BSTree {list f|res}//
+defun insert (struct BSTree b, dynamic k, dynamic v) :=
+  let res := _insert : (b::f) : (b::b) : k : v in
+    struct BSTree {list b::f|res}//
+
+-- internal insert function (works with a raw element)
+defun _insert (fun f, ? b element?, dynamic k, dynamic v) :=
+  match b
+  | {_leaf} ->
+    struct _Node {list {_leaf}|{_leaf}|k|v}
+  | struct _Node {list l|r|b.k|b.v} ->
+    let c := f : k : b.k in
+      | c = 0 ->
+        -- update case
+        struct _Node {list {_leaf}|{_leaf}|k|v}
+      | c > 0 ->
+        struct _Node {list l | _insert:f:r:k:v | b.k | b.v}
+      else
+        struct _Node {list _insert:f:l:k:v | r | b.k | b.v}
+  end//
+
+-- removes `k` from `b`
+defun remove (struct BSTree b, dynamic k) :=
+  let res := _remove : (b::f) : (b::b) : k in
+    struct BSTree {list (b::f)|res}//
+
+defun _remove (fun f, ? b element?, dynamic k) :=
+  match b
+  | {_leaf} -> 
+    error : ("remove: Could not find key: " $ k)
+  | struct _Node {list l|r|b.k|b.v} ->
+    let c := f : k : b.k in
+      | c = 0 ->
+        match l,r
+        | {_leaf}, {_leaf} -> {_leaf}
+        | {_leaf}, r -> r
+        | l, {_leaf} -> l
+        | _ -> 
+          -- get the in order successor
+          match _IOS : r
+          | {list ios.k|ios.v} ->
+            -- now delete the ios
+            struct _Node {list l | _remove:f:r:ios.k | ios.k | ios.v}
+          end
+        end
+      | c > 0 ->
+        struct _Node {list l | _remove:f:r:k | b.k | b.v}
+      else
+        struct _Node {list _remove:f:l:k | r | b.k | b.v}
+  end//
+
+-- retrieves the data associated to `k` from `b`.
+-- Throws GENERIC exception if the item could not be found.
+defun get (struct BSTree b, dynamic k) :=
+  _get : (b::f) : (b::b) : k//
+
+defun _get (fun f, ? b element?, dynamic k) :=
+  match b
+  | {_leaf} ->
+    error : ("insert: Could not find key: " $ k)
+  | struct _Node {list l|r|b.k|b.v} ->
+    let c := f : k : b.k in
+      | c = 0 -> b.v
+      | c > 0 -> _get : f : r : k
+      else _get : f : l : k
+  end//
+
+
+-- asks if `b` contains an entry with key `k`
+defun contains? (struct BSTree b, dynamic k) :=
+  _contains? : (b::f) : (b::b) : k//
+
+defun _contains? (fun f, ? b element?, dynamic k) :=
+  match b
+  | {_leaf} ->
+    false
+  | struct _Node {list l|r|b.k|_} ->
+    let c := f : k : b.k in
+      | c = 0 -> true
+      | c > 0 -> _contains? : f : r : k
+      else _contains? : f : l : k
+  end//
+
+
+--- traversals
+
+-- does an in-order-traversal and
+-- returns an association list of form:
+-- `{list key1, value1 | key2, value2 | ...}`
+defun to_list (struct BSTree b) :=
+  _to_list : (b::b)//
+
+defun _to_list (? b element?) :=
+  match b
+  | struct _Node {list l|r|k|v} ->
+    (_to_list : l) ++ {list k,v} ++ (_to_list : r)
+  | {_leaf} -> ()
+  end//
+
+-- applies `f` onto all elements of `b` in-order
+defun tmap (struct BSTree b, fun f) :=
+  let res := _tmap : (b::b) : f in
+    struct BSTree {list (b::f)|res}//
+
+defun _tmap (? b element?, fun f) :=
+  match b
+  | {_leaf} -> {_leaf}
+  | struct _Node {list l|r|k|v} -> 
+    struct _Node {list _tmap:l:f | _tmap:r:f | k | f:v}
+  end//
+
+defun size (struct BSTree b) :=
+  _size : (b::b)//
+
+defun _size (? b element?) :=
+  match b
+  | {_leaf} -> 0
+  | struct _Node {list l|r|_|_} ->
+    1 + (_size : l) + (_size : r)
+  end//
+
+--- internal utilities
+
+-- in order successor, `n` must not be leaf
+-- returns `{list key | value}` of the IOS
+defun _IOS (? n element?) :=
+  match n
+  | struct _Node {list {_leaf} | _ | n.k | n.v} ->
+    {list n.k | n.v}
+  | struct _Node {list l|_|_|_} ->
+    _IOS : l
+  end//

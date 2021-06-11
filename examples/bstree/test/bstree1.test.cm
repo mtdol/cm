@@ -7,15 +7,288 @@ defun compare (int x, int y) :=
   | y > x -> -1
   else 0//
 
-def b := make_bstree : compare//
 
-assert_equalf : bstree_equal? 
-  : (insert : b : 3) 
-  : (struct BSTree 
-    {list compare | struct Node {list leaf|leaf|3}})//
+def b := make : compare//
 
-assert_equalf : bstree_equal? 
-  : (insert : (insert : b : 3) : 5) 
-  : (struct BSTree 
-      {list compare | struct Node 
-        {list leaf | struct Node {list leaf | leaf | 5} | 3}})//
+assert_equal
+  : (size : b)
+  : 0//
+
+assert_equal
+  : (empty? : b)
+  : true//
+
+assert_equal
+  : (contains? : b : 3)
+  : false//
+
+assert_failure
+  : get
+  : {list b|3}//
+
+
+set b := (insert : b : 3 : "c1")//
+
+assert_equal
+  : (size : b)
+  : 1//
+
+assert_equal
+  : (empty? : b)
+  : false//
+
+assert_equal
+  : (get : b : 3) 
+  : "c1"//
+
+assert_equal
+  : (contains? : b : 3)
+  : true//
+
+assert_equal
+  : (contains? : b : 4)
+  : false//
+
+assert_failure
+  : get
+  : {list b|4}//
+
+
+-- test update
+set b := (insert : b : 3 : "c")//
+
+assert_equal
+  : (empty? : b)
+  : false//
+
+assert_equal
+  : (get : b : 3) 
+  : "c"//
+
+assert_equal
+  : (contains? : b : 3)
+  : true//
+
+assert_equal
+  : (contains? : b : 4)
+  : false//
+
+assert_failure
+  : get
+  : {list b|4}//
+
+
+set b := (insert : b : 4 : "d")//
+
+assert_equal
+  : (empty? : b)
+  : false//
+
+assert_equal
+  : (get : b : 3) 
+  : "c"//
+
+assert_equal
+  : (get : b : 4) 
+  : "d"//
+
+assert_equal
+  : (contains? : b : 3)
+  : true//
+
+assert_equal
+  : (contains? : b : 4)
+  : true//
+
+
+set b := (insert : b : 2 : "b")//
+
+assert_equal
+  : (empty? : b)
+  : false//
+
+assert_equal
+  : (get : b : 3) 
+  : "c"//
+
+assert_equal
+  : (get : b : 4) 
+  : "d"//
+
+assert_equal
+  : (get : b : 2) 
+  : "b"//
+
+assert_equal
+  : (contains? : b : 3)
+  : true//
+
+assert_equal
+  : (contains? : b : 4)
+  : true//
+
+assert_equal
+  : (contains? : b : 2)
+  : true//
+
+
+set b := (insert : b : 5 : "e")//
+
+assert_equal
+  : (empty? : b)
+  : false//
+
+assert_equal
+  : (get : b : 3) 
+  : "c"//
+
+assert_equal
+  : (get : b : 4) 
+  : "d"//
+
+assert_equal
+  : (get : b : 2) 
+  : "b"//
+
+assert_equal
+  : (get : b : 5) 
+  : "e"//
+
+assert_equal
+  : (contains? : b : 3)
+  : true//
+
+assert_equal
+  : (contains? : b : 4)
+  : true//
+
+assert_equal
+  : (contains? : b : 2)
+  : true//
+
+assert_equal
+  : (contains? : b : 5)
+  : true//
+
+
+assert_equal
+  : (size : b)
+  : 4//
+
+-- test traversal
+
+assert_equal
+  : (to_list : b)
+  : {list 2,"b"|3,"c"|4,"d"|5,"e"}//
+
+-- test tmap
+
+assert_equal
+  : (to_list 
+    : (tmap : b 
+      : (\c -> int_to_char : ((char_to_int : c) + 1))))
+  : {list 2,"c"|3,"d"|4,"e"|5,"f"}//
+
+
+-- now remove elements
+
+-- not present in tree
+assert_failure
+  : remove 
+  : {list b|7}//
+
+
+set b := (remove : b : 3)//
+
+assert_failure
+  : get 
+  : {list b|3}//
+
+assert_equal
+  : (get : b : 4) 
+  : "d"//
+
+assert_equal
+  : (get : b : 2) 
+  : "b"//
+
+assert_equal
+  : (get : b : 5) 
+  : "e"//
+
+assert_equal
+  : (contains? : b : 3)
+  : false//
+
+assert_equal
+  : (contains? : b : 4)
+  : true//
+
+assert_equal
+  : (contains? : b : 2)
+  : true//
+
+assert_equal
+  : (contains? : b : 5)
+  : true//
+
+
+set b := (remove : b : 5)//
+
+assert_failure
+  : get 
+  : {list b|5}//
+
+assert_equal
+  : (get : b : 4) 
+  : "d"//
+
+assert_equal
+  : (get : b : 2) 
+  : "b"//
+
+assert_equal
+  : (contains? : b : 4)
+  : true//
+
+assert_equal
+  : (contains? : b : 2)
+  : true//
+
+assert_equal
+  : (contains? : b : 5)
+  : false//
+
+
+set b := (remove : b : 2)//
+
+assert_failure
+  : get 
+  : {list b|2}//
+
+assert_equal
+  : (get : b : 4) 
+  : "d"//
+
+assert_equal
+  : (contains? : b : 4)
+  : true//
+
+assert_equal
+  : (contains? : b : 2)
+  : false//
+
+
+set b := (remove : b : 4)//
+
+assert_failure
+  : get 
+  : {list b|4}//
+
+assert_equal
+  : (contains? : b : 4)
+  : false//
+
+assert_equal
+  : (empty? : b)
+  : true//
