@@ -28,21 +28,21 @@
 
 (check-failure run "def types (\"float\", \"int\";) x := true")
 
-(check-equal? (run "def types (\"int\", \"float\";) x, y := 5.5")
+(check-equal? (run "def types (\"int\", \"float\";) x := def y := 5.5")
 5.5)
 (check-equal? (run "x")
 5.5)
 (check-equal? (run "y")
 5.5)
 
-(check-equal? (run "def types (\"int\", \"float\";) x, float y := 5.5")
+(check-equal? (run "def types (\"int\", \"float\";) x := def float y := 5.5")
 5.5)
 (check-equal? (run "x")
 5.5)
 (check-equal? (run "y")
 5.5)
 
-(check-failure run "def types (\"float\", \"int\";) x, int y := 5.5")
+(check-failure run "def types (\"float\", \"int\";) x := def int y := 5.5")
 
 (check-equal? (run "def types (\"int\", \"fl\"$\"oat\";) x := 5.5")
 5.5)

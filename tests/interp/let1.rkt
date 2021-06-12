@@ -18,3 +18,14 @@
 
 (check-equal? (run "let x := 1 + let y := -4 in y + 2 in x - 5")
 -6)
+
+(check-equal? (run "let x := 1 in let x := 2 in x")
+2)
+
+(check-equal? (run "let x,y := 1,2 in x - y")
+-1)
+
+(check-equal? (run "let int x, int y := 1,2 in x - y")
+-1)
+
+(check-failure run "let int x, float y := 1,2 in y")

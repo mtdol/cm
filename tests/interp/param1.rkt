@@ -42,6 +42,16 @@
 (check-failure run "param float x1 := 2 in x1")
 
 
+;; check matching
+
+(check-equal? (run "param x1, x2 := 2,3 in x1 - x2")
+-1)
+
+(check-equal? (run "param int x1, int x2; := 2,3; in x1 - x2")
+-1)
+
+(check-failure run "param int x1, float x2; := 2,3; in x1 - x2")
+
 ;; check if param works with guard functions
 
 (run-silent "defun y_is_1? _ := y = 1")

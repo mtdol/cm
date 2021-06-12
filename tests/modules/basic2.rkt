@@ -14,7 +14,7 @@
 
 ;; check basic properties of `static`
 (check-equal? (run "static vv := 6")
-6)
+val-void)
 
 (check-equal? (run "static vv := 6")
 val-void)

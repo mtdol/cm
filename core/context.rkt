@@ -61,6 +61,10 @@
 
 (define global-context (make-hash))
 
+; `true` if global var exists in the given module, else `false`
+(define (global-var-exists? label module-id)
+  (hash-has-key? global-context (GlobalContextKey "var" label module-id)))
+
 (define (set-global-var! var value private? static? module-id) 
   (hash-set! global-context (GlobalContextKey "var" var module-id) 
              (GlobalContextEntry value private? static?)))

@@ -1,5 +1,5 @@
 #lang racket
-(require racket/lazy-require
+(require racket/lazy-require racket/hash
          cm/core/ast cm/core/types cm/core/error)
 (lazy-require [cm/core/interp (trace-interp-expr interp-apply)])
 (provide fix-string ast-cons-to-racket apply-if-type
@@ -8,8 +8,9 @@
          apply-if-type-1 assign-type-check check-types-list
          valid-against-schema?
          value->list value-length
-         interp-def-list interp-static-list interp-lambda-list
-         struct-schema->string)
+         interp-lambda-list
+         struct-schema->string
+         merge-contexts)
 
 ;; Matthew Dolinka
 ;;
@@ -184,17 +185,9 @@
           [(cons v vs) (aux vs (add1 num))]
           [v num])))
 
-;; repackages def x,y = 5 as def x = def y = 5
-;; es = "x,y", rexpr = "5"
+;; repackages \x,y -> x-y as \x -> \y -> x-y
+;; es = "x,y", rexpr = "x-y"
 ;; ast pair | ast, ast -> ast
-(define (interp-def-list es rexpr)
-  (match es
-         [(Prim2 'cons e1 e2) (Def e1 (Assign (interp-def-list e2 rexpr)))]
-         [e (Def e (Assign rexpr))]))
-(define (interp-static-list es rexpr)
-  (match es
-         [(Prim2 'cons e1 e2) (Static e1 (Assign (interp-static-list e2 rexpr)))]
-         [e (Static e (Assign rexpr))]))
 (define (interp-lambda-list es rexpr)
   (match es
          [(Prim2 'cons e1 e2) (Lambda e1 (Yields (interp-lambda-list e2 rexpr)))]
@@ -226,3 +219,8 @@
                        "Max number of args: " (number->string maxargs) ". "))]
             [(cons h t) (cons h (aux t))])))
 
+
+(define (merge-contexts c1 c2)
+  (hash-union 
+    c1 c2
+    #:combine/key (lambda (k v1 v2) v2)))

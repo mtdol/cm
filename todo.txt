@@ -1,4 +1,1 @@
 allow slicing of arrays
-
-allow let to use a match expr
-    - let {list x|y} := {list 1|2} in x - y = -1

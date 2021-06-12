@@ -5,6 +5,16 @@
 (run-silent "typedef Si := int a;")
 (run-silent "typedef S2 := a, b;")
 
+
+(check-equal? (run "match struct S (3;) | struct S s -> string s end")
+"(struct S (3;))")
+
+(check-equal? (run "match struct S (3;) | s -> string s end")
+"(struct S (3;))")
+
+(check-equal? (run "match struct S (3;) | struct S _ -> true end")
+val-true)
+
 (check-equal? (run "match struct S (3;) | struct S (3;) -> 2 end")
 2)
 (check-equal? (run "match struct S (3;) | struct S (a;) -> 2 end")
@@ -76,8 +86,6 @@
 
 (check-equal? (run "match (struct S ((struct S (2;));)),4 | (struct S ((struct S (a;));)), b -> a | (struct S (a;)), b -> 0 end")
 2)
-
-(check-failure run "match (struct S ((struct S (2;));)),4 | (struct S ((struct S a);)), b -> b | (struct S (a;)), b -> 0 end")
 
 (check-equal? (run "match (struct S ((struct S2 (2,3;));)),4 | (struct S (struct S (a;);)), b -> a | (struct S ((struct S2 (a,b;));)), c  -> a + b end")
 5)

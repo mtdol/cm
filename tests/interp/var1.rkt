@@ -39,7 +39,7 @@
 
 (check-failure run "def types (\"float\", \"string\";) var \"~z2 4\" := 5")
 
-(check-equal? (run "def types (\"int\";) var \"~z2 4\", dynamic var \"2\" := 5")
+(check-equal? (run "def types (\"int\";) var \"~z2 4\" := def dynamic var \"2\" := 5")
 5)
 
 (check-equal? (run "var \"~z2 4\"")

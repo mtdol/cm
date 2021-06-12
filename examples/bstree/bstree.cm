@@ -8,20 +8,20 @@
 
 ---- definitions
 
-defun element? (dynamic v) :=
+defun _element? (dynamic v) :=
   match v
-  | struct _Node {list _|_|_|_} -> true
+  | struct _Node _ -> true
   | {_leaf} -> true
   | _ -> false
   end//
 
-typedef BSTree := {list fun f | ? b element?}//
+typedef BSTree := {list fun f | ? b _element?}//
 
 typedef _Node := 
       -- left node
-  {list ? l element? 
+  {list ? l _element? 
       -- right node
-      | ? r element? 
+      | ? r _element? 
       -- key
       | dynamic k
       -- stored value
@@ -50,7 +50,7 @@ defun insert (struct BSTree b, dynamic k, dynamic v) :=
     struct BSTree {list b::f|res}//
 
 -- internal insert function (works with a raw element)
-defun _insert (fun f, ? b element?, dynamic k, dynamic v) :=
+defun _insert (fun f, ? b _element?, dynamic k, dynamic v) :=
   match b
   | {_leaf} ->
     struct _Node {list {_leaf}|{_leaf}|k|v}
@@ -70,7 +70,7 @@ defun remove (struct BSTree b, dynamic k) :=
   let res := _remove : (b::f) : (b::b) : k in
     struct BSTree {list (b::f)|res}//
 
-defun _remove (fun f, ? b element?, dynamic k) :=
+defun _remove (fun f, ? b _element?, dynamic k) :=
   match b
   | {_leaf} -> 
     error : ("remove: Could not find key: " $ k)
@@ -83,11 +83,9 @@ defun _remove (fun f, ? b element?, dynamic k) :=
         | l, {_leaf} -> l
         | _ -> 
           -- get the in order successor
-          match _IOS : r
-          | {list ios.k|ios.v} ->
-            -- now delete the ios
+          let {list ios.k|ios.v} := _IOS : r in
+            -- delete the ios
             struct _Node {list l | _remove:f:r:ios.k | ios.k | ios.v}
-          end
         end
       | c > 0 ->
         struct _Node {list l | _remove:f:r:k | b.k | b.v}
@@ -100,7 +98,7 @@ defun _remove (fun f, ? b element?, dynamic k) :=
 defun get (struct BSTree b, dynamic k) :=
   _get : (b::f) : (b::b) : k//
 
-defun _get (fun f, ? b element?, dynamic k) :=
+defun _get (fun f, ? b _element?, dynamic k) :=
   match b
   | {_leaf} ->
     error : ("insert: Could not find key: " $ k)
@@ -116,7 +114,7 @@ defun _get (fun f, ? b element?, dynamic k) :=
 defun contains? (struct BSTree b, dynamic k) :=
   _contains? : (b::f) : (b::b) : k//
 
-defun _contains? (fun f, ? b element?, dynamic k) :=
+defun _contains? (fun f, ? b _element?, dynamic k) :=
   match b
   | {_leaf} ->
     false
@@ -136,7 +134,7 @@ defun _contains? (fun f, ? b element?, dynamic k) :=
 defun to_list (struct BSTree b) :=
   _to_list : (b::b)//
 
-defun _to_list (? b element?) :=
+defun _to_list (? b _element?) :=
   match b
   | struct _Node {list l|r|k|v} ->
     (_to_list : l) ++ {list k,v} ++ (_to_list : r)
@@ -148,7 +146,7 @@ defun tmap (struct BSTree b, fun f) :=
   let res := _tmap : (b::b) : f in
     struct BSTree {list (b::f)|res}//
 
-defun _tmap (? b element?, fun f) :=
+defun _tmap (? b _element?, fun f) :=
   match b
   | {_leaf} -> {_leaf}
   | struct _Node {list l|r|k|v} -> 
@@ -158,7 +156,7 @@ defun _tmap (? b element?, fun f) :=
 defun size (struct BSTree b) :=
   _size : (b::b)//
 
-defun _size (? b element?) :=
+defun _size (? b _element?) :=
   match b
   | {_leaf} -> 0
   | struct _Node {list l|r|_|_} ->
@@ -169,7 +167,7 @@ defun _size (? b element?) :=
 
 -- in order successor, `n` must not be leaf
 -- returns `{list key | value}` of the IOS
-defun _IOS (? n element?) :=
+defun _IOS (? n _element?) :=
   match n
   | struct _Node {list {_leaf} | _ | n.k | n.v} ->
     {list n.k | n.v}

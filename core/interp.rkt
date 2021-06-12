@@ -133,41 +133,43 @@
                      (trace-interp-expr e1 context params module-id debug)
                      e2 context context params module-id debug)]
     [(Def e1 (Assign e2)) 
-      (match (interp-def-list e1 e2)
-             [(Def e1-2 (Assign e2-2)) 
-              (let ([v2 (trace-interp-expr e2-2 context params module-id debug)])
-              (let-values ([(guard-types label)
-                            (interp-left-hand-expr e1-2 context params module-id debug)])
-                (interp-def guard-types label v2 "def" context params module-id debug)))])]
+     (let* ([v2 (trace-interp-expr e2 context params module-id debug)] 
+         [context2
+           (match-expr e1 v2 (hash) context params module-id debug)])
+      (match context2
+         [#f (cm-error "MATCH" 
+              (format "def: Could not match guard expr.\ngot: ~a" 
+                      (string-coerce v2)))]
+         [_ (interp-assign context2 v2 'def module-id)]))
+     ]
     [(Def _ _) (cm-error "SYNTAX" "Improperly formed `def`.")]
     [(Static e1 (Assign e2)) 
-      (match (interp-static-list e1 e2)
-        [(Static e1-2 (Assign e2-2)) 
-         (let-values ([(guard-types label)
-                       (interp-left-hand-expr e1-2 context params module-id debug)])
-         ;; only interp and assign if not already defined, else return void
-         (if (get-global-var-data label module-id)
-           (Prim0 'void)
-           (let ([v2 (trace-interp-expr e2-2 context params module-id debug)])
-             (interp-def guard-types label v2 "static" context params module-id debug))))])]
+     (let* ([v2 (trace-interp-expr e2 context params module-id debug)] 
+         [context2
+           (match-expr e1 v2 (hash) context params module-id debug)])
+      (match context2
+         [#f (cm-error "MATCH" 
+              (format "static: Could not match guard expr.\ngot: ~a" 
+                      (string-coerce v2)))]
+         [_ (interp-assign context2 v2 'static module-id)]))]
     [(Static _ _) (cm-error "SYNTAX" "Improperly formed `static`.")]
     [(Set e1 (Assign e2)) 
-     (let-values ([(guard-types label) 
-                   (interp-left-hand-expr e1 context params module-id debug)])
-     (interp-def 
-       guard-types label
-       (trace-interp-expr e2 context params module-id debug)
-       "set" context params module-id debug))]
+     (let* ([v2 (trace-interp-expr e2 context params module-id debug)] 
+         [context2
+           (match-expr e1 v2 (hash) context params module-id debug)])
+      (match context2
+         [#f (cm-error "MATCH" 
+              (format "set: Could not match guard expr.\ngot: ~a" 
+                      (string-coerce v2)))]
+         [_ (interp-assign context2 v2 'set module-id)]))]
     [(Set _ _) (cm-error "SYNTAX" "Improperly formed `set`.")]
     [(Defun (? var-container? var) e1 (Assign e2))
      (let ([name (get-var-label var context params module-id debug)])
      (match (interp-lambda-list e1 e2)
        [(Lambda e1-2 (Yields e2-2))
-        (interp-def '("dynamic") name
-          (interp-lambda e1-2 e2-2 name context params module-id debug)
-          "def" context params module-id debug)
-        ])
-      )]
+        (let 
+          ([lam (interp-lambda e1-2 e2-2 name context params module-id debug)])
+            (set-global-var! name lam (var-name-private? name) #f module-id))]))]
     [(Defun _ _ _) (cm-error "SYNTAX" "Improperly formed `defun`.")]
     [(Let e1 (Assign e2) (In e3)) (interp-let e1 e2 e3 context params module-id debug)]
     [(Let _ _ _) (cm-error "SYNTAX" "Improperly formed `let`.")]
@@ -339,9 +341,12 @@
   (match vs
     ['() (Prim0 'void)]
     [(cons v t)
-      (match (match-expr e1 v context context params module-id debug)
-            [#f (cm-error "MATCH" "Could not match `foreach` guard expr.")]
-            [c2 (trace-interp-expr e2 c2 params module-id debug)
+      (match (match-expr e1 v (hash) context params module-id debug)
+            [#f (cm-error "MATCH" 
+                 (format "foreach: Could not match guard expr.\ngot: ~a"
+                         (string-coerce v)))]
+            [c2 (trace-interp-expr e2 (merge-contexts context c2)
+                                   params module-id debug)
                 (interp-foreach e1 t e2 context params module-id debug)]
             )]
     ))
@@ -374,8 +379,7 @@
           [(Prim2 'when ce1-1 ce1-2)
            (let ([match-context-2 (match-expr ce1-1 v (hash) context params module-id debug)])
              (let ([merged-context (if match-context-2 
-                                     (hash-union match-context match-context-2
-                                       #:combine/key (lambda (k v1 v2) v2))
+                                     (merge-contexts match-context match-context-2)
                                      #f)])
            (if (and merged-context 
                     (bool-to-racket 
@@ -390,8 +394,7 @@
            (if match-context-2
              ;; merge the local contexts so that match-context 2 vals replace
              ;; match context vals
-             (let ([merged-context (hash-union match-context match-context-2
-                                       #:combine/key (lambda (k v1 v2) v2))])
+             (let ([merged-context (merge-contexts match-context match-context-2)])
                  (trace-interp-expr ce2-1 merged-context params module-id debug))
              (interp-match v ce3 match-context context params module-id debug)
              ))
@@ -404,7 +407,7 @@
     [(Prim0 'end) (cm-error "GENERIC" (format "Matching failed for ~a." (string-coerce v)))]
     [_ (cm-error "SYNTAX" "Invalid match syntax.")]))
 
-;; ast, value, hash, string, debug -> hash | #f
+;; ast, value, hash, hash, hash, string, debug -> hash | #f
 (define (match-expr e v match-context context params module-id debug)
   (match e
          [(Int i) (if (equal? i v) match-context #f)]
@@ -445,14 +448,19 @@
                 (check-types-list (trace-interp-expr types-expr context params module-id debug))
                 v match-context)])]
          [(Prefix2 'struct (? var-container? var) lst) 
-          #:when (expr-is-list? lst)
+          ;#:when (expr-is-list? lst)
           (match (get-var-label var context params module-id debug)
             ["_" (cm-error "CONTRACT" "Only plain wildcard is acceptable in match expr.")]
             [label 
               (match v
-                [(CmStruct label2 lst2) 
-                 #:when (equal? label label2)
-                 (match-expr lst lst2 match-context context params module-id debug)]
+                [(CmStruct (? (lambda (l) (equal? l label))) lst2) 
+                 (if (var-container? lst)
+                   ; case where we match the entire struct
+                   ; ie `| struct S s -> s`
+                   ; rather than `| struct S {list a|b} -> a-b`
+                   (match-var (get-var-label lst context params module-id debug)
+                              (list "dynamic") v match-context)
+                   (match-expr lst lst2 match-context context params module-id debug))]
                 [_ #f]
             )])]
 
@@ -657,54 +665,51 @@
         )]
     ))
 
-;; op-type = "def" | "set" | "static"
-(define (interp-def guard-types label v op-type context params module-id debug)
- (match label
-      [#f #:when (equal? op-type "set")
-        (cm-error "SYNTAX" "Unknown Item on left hand of `set`.")] 
-      [#f #:when (equal? op-type "static") 
-        (cm-error "SYNTAX" "Unknown Item on left hand of `static`.")] 
-      [#f (cm-error "SYNTAX" "Unknown Item on left hand of `def`.")]
-      ['() (cm-error "SYNTAX" "`def` is missing a variable.")]
-      ;; sets var in global context hash and returns value to caller
-      [_
-        (assign-type-check guard-types v params label)
-        (match op-type
-          ;; `set`
-          ["set"
-            (update-global-var! label v module-id)]
-          ;; `static`
-          ["static"
-            (set-global-var! label v (var-name-private? label) #t module-id)]
-          ;; `def`
-          ["def"
-            (set-global-var! label v (var-name-private? label) #f module-id)]
-          )
-       v]))
+;; hash, ('def | 'set | 'static), string -> any
+(define (interp-assign c v mode module-id)
+  (map 
+    ; goes over each `(key . value)` and maps it in the global context
+    ; according to the mode
+    (lambda (entry) 
+      (match entry
+        [(cons k (ContextEntry v))
+         (match mode
+           ['def
+            (set-global-var! k v (var-name-private? k) #f module-id)]
+           ['set 
+            (update-global-var! k v module-id)]
+           ['static
+            (unless (global-var-exists? k module-id)
+              (set-global-var! k v (var-name-private? k) #t module-id))]
+           )]))
+    (hash->list c))
+  ; return the original value, so `def x,y := 1,2` returns `1,2`
+  (match mode
+    ['def v]
+    ['set v]
+    ['static (Prim0 'void)]))
          
 (define (interp-let e1 e2 e3 context params module-id debug)
-  (let-values ([(v2) (trace-interp-expr e2 context params module-id debug)] 
-               [(guard-types label)
-                (interp-left-hand-expr e1 context params module-id debug)])
-    (match label
-         [#f (cm-error "SYNTAX" "Unknown Item on left hand of `let`.")]
-         ['() (cm-error "SYNTAX" "`let` is missing a variable.")]
-         [_ 
-            (assign-type-check guard-types v2 params label)
-            (trace-interp-expr 
-              e3 (set-local-var label v2 context) params module-id debug)])))
+  (let* ([v2 (trace-interp-expr e2 context params module-id debug)] 
+         [context2
+           (match-expr e1 v2 (hash) context params module-id debug)])
+    (match context2
+         [#f (cm-error "MATCH" 
+              (format "let: Could not match guard expr.\ngot: ~a" 
+                      (string-coerce v2)))]
+         [_ (trace-interp-expr e3 
+                (merge-contexts context context2) params module-id debug)])))
 
 (define (interp-param e1 e2 e3 context params module-id debug)
-  (let-values ([(v2) (trace-interp-expr e2 context params module-id debug)] 
-               [(guard-types label)
-                (interp-left-hand-expr e1 context params module-id debug)])
-    (match label
-         [#f (cm-error "SYNTAX" "Unknown Item on left hand of `param`.")]
-         ['() (cm-error "SYNTAX" "`param` is missing a variable.")]
-         [_ 
-            (assign-type-check guard-types v2 params label)
-            (trace-interp-expr 
-              e3 context (set-local-var label v2 params) module-id debug)])))
+  (let* ([v2 (trace-interp-expr e2 context params module-id debug)] 
+         [params2
+           (match-expr e1 v2 (hash) context params module-id debug)])
+    (match params2
+         [#f (cm-error "MATCH" 
+              (format "param: Could not match guard expr.\ngot: ~a" 
+                      (string-coerce v2)))]
+         [_ (trace-interp-expr e3 context
+                (merge-contexts params params2) module-id debug)])))
 
 (define (interp-letrec label args-e body-e in-e context params module-id debug)
   (match (interp-lambda-list args-e body-e)

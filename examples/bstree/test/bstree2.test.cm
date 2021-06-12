@@ -1,0 +1,52 @@
+#:lang cm
+#:import "std_lib::testing.cm"
+#:import "../bstree.cm"
+
+defun compare (int x, int y) :=
+  | x > y -> 1
+  | y > x -> -1
+  else 0//
+
+defun test (list vs) :=
+  letaux test
+  | b := make : compare
+  | vs := vs
+  | acc := {list}
+  -- size of b
+  | n := 0
+  in
+    match vs
+    | () -> true
+    | v, vs -> 
+      let b := (insert : b : v : (int_to_char : v))
+      in let n := n + 1
+      in let acc := 
+        sort 
+          : (\x -> match x | x,_ -> x end)
+          : ((v, (int_to_char : v)), acc)
+       in
+        {% void
+        |  assert_equal
+            : (size : b)
+            : n
+        | assert_equal
+            : (to_list : b)
+            : acc
+        | foreach x,_ in acc do
+            assert_equal
+              : (contains? : b : x) 
+              : true
+        | foreach x,_ in acc do
+            assert_equal
+              : (get : b : x) 
+              : (int_to_char : x)
+        } comma 
+          test : b : vs : acc : n
+    end//
+
+test : (range : 1 : 25)//
+test : (range : 26 : 1)//
+
+-- shuffle and test 5 times
+foreach _ in range : 0 : 5 do
+  test : (shuffle : (range : 1 : 25))//

@@ -26,11 +26,11 @@
 (define (tokenize str) 
   (main:run-tokenize-string str))
 
-(define (check-failure f v) 
+(define-syntax-rule (check-failure f v) 
   (check-exn exn:fail? (lambda ()
     (f v))))
 
-(define (check-failure-args f vs) 
+(define-syntax-rule (check-failure-args f vs) 
   (check-exn exn:fail? (lambda ()
     (apply f vs))))
 

@@ -21,20 +21,31 @@
 (check-equal? (run "y + 1")
 6)
 
-(check-equal? (run "def z1, int z2 := def int z3 := 1 * ( 2 + 3 )")
-5)
+(check-equal? (run "def z := def x,y; := 1,2;")
+(list 1 2))
 
-(check-equal? (run "z1")
-5)
-(check-equal? (run "z2")
-5)
-(check-equal? (run "z3")
-5)
+(check-equal? (run "z")
+(list 1 2))
+(check-equal? (run "x")
+1)
+(check-equal? (run "y")
+2)
+
+(check-equal? (run "def z := def int x, int y; := 1,2;")
+(list 1 2))
+
+(check-equal? (run "z")
+(list 1 2))
+(check-equal? (run "x")
+1)
+(check-equal? (run "y")
+2)
+
+(check-failure run "def z := def int x, float y; := 1,2;")
+
 
 (check-equal? (run "def int x := 2 * ( 2 + 3 )")
 10)
-(check-equal? (run "z1")
-5)
 (check-equal? (run "x")
 10)
 
