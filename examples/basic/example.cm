@@ -5,18 +5,17 @@
 @ add1:4//
 
 -- comment, comments look like this
--- // is the statement terminator
-@ (7)//                      -- prints 7
-@ 7//                        -- also prints 7
+-- `//` is the statement terminator
+@ 7//                        -- prints `7`
 print 7//                    -- same
-def x := 5//                  -- def creates a toplevel binding
-x - 3//                      -- evaluates to 2 but does not normally print
-@ [1 + 2] - 5 + [4 * 3]//    -- square brackets
-                            -- are the same as parens
+def x := 5//                 -- def creates a toplevel binding
+x - 3//                      -- evaluates to `2` but does not normally print
+(1 - 2) * 3//                -- parens can be used for evaluation order
+@ [1 + 2] - 5 + [4 * 3]//    -- square brackets are the same as plain parens
 //                           -- does nothing
--- ef y := 7//
-@ let y := [x - 2] in (y + 1)//    -- let is an expression;
-                                 -- this expression returns 4 (5 - 2 + 1)
+
+@ let y := [x - 2] in (y + 1)//  -- let is an expression;
+                                 -- this expression returns `4` (5 - 2 + 1)
 
 -- strings
 @ "done"// @ "see ya later"//

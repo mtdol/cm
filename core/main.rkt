@@ -65,15 +65,16 @@
 ;;
 ;; string, string list -> value list
 (define (run-file/main file args)
-  ;; run `file`, discard results
-  (run-file file)
-  ;; run `main` if it exists with `args`
-  (interp-expr 
-    (run-parse-expr 
-      "if defined? \"main\" (evalxp:\"{current_module}\")
-              and fun? main then main:args else void")
-    (set-local-var "args" args (hash)) (hash) current-module-id '())
-  (void))
+  (let ([module-id (file-name->module-id file)])
+    ;; run `file`, discard results
+    (run-file file)
+    ;; run `main` if it exists with `args`
+    (interp-expr 
+      (run-parse-expr 
+        (format "if defined? \"main\" \"~a\"
+                and fun? main then main:args else void" module-id))
+      (set-local-var "args" args (hash)) (hash) current-module-id '())
+    (void)))
 
 ;; runs an expr (no terminator)
 (define (run-expr input) 
