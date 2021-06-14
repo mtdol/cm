@@ -31,6 +31,8 @@
 (check-failure run "array_ref : a : -1")
 (check-failure run "a::3")
 (check-failure run "a::-1")
+(check-failure run "a::(0,4;)")
+(check-failure run "a::(-1,2;)")
 
 (run-silent "array_set : a : 0 : \"a\"")
 (run-silent "array_set : a : 1 : \"b\"")
@@ -45,6 +47,12 @@
 
 (check-equal? (run "a")
 (vector "a" "b" "c"))
+
+(check-equal? (run "a::(0,2;)")
+(vector "a" "b"))
+
+(check-equal? (run "a::(1,3;)")
+(vector "b" "c"))
 
 (check-failure run "array_set : a : 3 : \"d\"")
 
@@ -70,3 +78,19 @@
 ;;
 ;; equality
 ;;
+
+(check-equal? (run "list_to_array : {list \"a\"|\"b\"|\"c\"} ==
+                      list_to_array : {list \"a\"|\"b\"|\"c\"}")
+val-true)
+
+(check-equal? (run "list_to_array : {list \"b\"|\"c\"} ==
+                      list_to_array : {list \"a\"|\"b\"|\"c\"}")
+val-false)
+
+(check-equal? (run "list_to_array : {list} ==
+                      list_to_array : {list \"a\"|\"b\"|\"c\"}")
+val-false)
+
+(check-equal? (run "list_to_array : {list} ==
+                      list_to_array : {list}")
+val-true)

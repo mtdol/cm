@@ -902,8 +902,11 @@
 
 (define (interp-index e1 e2 context params module-id debug)
   (match (trace-interp-expr e1 context params module-id debug)
-         [(? is-array? a) 
-          (interp-array-ref 
+         [(? is-array? a) #:when (expr-is-list? e2)
+          (interp-array-slice
+            a (trace-interp-expr e2 context params module-id debug) params)]
+         [(? is-array? a)
+          (interp-array-ref
             a (trace-interp-expr e2 context params module-id debug) params)]
          [vs #:when (list? vs) 
              (match (trace-interp-expr e2 context params module-id debug)
@@ -1063,6 +1066,12 @@
     (cm-error "CONTRACT"
         (format "Index out of bounds for array.\nIndex: ~a" index))))
 
+(define (check-array-slice-bounds arr.length i1 i2)
+  (when (or (> i1 i2) (< i1 0) (> i2 arr.length))
+    (cm-error "CONTRACT"
+        (format "Indices out of bounds for array.\nIndices:\n~a\n~a" 
+                (string-coerce i1) (string-coerce i2)))))
+
 (define (interp-make-array v params)
   (assert-contract (list "int") v params "make_array")
   (make-vector v))
@@ -1076,6 +1085,14 @@
   (assert-contract (list "int") v2 params "array_ref")
   (check-array-bounds (vector-length v1) v2)
   (vector-ref v1 v2))
+
+(define (interp-array-slice v1 v2 params)
+  (match v2
+    [(list (? is-int? i1) (? is-int? i2))
+     (check-array-slice-bounds (vector-length v1) i1 i2)
+     (vector-take (vector-drop v1 i1) (- i2 i1))]
+    [_ (cm-error "CONTRACT" 
+            (format "array: Invalid arguments for slice: ~a" v2))]))
 
 (define (interp-array-set v1 v2 v3 params)
   (assert-contract (list "array") v1 params "array_set")
