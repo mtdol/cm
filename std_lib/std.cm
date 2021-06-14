@@ -860,6 +860,9 @@ defun array_length (? a array?) :=
 defun array_ref (? a array?, int i) :=
   a::i//
 
+defun array_slice (? a array?, int i1, int i2) :=
+  a::{list i1|i2}//
+
 defun array_set (? a array?, int i, dynamic v) :=
   internal_op "array_set" {list a|i|v}//
 

@@ -51,6 +51,9 @@
 (check-equal? (run "a::(0,2;)")
 (vector "a" "b"))
 
+(check-equal? (run "array_slice : a : 0 : 2")
+(vector "a" "b"))
+
 (check-equal? (run "a::(1,3;)")
 (vector "b" "c"))
 
