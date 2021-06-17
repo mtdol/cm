@@ -65,7 +65,7 @@
 ;;
 ;; string, string list -> value list
 (define (run-file/main file args)
-  (let ([module-id (file-name->module-id file)])
+  (let ([module-id (file-name->module-id (module-string->filename file))])
     ;; run `file`, discard results
     (run-file file)
     ;; run `main` if it exists with `args`

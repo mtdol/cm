@@ -52,11 +52,14 @@ defun main (list args) :=
     remove_duplicates :
       {: map | expand_path | files}
   in
-    {% 
-      {: map | _run_test_file | files}
-    | @ ""
-    | :>_display_results
-    }//
+    if length files = 0 then
+      @ "No files to test."
+    else
+      {% 
+        {: map | _run_test_file | files}
+      | @ ""
+      | :>_display_results
+      }//
 
 defun _run_test_file (string file) :=
   {%
