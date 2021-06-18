@@ -2,7 +2,7 @@
 (require racket/lazy-require cm/core/error cm/core/tokens)
 (lazy-require (cm/core/context 
                 [get-macro-defs print-macro-context]) 
-              (cm/core/types [is-string-token?])
+              (cm/core/types [is-string-token? string-coerce])
               (cm/core/pre-lex [unwrap-string])
               (cm/core/modules [module-string->filename file-name->module-id]))
 (provide (all-defined-out))
@@ -49,14 +49,19 @@
 
 ;; turns a module style string into a in language string
 (define (apply-to-module-id-macro args)
+  (define-syntax-rule (v) (tok (caar args)))
   (unless (and (= (length args) 1) (not (equal? args '(()))))
     (invalid-args-error "->module_id" args))
-  (unless (not (equal? (tok (caar args)) "\"\""))
+  (unless (is-string-token? (v))
+    (cm-error-linenum (macros:get-current-module-id) (get-current-linenum)
+      "MACRO" (format "->module_id requires a string argument.\ngot: ~a" 
+        (string-coerce (v)))))
+  (unless (not (equal? (v) "\"\""))
     (cm-error-linenum (macros:get-current-module-id) (get-current-linenum)
       "MACRO" "->module_id requires a non-empty argument."))
   (list (Token (string-append 
     "\"" (file-name->module-id 
-           (module-string->filename (unwrap-string (tok (caar args)))))
+           (module-string->filename (unwrap-string (v))))
     "\""))))
 
 

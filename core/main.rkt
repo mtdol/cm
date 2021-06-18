@@ -71,8 +71,8 @@
     ;; run `main` if it exists with `args`
     (interp-expr 
       (run-parse-expr 
-        (format "if defined? \"main\" \"~a\"
-                and fun? main then main:args else void" module-id))
+        "if defined? \"main\" (internal_op \"evalxp\" (\"{current_module}\";))
+           and fun? main then main:args else void")
       (set-local-var "args" args (hash)) (hash) current-module-id '())
     (void)))
 

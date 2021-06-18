@@ -1,6 +1,6 @@
 #lang racket
 (require racket/lazy-require racket/runtime-path)
-(require cm/core/error cm/core/ast cm/core/context)
+(require cm/core/error cm/core/ast cm/core/context cm/core/types)
 (lazy-require [cm/core/main (run-file silent set-current-module-id!)])
 (provide process-import process-lazy-import file-name->module-id module-string->filename
          show-modules write-modules add-to-modules remove-from-modules
@@ -91,8 +91,9 @@
 
 ;; module string -> filename string
 (define (module-string->filename str)
+  (let ([str (string-coerce str)])
   ;; check if explicit file path
-    (match (regexp-match #rx"^f\\:(.+)$" str)
+    (match (regexp-match #rx"^f\\:(.+)$" (string-coerce str))
         [(list _ file) file]
         ;; else is a module or unlabeled file path
         [_ (match (regexp-match #rx"^(?:m\\:)?(.+)\\:\\:(.+)$" str)
@@ -106,7 +107,7 @@
                       file-path)]
                   ;; else assume file
                   [_ str]
-             )]))
+             )])))
 
 ;; processes import command
 (define (process-import str prefix current-module-id)
