@@ -169,7 +169,8 @@
        [(Lambda e1-2 (Yields e2-2))
         (let 
           ([lam (interp-lambda e1-2 e2-2 name context params module-id debug)])
-            (set-global-var! name lam (var-name-private? name) #f module-id))]))]
+            (set-global-var! name lam (var-name-private? name) #f module-id)
+            (Prim0 'void))]))]
     [(Defun _ _ _) (cm-error "SYNTAX" "Improperly formed `defun`.")]
     [(Let e1 (Assign e2) (In e3)) (interp-let e1 e2 e3 context params module-id debug)]
     [(Let _ _ _) (cm-error "SYNTAX" "Improperly formed `let`.")]
