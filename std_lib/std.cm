@@ -884,6 +884,19 @@ defun list_to_array (list vs) :=
     | v, vs -> (array_set : a : i : v) comma aux : (add1:i) : vs
     end//
 
+defun reverse_array(? a array?) :=
+  let l, lh := (length a), (int ((float length a)/2.0))
+  in letaux reverse_array
+  | i := 0
+  in
+    | i >= lh -> void
+    else
+      let t := a::i in
+        (array_set : a : i : (a::(l-1-i))) comma
+        (array_set : a : (l-1-i) : t) comma
+        reverse_array : (add1:i)//
+
+
 --- System
 --------------------------------
 
