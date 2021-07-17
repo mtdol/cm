@@ -784,7 +784,13 @@ defun list_to_mutable_hash (list ms) :=
 
 typedef Set := {list ? h hash?}//
 
-defun mutable_set? (struct Set s) :=
+defun set? (dynamic v) :=
+  match v
+  | struct Set _ -> true
+  | _ -> false
+  end//
+
+defun mutable_set? (? s set?) :=
   match s
   | struct Set {list ? _ mutable_hash?} -> true
   | _ -> false
@@ -796,13 +802,13 @@ defun make_set () :=
 defun make_mutable_set () := 
   struct Set {list :>make_mutable_hash}//
 
-defun set_equal? (struct Set s1, struct Set s2) :=
+defun set_equal? (? s1 set?, ? s2 set?) :=
   match s1,s2
   | struct Set {list h1}, struct Set {list h2} ->
     h1 == h2
   end//
 
-defun set_to_list (struct Set s) :=
+defun set_to_list (? s set?) :=
   match s
   | struct Set {list h} ->
     hash_keys : h
@@ -816,13 +822,13 @@ defun list_to_mutable_set (list vs) :=
     (map : (\e -> set_add : s : e) : vs) comma
       s//
 
-defun set_member? (struct Set s, dynamic v) :=
+defun set_member? (? s set?, dynamic v) :=
   match s
   | struct Set {list h} ->
     hash_has_key? : h : v
   end//
 
-defun set_add (struct Set s, dynamic v) :=
+defun set_add (? s set?, dynamic v) :=
   match s
   | struct Set {list ? h mutable_hash?} ->
     hash_set : h : v : void
@@ -830,7 +836,7 @@ defun set_add (struct Set s, dynamic v) :=
     struct Set {list hash_set : h : v : void}
   end//
 
-defun set_remove (struct Set s, dynamic v) :=
+defun set_remove (? s set?, dynamic v) :=
   match s
   | struct Set {list ? h mutable_hash?} ->
     hash_remove : h : v
@@ -838,11 +844,21 @@ defun set_remove (struct Set s, dynamic v) :=
     struct Set {list hash_remove : h : v}
   end//
 
-defun set_size (struct Set s) :=
+defun set_size (? s set?) :=
   match s
   | struct Set {list h} ->
     hash_size : h
   end//
+
+defun set_union (? s1 set?, ? s2 set?) :=
+  letaux set_union
+  | s1 := set_to_list:s1
+  | s2 := s2
+  in
+    match s1
+    | () -> s2
+    | e, s1 -> set_union : s1 : (set_add : s2 : e)
+    end//
 
 
 --- Arrays

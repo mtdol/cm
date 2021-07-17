@@ -1,0 +1,49 @@
+#:lang cm
+
+-- Matthew Dolinka
+
+-- produces the power set of a list of values
+defun power_set (list vs) :=
+  letaux power_set 
+  | (? s set?) := list_to_set : vs
+  in
+    match (set_to_list:s)
+    -- {{}}
+    | () -> set_add : (:>make_set) : (:>make_set)
+    | e, t -> 
+      let t, e_set := (list_to_set : t), (list_to_set : {list e}) in
+        let p_t := power_set:t in
+          let p_ts := foldl : (\elem, acc -> set_add : acc : (set_add : elem : e)) 
+            : (:>make_set) : (set_to_list:p_t)
+          in
+            set_union : p_ts : p_t
+    end//
+
+defun print_power_set (? ps set?) :=
+  let vs := 
+    foldl : (\s, acc -> (set_to_list : s), acc) : () : (set_to_list : ps)
+  in let vs :=
+    (sort : (\v -> length v) : vs)
+  in 
+    (map : (\v -> @ v) : vs)
+      comma void//
+
+@ "power set of `{list}`"//
+print_power_set : (power_set : {list})//
+@ ""//
+
+@ "power set of `{list 1}`"//
+print_power_set : (power_set : {list 1})//
+@ ""//
+
+@ "power set of `{list 1|2}`"//
+print_power_set : (power_set : {list 1|2})//
+@ ""//
+
+@ "power set of `{list 1|2|3}`"//
+print_power_set : (power_set : {list 1|2|3})//
+@ ""//
+
+@ "power set of `{list 1|2|3|4}`"//
+print_power_set : (power_set : {list 1|2|3|4})//
+@ ""//
