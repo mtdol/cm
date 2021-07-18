@@ -932,6 +932,16 @@ defun reverse_array(? a array?) :=
         (array_set : a : (l-1-i) : t) comma
         reverse_array : (add1:i)//
 
+-- applies `f` onto each elem of `a`
+defun array_map (fun f, ? a array?) :=
+  let l := length a
+  in letaux array_map
+  | i := 0
+  in
+    | i = l -> void
+    else
+      (array_set : a : i : (f : (a::i))) comma
+        array_map : (add1:i)//
 
 --- System
 --------------------------------
