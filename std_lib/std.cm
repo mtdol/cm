@@ -880,6 +880,16 @@ defun set_union (? s1 set?, ? s2 set?) :=
     | e, s1 -> set_union : s1 : (set_add : s2 : e)
     end//
 
+defun set_intersect (? s1 set?, ? s2 set?) :=
+  foldl
+    : (\elem, acc -> 
+        if set_member? : s2 : elem then
+          set_add : acc : elem
+        else
+          acc) 
+    : (:>make_set) 
+    : (set_to_list : s1)//
+ 
 
 --- Arrays
 --------------------------------
