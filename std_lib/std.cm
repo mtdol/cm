@@ -37,6 +37,15 @@
 #:def+:list{v} ((v);)
 #:def+:list{} ()
 
+-- list comprehension
+#:<def:listc{a|b|c}
+(
+let c2 := ( c ) in
+  foldr : (\x, acc -> match x | ( b ) -> ( a ), acc end) : () : c2
+)
+>:#
+
+
 -- apply args to function
 #:def::{f|REST} (appl f {list REST})
 #:def+::{f} (:>f)

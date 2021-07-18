@@ -24,6 +24,32 @@
 (check-failure run-stat "{list |3}//")
 
 ;;
+;; listc{}
+;;
+
+(check-equal? (run-stat "{listc x|x|{list 1|2|3}}//")
+'((1 2 3)))
+
+(check-equal? (run-stat "{listc x+1|x|{list 1|2|3}}//")
+'((2 3 4)))
+
+(check-equal? (run-stat "{listc x-y|x,y|{list 1,3|3,2|5,2}}//")
+'((-2 1 3)))
+
+(check-equal? (run-stat "{listc y,x | x,y | zip : {list 1|3|5} : {list 2|4|6}}//")
+'(((2 . 1) (4 . 3) (6 . 5))))
+
+(check-failure run-stat "{listc x-z|x,y|{list 1,3|3,2|5,2}}//")
+
+(check-failure run-stat "{listc {empty}|x,y|{list 1,3|3,2|5,2}}//")
+
+(check-failure run-stat "{listc x|{empty}|{list 1,3|3,2|5,2}}//")
+
+(check-failure run-stat "{listc x|x|{empty}}//")
+
+(check-failure run-stat "{listc x-z|x,y,z|{list 1,3|3,2|5,2}}//")
+
+;;
 ;; empty{}
 ;;
 
